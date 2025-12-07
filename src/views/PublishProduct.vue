@@ -204,7 +204,7 @@ export default {
           response = await api.product.addProduct(productForm)
         }
         
-        if (response.data.code === 0) {
+        if (response.data.code === 200) {
           ElMessage.success(isEdit.value ? '商品修改成功' : '商品发布成功')
           router.push('/my-products')
         }
@@ -223,7 +223,7 @@ export default {
     
     // 图片上传成功
     const handleImageSuccess = (res) => {
-      if (res.code === 0) {
+      if (res.code === 200) {
         productForm.imageUrl = res.data
         ElMessage.success('图片上传成功')
       } else {

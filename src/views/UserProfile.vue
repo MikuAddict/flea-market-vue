@@ -353,7 +353,7 @@ export default {
       try {
         // 获取用户统计信息
         const response = await api.statistics.getUserStatistics(user.value.id)
-        if (response.data.code === 0) {
+        if (response.data.code === 200) {
           const data = response.data.data
           stats.value.completed = (data.totalPurchases || 0) + (data.totalSales || 0)
           stats.value.reviews = myReviews.value.length
@@ -395,7 +395,7 @@ export default {
     
     // 头像上传成功
     const handleAvatarSuccess = (res) => {
-      if (res.code === 0) {
+      if (res.code === 200) {
         ElMessage.success('头像上传成功')
         // 更新本地用户头像
         store.state.user.userAvatar = res.data

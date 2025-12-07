@@ -78,7 +78,7 @@ export default createStore({
       } catch (error) {
         return { 
           success: false, 
-          message: error.response?.data?.message || '登录失败，请检查用户名和密码'
+          message: error.response?.data?.message
         }
       } finally {
         commit('SET_LOADING', false)

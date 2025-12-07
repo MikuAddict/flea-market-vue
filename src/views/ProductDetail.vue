@@ -274,7 +274,7 @@ export default {
         
         // 获取卖家订单统计
         const statsResponse = await api.statistics.getUserStatistics(sellerId)
-        if (statsResponse.data.code === 0) {
+        if (statsResponse.data.code === 200) {
           const stats = statsResponse.data.data
           sellerStats.value.completed = stats.totalSales || 0
         }
@@ -306,7 +306,7 @@ export default {
           productId: productId.value
         })
         
-        if (response.data.code === 0) {
+        if (response.data.code === 200) {
           ElMessage.success('订单创建成功')
           router.push(`/orders/${response.data.data}`)
         }

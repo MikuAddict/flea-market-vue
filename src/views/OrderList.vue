@@ -252,7 +252,7 @@ export default {
             return
         }
         
-        if (result.data.code === 0) {
+        if (result.data.code === 200) {
           ElMessage.success('支付成功')
           fetchOrders()
         }

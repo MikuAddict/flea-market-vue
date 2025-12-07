@@ -39,8 +39,8 @@ request.interceptors.response.use(
     if (res && typeof res.code !== 'undefined' && res.code !== 200) {
       ElMessage.error(res.message || '请求失败')
       
-      // 特殊处理未授权状态
-      if (res.code === 40100 || res.code === 40101) {
+      // 特殊处理未授权状态 (根据状态码规范文档)
+      if (res.code === 401) {
         store.commit('CLEAR_USER')
         window.location.href = '/login'
       }

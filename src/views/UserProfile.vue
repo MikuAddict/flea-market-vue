@@ -57,21 +57,15 @@
                 </div>
                 <div class="info-item">
                   <div class="info-label">手机号</div>
-                  <div class="info-value">{{ user.userPhone || '未设置' }}</div>
+                  <div class="info-value">{{ user.userPhone}}</div>
                 </div>
                 <div class="info-item">
                   <div class="info-label">积分</div>
-                  <div class="info-value">{{ user.point || 0 }}</div>
+                  <div class="info-value">{{ user.point}}</div>
                 </div>
                 <div class="info-item">
                   <div class="info-label">角色</div>
                   <div class="info-value">{{ formatUserRole(user.userRole) }}</div>
-                </div>
-                <div class="info-item">
-                  <div class="info-label">状态</div>
-                  <el-tag :type="getUserStatusType(user.userStatus)" size="small">
-                    {{ formatUserStatus(user.userStatus) }}
-                  </el-tag>
                 </div>
                 <div class="info-item">
                   <div class="info-label">注册时间</div>
@@ -81,34 +75,7 @@
             </div>
           </el-card>
           
-          <!-- 用户统计信息 -->
-          <el-card class="stats-card">
-            <template #header>
-              <span>我的统计</span>
-            </template>
-            <div class="stats-content">
-              <el-row :gutter="10">
-                <el-col :span="8">
-                  <div class="stat-item">
-                    <div class="stat-value">{{ stats.published || 0 }}</div>
-                    <div class="stat-label">发布商品</div>
-                  </div>
-                </el-col>
-                <el-col :span="8">
-                  <div class="stat-item">
-                    <div class="stat-value">{{ stats.completed || 0 }}</div>
-                    <div class="stat-label">完成交易</div>
-                  </div>
-                </el-col>
-                <el-col :span="8">
-                  <div class="stat-item">
-                    <div class="stat-value">{{ stats.reviews || 0 }}</div>
-                    <div class="stat-label">发表评价</div>
-                  </div>
-                </el-col>
-              </el-row>
-            </div>
-          </el-card>
+
         </el-col>
         
         <!-- 右侧内容区域 -->
@@ -227,7 +194,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Layout from '@/components/Layout.vue'
 import ProductCard from '@/components/ProductCard.vue'
-import api from '@/api'
+import { userApi, productApi, orderApi, reviewApi } from '@/api'
 import {
   formatPrice,
   formatOrderStatus,
@@ -262,11 +229,6 @@ export default {
     const myProducts = ref([])
     const orders = ref([])
     const myReviews = ref([])
-    const stats = ref({
-      published: 0,
-      completed: 0,
-      reviews: 0
-    })
     
     // 编辑表单
     const profileForm = reactive({
@@ -300,7 +262,7 @@ export default {
     // 获取我的商品
     const fetchMyProducts = async () => {
       try {
-        const response = await api.product.getMyProductList({
+        const response = await productApi.getMyProductList({
           current: 1,
           size: 5 // 只显示最近的5个
         })
@@ -317,13 +279,13 @@ export default {
         
         if (orderStatus.value !== null) {
           // 获取特定状态的订单
-          response = await api.order.getBuyerOrderListByStatus(orderStatus.value, {
+          response = await orderApi.getBuyerOrderListByStatus(orderStatus.value, {
             current: 1,
             size: 10
           })
         } else {
           // 获取所有订单
-          response = await api.order.getBuyerOrderList({
+          response = await orderApi.getBuyerOrderList({
             current: 1,
             size: 10
           })
@@ -338,7 +300,7 @@ export default {
     // 获取我的评价
     const fetchMyReviews = async () => {
       try {
-        const response = await api.review.getMyReviewList({
+        const response = await reviewApi.getMyReviewList({
           current: 1,
           size: 10
         })
@@ -348,27 +310,7 @@ export default {
       }
     }
     
-    // 获取用户统计信息
-    const fetchUserStats = async () => {
-      try {
-        // 获取用户统计信息
-        const response = await api.statistics.getUserStatistics(user.value.id)
-        if (response.data.code === 200) {
-          const data = response.data.data
-          stats.value.completed = (data.totalPurchases || 0) + (data.totalSales || 0)
-          stats.value.reviews = myReviews.value.length
-        }
-        
-        // 获取商品统计
-        const productResponse = await api.product.getMyProductList({
-          current: 1,
-          size: 1
-        })
-        stats.value.published = productResponse.data.data.total || 0
-      } catch (error) {
-        console.error('获取用户统计失败:', error)
-      }
-    }
+
     
     // 更新个人信息
     const updateProfile = async () => {
@@ -427,7 +369,7 @@ export default {
     // 取消订单
     const cancelOrder = async (orderId) => {
       try {
-        await api.order.cancelOrder(orderId)
+        await orderApi.cancelOrder(orderId)
         ElMessage.success('订单已取消')
         fetchOrders()
       } catch (error) {
@@ -453,17 +395,22 @@ export default {
         fetchOrders()
       } else if (newVal === 'reviews') {
         fetchMyReviews()
-        fetchUserStats()
       }
     })
     
-    onMounted(() => {
+    onMounted(async () => {
+      // 获取当前用户信息
+      if (!user.value.id) {
+        await store.dispatch('getCurrentUser')
+      }
+      
       // 初始化表单
       initProfileForm()
       
       // 获取初始数据
       fetchMyProducts()
-      fetchUserStats()
+      
+
     })
     
     return {
@@ -471,7 +418,6 @@ export default {
       myProducts,
       orders,
       myReviews,
-      stats,
       editMode,
       updating,
       activeTab,
@@ -507,7 +453,7 @@ export default {
   padding: 20px;
 }
 
-.profile-card, .stats-card {
+.profile-card {
   margin-bottom: 20px;
 }
 
@@ -553,25 +499,7 @@ export default {
   font-size: 14px;
 }
 
-.stats-content {
-  text-align: center;
-}
 
-.stat-item {
-  margin-bottom: 15px;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: bold;
-  color: #409EFF;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #909399;
-  margin-top: 5px;
-}
 
 .profile-tabs {
   background-color: #fff;

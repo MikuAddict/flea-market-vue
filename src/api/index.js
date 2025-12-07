@@ -37,18 +37,19 @@ request.interceptors.response.use(
     
     // 检查是否有code字段，如果有且不为200，则处理为错误
     if (res && typeof res.code !== 'undefined' && res.code !== 200) {
-      ElMessage.error(res.message || '请求失败')
-      
       // 特殊处理未授权状态 (根据状态码规范文档)
-      if (res.code === 401) {
+      if (res.code === 40100) {
         store.commit('CLEAR_USER')
         window.location.href = '/login'
+        ElMessage.error('请先登录')
       }
+      // 对于其他业务错误，不在这里显示消息，由具体业务逻辑处理
       
       return Promise.reject(new Error(res.message || '请求失败'))
     }
     
     // 如果没有code字段或者code为200，则返回正常响应
+    // 注意：这里不显示成功消息，由具体业务逻辑处理
     return response
   },
   error => {

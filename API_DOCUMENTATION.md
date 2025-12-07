@@ -1,21 +1,36 @@
-# 跳蚤市场 API 文档
+# 跳蚤市场系统 API 文档
 
 本文档详细描述了跳蚤市场系统的各个 API 接口，包括 URL 路径、请求方法、请求参数、响应数据结构和错误码说明。
 
+**项目概述**：这是一个基于 Spring Boot 的跳蚤市场系统，支持用户注册登录、商品交易、订单管理、评价系统、统计分析等功能。
+
+**技术栈**：
+- 后端框架：Spring Boot 3.x
+- 数据库：MySQL + MyBatis-Plus
+- 认证授权：JWT Token
+- API文档：OpenAPI 3.0 (Swagger)
+- 图片存储：本地文件系统
+
+**基础信息**：
+- 基础路径：`/api` (根据实际部署配置)
+- 默认端口：7023
+- 请求格式：JSON
+- 响应格式：统一 JSON 格式
+
 ## 错误码说明
 
-| 错误码 | 说明 |
-|--------|------|
-| 0 | 成功 |
-| 40000 | 请求参数错误 |
-| 40100 | 未登录 |
-| 40101 | 无权限 |
-| 40400 | 请求数据不存在 |
-| 40300 | 禁止访问 |
-| 50000 | 系统内部异常 |
-| 50001 | 操作失败 |
-| 422200 | 包含违禁词，多次违禁将封禁账号 |
-| 50002 | 用户余额不足，无法调用 AI |
+| 错误码 | 含义 | 使用场景 |
+|--------|------|----------|
+| 200 | 成功 | 所有成功的业务操作，如查询成功、操作成功等 |
+| 400 | 请求参数错误 | 参数校验失败、格式错误、必填参数缺失等 |
+| 401 | 未登录 | 需要登录但未提供有效认证信息 |
+| 402 | 用户余额不足 | 用户余额不足，无法完成操作（如调用AI服务） |
+| 403 | 无权限 | 用户权限不足，无法访问资源 |
+| 404 | 请求数据不存在 | 请求的资源不存在 |
+| 405 | 禁止访问 | 访问被明确禁止（如违禁操作） |
+| 422 | 包含违禁词 | 用户输入包含违禁词，需要修改内容 |
+| 500 | 系统内部异常 | 服务器内部错误、数据库异常等 |
+| 501 | 操作失败 | 业务操作失败，如数据更新失败等 |
 
 ## 用户管理接口
 
@@ -38,7 +53,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "注册成功"
 }
@@ -61,7 +76,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "userAccount": "test",
@@ -83,17 +98,19 @@
 
 - **URL**: `/user/logout`
 - **方法**: POST
-- **描述**: 用户退出登录
+- **描述**: 用户退出登录，同时清除Cookie中的token
 
 #### 响应数据
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "注销成功"
 }
 ```
+
+**注意**：此接口会清除浏览器中的token Cookie，实现完全退出登录状态。
 
 ### 获取当前登录用户
 
@@ -106,7 +123,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "userAccount": "test",
@@ -147,7 +164,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "用户创建成功"
 }
@@ -170,7 +187,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "用户删除成功"
 }
@@ -200,7 +217,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "用户更新成功"
 }
@@ -223,7 +240,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "userAccount": "test",
@@ -258,7 +275,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "userName": "测试用户",
@@ -294,7 +311,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -343,7 +360,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -381,7 +398,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "个人信息更新成功"
 }
@@ -405,7 +422,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "用户审核成功"
 }
@@ -429,7 +446,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -466,7 +483,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 5,
   "message": "ok"
 }
@@ -490,7 +507,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": "成功删除了 5 个已拒绝用户",
   "message": "ok"
 }
@@ -520,7 +537,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "商品添加成功"
 }
@@ -549,7 +566,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "商品更新成功"
 }
@@ -572,7 +589,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "商品删除成功"
 }
@@ -582,7 +599,7 @@
 
 - **URL**: `/product/get/{id}`
 - **方法**: GET
-- **描述**: 根据商品ID获取商品详细信息
+- **描述**: 根据商品ID获取商品详细信息（包含关联的分类和用户信息）
 
 #### 请求参数
 
@@ -594,7 +611,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "productName": "测试商品",
@@ -603,6 +620,8 @@
     "imageUrl": "image_url",
     "status": 1,
     "paymentMethod": 1,
+    "categoryId": 1,
+    "userId": 456,
     "category": {
       "id": 1,
       "name": "电子产品"
@@ -644,7 +663,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -702,7 +721,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -760,7 +779,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -824,7 +843,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -882,7 +901,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -940,7 +959,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -998,7 +1017,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "商品状态更新成功"
 }
@@ -1020,7 +1039,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "id": 123,
@@ -1073,7 +1092,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "商品审核成功"
 }
@@ -1100,7 +1119,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -1152,7 +1171,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "id": 1,
@@ -1184,7 +1203,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "商品分类添加成功"
 }
@@ -1208,7 +1227,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "商品分类更新成功"
 }
@@ -1231,7 +1250,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "商品分类删除成功"
 }
@@ -1256,7 +1275,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "订单创建成功"
 }
@@ -1279,7 +1298,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "订单支付成功"
 }
@@ -1302,7 +1321,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "订单取消成功"
 }
@@ -1325,7 +1344,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "订单完成成功"
 }
@@ -1348,7 +1367,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "productId": 456,
@@ -1409,7 +1428,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -1477,7 +1496,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -1546,7 +1565,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -1615,7 +1634,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -1676,7 +1695,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "pendingPayment": 1,
     "paid": 2,
@@ -1706,7 +1725,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -1774,7 +1793,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "支付凭证提交成功"
 }
@@ -1797,7 +1816,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "确认收货成功"
 }
@@ -1820,7 +1839,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "微信支付成功"
 }
@@ -1843,7 +1862,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "积分兑换成功"
 }
@@ -1866,7 +1885,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "物品交换申请成功，等待卖家确认"
 }
@@ -1889,7 +1908,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "物品交换确认成功"
 }
@@ -1914,7 +1933,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "id": 123,
@@ -1940,7 +1959,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "title": "平台公告标题",
@@ -1970,7 +1989,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "title": "平台公告标题",
@@ -2003,7 +2022,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "新闻添加成功"
 }
@@ -2029,7 +2048,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "新闻更新成功"
 }
@@ -2052,7 +2071,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "新闻删除成功"
 }
@@ -2069,18 +2088,35 @@
 
 #### 请求参数
 
+**注意：根据实际代码实现，请求体为Review对象，需要传递完整的关联对象**
+
 | 名称 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| productId | integer | 是 | 商品ID |
-| orderId | integer | 否 | 订单ID |
+| product | object | 是 | 商品对象，包含id字段 |
+| order | object | 否 | 订单对象，包含id字段 |
 | rating | integer | 是 | 评分 (1-5分) |
 | content | string | 是 | 评价内容 |
+
+#### 请求示例
+
+```json
+{
+  "product": {
+    "id": 456
+  },
+  "order": {
+    "id": 789
+  },
+  "rating": 5,
+  "content": "很好的商品"
+}
+```
 
 #### 响应数据
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "评价添加成功"
 }
@@ -2088,9 +2124,11 @@
 
 ### 更新评价信息
 
+**注意：根据项目实际实现，评价功能不支持更新操作，只能添加和删除。**
+
 - **URL**: `/review/update`
 - **方法**: PUT
-- **描述**: 用户更新自己的评价信息
+- **描述**: 用户更新自己的评价信息（当前版本不支持）
 - **权限要求**: 需要登录
 
 #### 请求参数
@@ -2105,9 +2143,9 @@
 
 ```json
 {
-  "code": 0,
-  "data": true,
-  "message": "评价更新成功"
+  "code": 501,
+  "data": false,
+  "message": "评价更新功能暂未实现"
 }
 ```
 
@@ -2128,7 +2166,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "评价删除成功"
 }
@@ -2150,7 +2188,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "productId": 456,
@@ -2181,7 +2219,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -2220,7 +2258,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -2259,7 +2297,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -2298,7 +2336,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -2336,7 +2374,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "productId": 456,
@@ -2367,7 +2405,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "productId": 456,
@@ -2397,7 +2435,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 4.5,
   "message": "ok"
 }
@@ -2419,7 +2457,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "productId": 123,
     "totalReviews": 10,
@@ -2454,7 +2492,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -2498,7 +2536,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -2540,7 +2578,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "productId": 123,
@@ -2572,7 +2610,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "userId": 123,
@@ -2601,7 +2639,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "productId": 123,
@@ -2631,7 +2669,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "productId": 123,
@@ -2662,7 +2700,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "totalUsers": 1000,
     "totalProducts": 5000,
@@ -2702,7 +2740,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "year": 2023,
     "month": 1,
@@ -2739,7 +2777,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "userId": 123,
     "totalPurchases": 10,
@@ -2782,7 +2820,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "productId": 123,
     "totalSales": 10,
@@ -2800,5 +2838,541 @@
     ]
   },
   "message": "ok"
+}
+```
+
+## 图片管理接口
+
+### 上传用户头像
+
+- **URL**: `/image/upload/avatar`
+- **方法**: POST
+- **描述**: 用户上传个人头像图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 头像图片文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": {
+    "originalUrl": "/api/images/avatars/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/avatars/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/avatars/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/avatars/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "AVATAR",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 上传商品图片
+
+- **URL**: `/image/upload/product`
+- **方法**: POST
+- **描述**: 上传商品相关图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 商品图片文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": {
+    "originalUrl": "/api/images/products/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/products/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/products/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/products/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "PRODUCT",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 上传新闻配图
+
+- **URL**: `/image/upload/news`
+- **方法**: POST
+- **描述**: 上传新闻文章配图
+- **权限要求**: 管理员权限
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 新闻配图文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": {
+    "originalUrl": "/api/images/news/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/news/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/news/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/news/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "NEWS",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 上传横幅图片
+
+- **URL**: `/image/upload/banner`
+- **方法**: POST
+- **描述**: 上传网站横幅或广告图片
+- **权限要求**: 管理员权限
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 横幅图片文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": {
+    "originalUrl": "/api/images/banners/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/banners/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/banners/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/banners/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "BANNER",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 通用图片上传
+
+- **URL**: `/image/upload`
+- **方法**: POST
+- **描述**: 通用图片上传接口，可指定图片类型
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 图片文件 |
+| type | string | 是 | 图片类型 (AVATAR, PRODUCT, NEWS, BANNER, OTHER) |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": {
+    "originalUrl": "/api/images/other/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/other/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/other/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/other/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "OTHER",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 批量上传图片
+
+- **URL**: `/image/upload/batch`
+- **方法**: POST
+- **描述**: 批量上传多张图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| files | file[] | 是 | 图片文件数组 |
+| type | string | 是 | 图片类型 (AVATAR, PRODUCT, NEWS, BANNER, OTHER) |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": [
+    {
+      "originalUrl": "/api/images/other/2024/01/01/uuid_filename1.jpg",
+      "thumbnailUrls": {
+        "small": "/api/images/thumbnails/other/2024/01/01/uuid_filename1_small.jpg",
+        "medium": "/api/images/thumbnails/other/2024/01/01/uuid_filename1_medium.jpg",
+        "large": "/api/images/thumbnails/other/2024/01/01/uuid_filename1_large.jpg"
+      },
+      "fileName": "uuid_filename1.jpg",
+      "fileSize": 102400,
+      "imageType": "OTHER",
+      "uploadTime": "2024-01-01 12:00:00"
+    },
+    {
+      "originalUrl": "/api/images/other/2024/01/01/uuid_filename2.jpg",
+      "thumbnailUrls": {
+        "small": "/api/images/thumbnails/other/2024/01/01/uuid_filename2_small.jpg",
+        "medium": "/api/images/thumbnails/other/2024/01/01/uuid_filename2_medium.jpg",
+        "large": "/api/images/thumbnails/other/2024/01/01/uuid_filename2_large.jpg"
+      },
+      "fileName": "uuid_filename2.jpg",
+      "fileSize": 204800,
+      "imageType": "OTHER",
+      "uploadTime": "2024-01-01 12:00:00"
+    }
+  ],
+  "message": "批量图片上传成功"
+}
+```
+
+### 删除图片
+
+- **URL**: `/image/delete`
+- **方法**: DELETE
+- **描述**: 根据图片URL删除图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| imageUrl | string | 是 | 图片URL |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": true,
+  "message": "图片删除成功"
+}
+```
+
+### 批量删除图片
+
+- **URL**: `/image/delete/batch`
+- **方法**: DELETE
+- **描述**: 批量删除多张图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| imageUrls | string[] | 是 | 图片URL数组 |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": true,
+  "message": "批量图片删除成功"
+}
+```
+
+## 图片管理接口
+
+### 上传用户头像
+
+- **URL**: `/image/upload/avatar`
+- **方法**: POST
+- **描述**: 用户上传个人头像图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 头像图片文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": {
+    "originalUrl": "/api/images/avatars/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/avatars/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/avatars/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/avatars/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "AVATAR",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 上传商品图片
+
+- **URL**: `/image/upload/product`
+- **方法**: POST
+- **描述**: 上传商品相关图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 商品图片文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": {
+    "originalUrl": "/api/images/products/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/products/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/products/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/products/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "PRODUCT",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 上传新闻配图
+
+- **URL**: `/image/upload/news`
+- **方法**: POST
+- **描述**: 上传新闻文章配图
+- **权限要求**: 管理员权限
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 新闻配图文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": {
+    "originalUrl": "/api/images/news/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/news/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/news/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/news/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "NEWS",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 上传横幅图片
+
+- **URL**: `/image/upload/banner`
+- **方法**: POST
+- **描述**: 上传网站横幅或广告图片
+- **权限要求**: 管理员权限
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 横幅图片文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": {
+    "originalUrl": "/api/images/banners/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/banners/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/banners/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/banners/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "BANNER",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 通用图片上传
+
+- **URL**: `/image/upload`
+- **方法**: POST
+- **描述**: 通用图片上传接口，可指定图片类型
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 图片文件 |
+| type | string | 是 | 图片类型 (AVATAR, PRODUCT, NEWS, BANNER, OTHER) |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": {
+    "originalUrl": "/api/images/other/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/other/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/other/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/other/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "OTHER",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 批量上传图片
+
+- **URL**: `/image/upload/batch`
+- **方法**: POST
+- **描述**: 批量上传多张图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| files | file[] | 是 | 图片文件数组 |
+| type | string | 是 | 图片类型 (AVATAR, PRODUCT, NEWS, BANNER, OTHER) |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": [
+    {
+      "originalUrl": "/api/images/other/2024/01/01/uuid_filename1.jpg",
+      "thumbnailUrls": {
+        "small": "/api/images/thumbnails/other/2024/01/01/uuid_filename1_small.jpg",
+        "medium": "/api/images/thumbnails/other/2024/01/01/uuid_filename1_medium.jpg",
+        "large": "/api/images/thumbnails/other/2024/01/01/uuid_filename1_large.jpg"
+      },
+      "fileName": "uuid_filename1.jpg",
+      "fileSize": 102400,
+      "imageType": "OTHER",
+      "uploadTime": "2024-01-01 12:00:00"
+    },
+    {
+      "originalUrl": "/api/images/other/2024/01/01/uuid_filename2.jpg",
+      "thumbnailUrls": {
+        "small": "/api/images/thumbnails/other/2024/01/01/uuid_filename2_small.jpg",
+        "medium": "/api/images/thumbnails/other/2024/01/01/uuid_filename2_medium.jpg",
+        "large": "/api/images/thumbnails/other/2024/01/01/uuid_filename2_large.jpg"
+      },
+      "fileName": "uuid_filename2.jpg",
+      "fileSize": 204800,
+      "imageType": "OTHER",
+      "uploadTime": "2024-01-01 12:00:00"
+    }
+  ],
+  "message": "批量图片上传成功"
+}
+```
+
+### 删除图片
+
+- **URL**: `/image/delete`
+- **方法**: DELETE
+- **描述**: 根据图片URL删除图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| imageUrl | string | 是 | 图片URL |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": true,
+  "message": "图片删除成功"
+}
+```
+
+### 批量删除图片
+
+- **URL**: `/image/delete/batch`
+- **方法**: DELETE
+- **描述**: 批量删除多张图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| imageUrls | string[] | 是 | 图片URL数组 |
+
+#### 响应数据
+
+```json
+{
+  "code": 200,
+  "data": true,
+  "message": "批量图片删除成功"
 }
 ```

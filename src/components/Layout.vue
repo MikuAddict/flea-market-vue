@@ -3,7 +3,7 @@
     <el-header>
       <div class="header-content">
         <div class="logo">
-          <router-link to="/">跳蚤市场</router-link>
+          <router-link to="/">校园跳蚤市场</router-link>
         </div>
         <div class="search-bar">
           <el-input
@@ -59,7 +59,7 @@
     </el-main>
     <el-footer>
       <div class="footer-content">
-        <p>© 2023 跳蚤市场. All rights reserved.</p>
+        <p>© 2025 校园跳蚤市场</p>
       </div>
     </el-footer>
   </el-container>

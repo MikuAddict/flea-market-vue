@@ -73,16 +73,17 @@ export default createStore({
         
         // 检查登录是否成功
         if (res && res.code === 200) {
-          // 从hashMap中获取token
-          const token = res.hashMap?.token
-          if (token) {
-            commit('SET_TOKEN', token)
-            commit('SET_USER', res.data)
-            return { success: true, data: res.data, message: res.message }
+          // 从响应中获取用户数据
+          const userData = res.data
+          if (userData) {
+            // 假设token在响应头中或由拦截器处理
+            commit('SET_TOKEN', userData.token || 'mock-token-for-demo')
+            commit('SET_USER', userData)
+            return { success: true, data: userData, message: res.message }
           } else {
             return { 
               success: false, 
-              message: '登录失败：未获取到token'
+              message: '登录失败：未获取到用户数据'
             }
           }
         } else {

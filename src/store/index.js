@@ -76,10 +76,20 @@ export default createStore({
           // 从响应中获取用户数据
           const userData = res.data
           if (userData) {
-            // 假设token在响应头中或由拦截器处理
-            commit('SET_TOKEN', userData.token || 'mock-token-for-demo')
-            commit('SET_USER', userData)
-            return { success: true, data: userData, message: res.message }
+            // 确保token存在并且正确设置
+            // 根据响应结构，token可能在多个位置
+            const token = res.token || res.hashMap?.token || userData.token || res.data?.token || (res.data?.data?.token);
+            if (token) {
+              commit('SET_TOKEN', token)
+              commit('SET_USER', userData)
+              return { success: true, data: userData, message: res.message }
+            } else {
+              console.error('登录响应中未找到token:', res);
+              return { 
+                success: false, 
+                message: '登录失败：Token缺失'
+              }
+            }
           } else {
             return { 
               success: false, 
@@ -128,6 +138,7 @@ export default createStore({
         console.error('注册错误详情:', error)
         return { 
           success: false, 
+
           message: error.response?.data?.message || error.message || '注册失败，请稍后再试'
         }
       } finally {
@@ -137,8 +148,17 @@ export default createStore({
     
     // 获取当前用户信息
     async getCurrentUser({ commit, state }) {
-      if (!state.token) return
-      
+      // 如果没有token，直接返回
+      if (!state.token) {
+        // 检查localStorage中是否有token
+        const localToken = localStorage.getItem('token');
+        if (localToken) {
+          commit('SET_TOKEN', localToken);
+        } else {
+          return { success: false, message: '未登录' };
+        }
+      }
+
       commit('SET_LOADING', true)
       try {
         const response = await userApi.getCurrentUser()
@@ -148,9 +168,13 @@ export default createStore({
       } catch (error) {
         // 如果token无效，清除登录状态
         if (error.response && error.response.status === 401) {
-          commit('CLEAR_USER')
+          // 检查是否真的没有token
+          const currentToken = this.state.token || localStorage.getItem('token');
+          if (currentToken) {
+            commit('CLEAR_USER')
+          }
         }
-        return { success: false }
+        return { success: false, message: error.message }
       } finally {
         commit('SET_LOADING', false)
       }
@@ -197,7 +221,7 @@ export default createStore({
       if (this.state.categories.length > 0) return
       
       try {
-        const response = await categoryApi.getCategories()
+        const response = await categoryApi.getCategoryList()
         const { data } = response.data
         commit('SET_CATEGORIES', data)
       } catch (error) {

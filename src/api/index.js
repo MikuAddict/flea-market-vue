@@ -18,6 +18,14 @@ request.interceptors.request.use(
     const token = store.state.token
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    } else {
+      // 检查localStorage中是否有token
+      const localToken = localStorage.getItem('token');
+      if (localToken) {
+        config.headers.Authorization = `Bearer ${localToken}`
+        // 同步token到store
+        store.commit('SET_TOKEN', localToken)
+      }
     }
     
     return config
@@ -40,8 +48,11 @@ request.interceptors.response.use(
       // 特殊处理未授权状态 (根据状态码规范文档)
       if (res.code === 40100) {
         store.commit('CLEAR_USER')
-        window.location.href = '/login'
-        ElMessage.error('请先登录')
+        // 只有在非登录页面才跳转
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login'
+          ElMessage.error('请先登录')
+        }
       }
       // 对于其他业务错误，不在这里显示消息，由具体业务逻辑处理
       
@@ -61,9 +72,18 @@ request.interceptors.response.use(
       
       switch (status) {
         case 401:
-          ElMessage.error('未授权，请重新登录')
-          store.commit('CLEAR_USER')
-          window.location.href = '/login'
+          // 检查是否真的没有token
+          const currentToken = store.state.token || localStorage.getItem('token');
+          if (!currentToken) {
+            ElMessage.error('未授权，请重新登录')
+            store.commit('CLEAR_USER')
+            window.location.href = '/login'
+          } else {
+            // 如果有token但仍然收到401，可能是token过期或其他问题
+            ElMessage.error(data?.message || '登录已过期，请重新登录')
+            store.commit('CLEAR_USER')
+            window.location.href = '/login'
+          }
           break
         case 403:
           ElMessage.error('拒绝访问')
@@ -98,6 +118,7 @@ import orderApi from './order'
 import newsApi from './news'
 import reviewApi from './review'
 import statisticsApi from './statistics'
+import imageApi from './image'
 
 // 导出所有API模块
 export {
@@ -107,7 +128,8 @@ export {
   orderApi,
   newsApi,
   reviewApi,
-  statisticsApi
+  statisticsApi,
+  imageApi
 }
 
 export default {
@@ -117,5 +139,6 @@ export default {
   orderApi,
   newsApi,
   reviewApi,
-  statisticsApi
+  statisticsApi,
+  imageApi
 }

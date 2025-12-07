@@ -184,6 +184,7 @@ import { Picture, ChatDotRound, Phone } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
 import ProductCard from '@/components/ProductCard.vue'
 import api from '@/api'
+import { productApi, orderApi, reviewApi, statisticsApi } from '@/api'
 import {
   formatPrice,
   formatPaymentMethod,
@@ -226,18 +227,18 @@ export default {
     const fetchProductDetail = async () => {
       try {
         loading.value = true
-        const response = await api.product.getProductById(productId.value)
+        const response = await productApi.getProductById(productId.value)
         product.value = response.data.data
         
         // 获取商品评价统计
-        const statsResponse = await api.review.getReviewStatistics(productId.value)
+        const statsResponse = await reviewApi.getReviewStatistics(productId.value)
         const stats = statsResponse.data.data
         averageRating.value = stats.averageRating || 0
         reviewCount.value = stats.totalReviews || 0
         
         // 获取评价列表（最多显示3条）
         if (reviewCount.value > 0) {
-          const reviewsResponse = await api.review.getReviewListByProduct(productId.value, {
+          const reviewsResponse = await reviewApi.getReviewListByProduct(productId.value, {
             current: 1,
             size: 3
           })
@@ -266,14 +267,14 @@ export default {
     const fetchSellerStats = async (sellerId) => {
       try {
         // 获取卖家发布的商品
-        const productsResponse = await api.product.getProductListByUser(sellerId, {
+        const productsResponse = await productApi.getProductListByUser(sellerId, {
           current: 1,
           size: 1
         })
         sellerStats.value.published = productsResponse.data.data.total || 0
         
         // 获取卖家订单统计
-        const statsResponse = await api.statistics.getUserStatistics(sellerId)
+        const statsResponse = await statisticsApi.getUserStatistics(sellerId)
         if (statsResponse.data.code === 200) {
           const stats = statsResponse.data.data
           sellerStats.value.completed = stats.totalSales || 0
@@ -286,7 +287,7 @@ export default {
     // 获取相关商品
     const fetchRelatedProducts = async (categoryId) => {
       try {
-        const response = await api.product.getProductListByCategory(categoryId, {
+        const response = await productApi.getProductListByCategory(categoryId, {
           current: 1,
           size: 4
         })
@@ -302,7 +303,7 @@ export default {
     // 创建订单
     const createOrder = async () => {
       try {
-        const response = await api.order.createOrder({
+        const response = await orderApi.createOrder({
           productId: productId.value
         })
         

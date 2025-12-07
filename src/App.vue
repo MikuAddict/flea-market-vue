@@ -7,6 +7,10 @@
 <script>
 export default {
   name: 'App',
+  mounted() {
+    // 应用挂载后再次检查用户状态，确保页面刷新后用户信息能正确加载
+    this.$store.dispatch('getCurrentUser');
+  }
 }
 </script>
 

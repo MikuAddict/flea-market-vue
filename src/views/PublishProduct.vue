@@ -107,6 +107,7 @@ import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
 import api from '@/api'
+import { productApi } from '@/api'
 
 export default {
   name: 'PublishProduct',
@@ -159,7 +160,7 @@ export default {
     
     // 计算属性
     const categories = computed(() => store.state.categories)
-    const uploadUrl = '/api/upload' // 这里需要根据实际API调整
+    const uploadUrl = '/api/image/upload/product'
     const uploadHeaders = computed(() => ({
       Authorization: `Bearer ${store.state.token}`
     }))
@@ -167,7 +168,7 @@ export default {
     // 获取商品详情（编辑模式）
     const fetchProductDetail = async (productId) => {
       try {
-        const response = await api.product.getProductById(productId)
+        const response = await productApi.getProductById(productId)
         const product = response.data.data
         
         // 填充表单
@@ -195,13 +196,13 @@ export default {
         
         if (isEdit.value) {
           // 编辑商品
-          response = await api.product.updateProduct({
+          response = await productApi.updateProduct({
             ...productForm,
             id: route.params.id
           })
         } else {
           // 发布新商品
-          response = await api.product.addProduct(productForm)
+          response = await productApi.addProduct(productForm)
         }
         
         if (response.data.code === 200) {
@@ -224,7 +225,7 @@ export default {
     // 图片上传成功
     const handleImageSuccess = (res) => {
       if (res.code === 200) {
-        productForm.imageUrl = res.data
+        productForm.imageUrl = res.data.originalUrl
         ElMessage.success('图片上传成功')
       } else {
         ElMessage.error(res.message || '图片上传失败')

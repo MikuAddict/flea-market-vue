@@ -124,6 +124,7 @@ import { useRoute, useRouter } from 'vue-router'
 import Layout from '@/components/Layout.vue'
 import ProductCard from '@/components/ProductCard.vue'
 import api from '@/api'
+import { productApi } from '@/api'
 
 export default {
   name: 'ProductList',
@@ -194,14 +195,14 @@ export default {
             current: pagination.current,
             size: pagination.size
           }
-          response = await api.product.advancedSearchProducts(searchParams)
+          response = await productApi.advancedSearchProducts(searchParams)
         } else {
           // 否则使用普通分页查询
           const params = {
             current: pagination.current,
             size: pagination.size
           }
-          response = await api.product.getProductList(params)
+          response = await productApi.getProductList(params)
         }
         
         productList.value = response.data.data.records || []

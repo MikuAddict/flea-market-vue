@@ -248,7 +248,7 @@ export default {
     }
     
     // 头像上传相关
-    const uploadUrl = '/api/upload' // 这里需要根据实际API调整
+    const uploadUrl = '/api/image/upload/avatar'
     const uploadHeaders = computed(() => ({
       Authorization: `Bearer ${store.state.token}`
     }))
@@ -340,7 +340,7 @@ export default {
       if (res.code === 200) {
         ElMessage.success('头像上传成功')
         // 更新本地用户头像
-        store.state.user.userAvatar = res.data
+        store.state.user.userAvatar = res.data.originalUrl
       } else {
         ElMessage.error(res.message || '头像上传失败')
       }

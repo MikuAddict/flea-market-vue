@@ -158,6 +158,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
 import api from '@/api'
+import { productApi } from '@/api'
 import {
   formatPrice,
   formatPaymentMethod,
@@ -200,7 +201,7 @@ export default {
     const fetchProducts = async () => {
       loading.value = true
       try {
-        const response = await api.product.getMyProductList({
+        const response = await productApi.getMyProductList({
           current: pagination.current,
           size: pagination.size,
           ...filters

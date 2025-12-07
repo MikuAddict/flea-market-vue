@@ -162,7 +162,7 @@ export default {
     // 获取分类列表
     const fetchCategories = async () => {
       try {
-        const response = await categoryApi.getCategories()
+        const response = await categoryApi.getCategoryList()
         categories.value = response.data
       } catch (error) {
         console.error('获取分类列表失败:', error)

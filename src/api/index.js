@@ -33,11 +33,10 @@ request.interceptors.response.use(
   response => {
     store.commit('SET_LOADING', false)
     
-    // API返回格式为 { code: 0, data: {...}, message: "ok" }
     const res = response.data
     
-    // 如果不是成功状态，显示错误消息
-    if (res.code !== 0) {
+    // 检查是否有code字段，如果有且不为200，则处理为错误
+    if (res && typeof res.code !== 'undefined' && res.code !== 200) {
       ElMessage.error(res.message || '请求失败')
       
       // 特殊处理未授权状态
@@ -49,6 +48,7 @@ request.interceptors.response.use(
       return Promise.reject(new Error(res.message || '请求失败'))
     }
     
+    // 如果没有code字段或者code为200，则返回正常响应
     return response
   },
   error => {
@@ -86,13 +86,35 @@ request.interceptors.response.use(
   }
 )
 
+// 导出request实例
+export { request }
+
+// 导入各个API模块
+import userApi from './user'
+import productApi from './product'
+import categoryApi from './category'
+import orderApi from './order'
+import newsApi from './news'
+import reviewApi from './review'
+import statisticsApi from './statistics'
+
 // 导出所有API模块
+export {
+  userApi,
+  productApi,
+  categoryApi,
+  orderApi,
+  newsApi,
+  reviewApi,
+  statisticsApi
+}
+
 export default {
-  user: require('./user').default,
-  product: require('./product').default,
-  category: require('./category').default,
-  order: require('./order').default,
-  news: require('./news').default,
-  review: require('./review').default,
-  statistics: require('./statistics').default
+  userApi,
+  productApi,
+  categoryApi,
+  orderApi,
+  newsApi,
+  reviewApi,
+  statisticsApi
 }

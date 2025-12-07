@@ -1,4 +1,4 @@
-import request from './index'
+import { request } from './index'
 
 export default {
   // 添加评价

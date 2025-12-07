@@ -1,4 +1,4 @@
-import request from './index'
+import { request } from './index'
 
 export default {
   // 获取所有商品分类

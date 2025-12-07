@@ -1,5 +1,5 @@
 import { createStore } from 'vuex'
-import api from '@/api'
+import { userApi, categoryApi, productApi, newsApi } from '@/api'
 
 export default createStore({
   state: {
@@ -68,7 +68,7 @@ export default createStore({
     async login({ commit }, credentials) {
       commit('SET_LOADING', true)
       try {
-        const response = await api.user.login(credentials)
+        const response = await userApi.login(credentials)
         const { data } = response.data
         
         commit('SET_TOKEN', 'dummy_token') // 实际项目中应使用服务器返回的token
@@ -89,12 +89,28 @@ export default createStore({
     async register({ commit }, userData) {
       commit('SET_LOADING', true)
       try {
-        const response = await api.user.register(userData)
-        return { success: true, data: response.data }
+        const response = await userApi.register(userData)
+        const res = response.data
+        
+        // 检查是否有code字段，如果有且为200表示成功
+        if (res && typeof res.code !== 'undefined') {
+          if (res.code === 200) {
+            return { success: true, data: res.data, message: res.message }
+          } else {
+            return { 
+              success: false, 
+              message: res.message || '注册失败，请稍后再试'
+            }
+          }
+        }
+        
+        // 如果没有code字段，直接返回响应数据
+        return { success: true, data: res }
       } catch (error) {
+        console.error('注册错误详情:', error)
         return { 
           success: false, 
-          message: error.response?.data?.message || '注册失败，请稍后再试'
+          message: error.response?.data?.message || error.message || '注册失败，请稍后再试'
         }
       } finally {
         commit('SET_LOADING', false)
@@ -107,7 +123,7 @@ export default createStore({
       
       commit('SET_LOADING', true)
       try {
-        const response = await api.user.getCurrentUser()
+        const response = await userApi.getCurrentUser()
         const { data } = response.data
         commit('SET_USER', data)
         return { success: true, data }
@@ -125,7 +141,7 @@ export default createStore({
     // 登出
     async logout({ commit }) {
       try {
-        await api.user.logout()
+        await userApi.logout()
       } catch (error) {
         console.error('Logout error:', error)
       } finally {
@@ -137,7 +153,7 @@ export default createStore({
     async updateProfile({ commit }, userData) {
       commit('SET_LOADING', true)
       try {
-        const response = await api.user.updateProfile(userData)
+        const response = await userApi.updateProfile(userData)
         const { data } = response.data
         
         if (data) {
@@ -163,7 +179,7 @@ export default createStore({
       if (this.state.categories.length > 0) return
       
       try {
-        const response = await api.category.list()
+        const response = await categoryApi.getCategories()
         const { data } = response.data
         commit('SET_CATEGORIES', data)
       } catch (error) {
@@ -176,7 +192,7 @@ export default createStore({
       if (this.state.latestProducts.length > 0) return
       
       try {
-        const response = await api.product.getLatest()
+        const response = await productApi.getLatestProducts()
         const { data } = response.data
         commit('SET_LATEST_PRODUCTS', data)
       } catch (error) {
@@ -189,7 +205,7 @@ export default createStore({
       if (this.state.latestNews) return
       
       try {
-        const response = await api.news.getLatest()
+        const response = await newsApi.getLatestNews()
         const { data } = response.data
         commit('SET_LATEST_NEWS', data)
       } catch (error) {

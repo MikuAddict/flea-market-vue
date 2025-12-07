@@ -1,38 +1,140 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import store from '@/store'
+
+// 路由组件
+const Home = () => import('@/views/Home.vue')
+const Login = () => import('@/views/Login.vue')
+const Register = () => import('@/views/Register.vue')
+const ProductList = () => import('@/views/ProductList.vue')
+const ProductDetail = () => import('@/views/ProductDetail.vue')
+const UserProfile = () => import('@/views/UserProfile.vue')
+const MyProducts = () => import('@/views/MyProducts.vue')
+const PublishProduct = () => import('@/views/PublishProduct.vue')
+const OrderList = () => import('@/views/OrderList.vue')
+const OrderDetail = () => import('@/views/OrderDetail.vue')
+const NewsList = () => import('@/views/NewsList.vue')
+const NewsDetail = () => import('@/views/NewsDetail.vue')
+const AdminDashboard = () => import('@/views/admin/Dashboard.vue')
+const AdminUsers = () => import('@/views/admin/Users.vue')
+const AdminProducts = () => import('@/views/admin/Products.vue')
+const AdminOrders = () => import('@/views/admin/Orders.vue')
+const AdminNews = () => import('@/views/admin/News.vue')
+const NotFound = () => import('@/views/NotFound.vue')
 
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: () => import('../views/Home.vue')
+    component: Home,
+    meta: { title: '首页' }
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: Login,
+    meta: { title: '登录', guest: true }
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: Register,
+    meta: { title: '注册', guest: true }
   },
   {
     path: '/products',
-    name: 'Products',
-    component: () => import('../views/Products.vue')
+    name: 'ProductList',
+    component: ProductList,
+    meta: { title: '商品列表' }
   },
   {
-    path: '/product/:id',
+    path: '/products/:id',
     name: 'ProductDetail',
-    component: () => import('../views/ProductDetail.vue')
-  },
-  {
-    path: '/publish',
-    name: 'Publish',
-    component: () => import('../views/Publish.vue'),
-    meta: { requiresAuth: true }
+    component: ProductDetail,
+    meta: { title: '商品详情' }
   },
   {
     path: '/profile',
-    name: 'Profile',
-    component: () => import('../views/Profile.vue'),
-    meta: { requiresAuth: true }
+    name: 'UserProfile',
+    component: UserProfile,
+    meta: { title: '个人中心', requiresAuth: true }
+  },
+  {
+    path: '/my-products',
+    name: 'MyProducts',
+    component: MyProducts,
+    meta: { title: '我的商品', requiresAuth: true }
+  },
+  {
+    path: '/publish-product',
+    name: 'PublishProduct',
+    component: PublishProduct,
+    meta: { title: '发布商品', requiresAuth: true }
+  },
+  {
+    path: '/edit-product/:id',
+    name: 'EditProduct',
+    component: PublishProduct,
+    meta: { title: '编辑商品', requiresAuth: true }
   },
   {
     path: '/orders',
-    name: 'Orders',
-    component: () => import('../views/Orders.vue'),
-    meta: { requiresAuth: true }
+    name: 'OrderList',
+    component: OrderList,
+    meta: { title: '我的订单', requiresAuth: true }
+  },
+  {
+    path: '/orders/:id',
+    name: 'OrderDetail',
+    component: OrderDetail,
+    meta: { title: '订单详情', requiresAuth: true }
+  },
+  {
+    path: '/news',
+    name: 'NewsList',
+    component: NewsList,
+    meta: { title: '新闻公告' }
+  },
+  {
+    path: '/news/:id',
+    name: 'NewsDetail',
+    component: NewsDetail,
+    meta: { title: '新闻详情' }
+  },
+  {
+    path: '/admin',
+    name: 'AdminDashboard',
+    component: AdminDashboard,
+    meta: { title: '管理员控制台', requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/users',
+    name: 'AdminUsers',
+    component: AdminUsers,
+    meta: { title: '用户管理', requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/products',
+    name: 'AdminProducts',
+    component: AdminProducts,
+    meta: { title: '商品管理', requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/orders',
+    name: 'AdminOrders',
+    component: AdminOrders,
+    meta: { title: '订单管理', requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/news',
+    name: 'AdminNews',
+    component: AdminNews,
+    meta: { title: '新闻管理', requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFound,
+    meta: { title: '页面不存在' }
   }
 ]
 
@@ -41,15 +143,32 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫
-router.beforeEach((to, _, next) => {
-  const userInfo = localStorage.getItem('userInfo')
+// 导航守卫
+router.beforeEach((to, from, next) => {
+  // 设置页面标题
+  document.title = to.meta.title ? `${to.meta.title} - 跳蚤市场` : '跳蚤市场'
   
-  if (to.meta.requiresAuth && !userInfo) {
-    next('/')
-  } else {
-    next()
+  // 检查是否需要登录
+  const isLoggedIn = store.getters.isLoggedIn
+  
+  if (to.meta.requiresAuth && !isLoggedIn) {
+    next({ name: 'Login', query: { redirect: to.fullPath } })
+    return
   }
+  
+  // 检查是否需要管理员权限
+  if (to.meta.requiresAdmin && store.state.user.userRole !== 'admin') {
+    next({ name: 'Home' })
+    return
+  }
+  
+  // 如果已登录用户访问登录/注册页面，重定向到首页
+  if (to.meta.guest && isLoggedIn) {
+    next({ name: 'Home' })
+    return
+  }
+  
+  next()
 })
 
 export default router

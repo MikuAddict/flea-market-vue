@@ -1,290 +1,246 @@
 <template>
-  <div class="home">
-    <!-- 搜索区域 -->
-    <div class="search-section">
-      <div class="search-container">
-        <el-input
-          v-model="searchKeyword"
-          placeholder="搜索商品..."
-          size="large"
-          class="search-input"
-        >
-          <template #append>
-            <el-button @click="handleSearch" :icon="Search">搜索</el-button>
-          </template>
-        </el-input>
-      </div>
-    </div>
-
-    <!-- 分类区域 -->
-    <div class="category-section">
-      <h2>商品分类</h2>
-      <div class="category-list">
-        <div 
-          v-for="category in categories" 
-          :key="category.id"
-          class="category-item"
-          @click="handleCategoryClick(category.id)"
-        >
-          <div class="category-icon">
-            <el-icon><Goods /></el-icon>
+  <Layout>
+    <div class="home-container">
+      <!-- 轮播图 -->
+      <el-carousel height="400px" class="banner">
+        <el-carousel-item v-for="(item, index) in banners" :key="index">
+          <img :src="item.image" :alt="item.title" class="banner-image" />
+          <div class="banner-text">
+            <h2>{{ item.title }}</h2>
+            <p>{{ item.description }}</p>
           </div>
-          <span>{{ category.name }}</span>
+        </el-carousel-item>
+      </el-carousel>
+
+      <!-- 最新公告 -->
+      <div class="card-container" v-if="latestNews">
+        <div class="section-header">
+          <h3>最新公告</h3>
+          <el-link type="primary" @click="$router.push('/news')">查看更多</el-link>
+        </div>
+        <el-card class="news-card" shadow="hover">
+          <div class="news-content">
+            <h4>{{ latestNews.title }}</h4>
+            <p class="news-summary">{{ latestNews.content.substring(0, 100) }}...</p>
+            <div class="news-meta">
+              <span>{{ formatDate(latestNews.createTime, 'YYYY-MM-DD') }}</span>
+              <el-button size="small" type="text" @click="$router.push(`/news/${latestNews.id}`)">
+                阅读全文
+              </el-button>
+            </div>
+          </div>
+        </el-card>
+      </div>
+
+      <!-- 商品分类 -->
+      <div class="card-container" v-if="categories.length > 0">
+        <div class="section-header">
+          <h3>商品分类</h3>
+        </div>
+        <div class="category-grid">
+          <div
+            class="category-item"
+            v-for="category in categories"
+            :key="category.id"
+            @click="goToCategory(category.id)"
+          >
+            <el-card shadow="hover" class="category-card">
+              <div class="category-icon">
+                <el-icon size="30"><Goods /></el-icon>
+              </div>
+              <span class="category-name">{{ category.name }}</span>
+            </el-card>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 热门商品 -->
-    <div class="hot-products-section">
-      <h2>热门商品</h2>
-      <div class="products-grid">
-        <div 
-          v-for="product in hotProducts" 
-          :key="product.id"
-          class="product-card"
-          @click="$router.push(`/product/${product.id}`)"
-        >
-          <div class="product-image">
-            <img :src="product.image || '/placeholder-image.png'" :alt="product.name" />
-          </div>
-          <div class="product-info">
-            <h3 class="product-name">{{ product.name }}</h3>
-            <p class="product-price">¥{{ product.price }}</p>
-            <p class="product-seller">{{ product.sellerName }}</p>
-          </div>
+      <!-- 最新商品 -->
+      <div class="card-container" v-if="latestProducts.length > 0">
+        <div class="section-header">
+          <h3>最新商品</h3>
+          <el-link type="primary" @click="$router.push('/products')">查看更多</el-link>
         </div>
+        <el-row :gutter="20">
+          <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="product in latestProducts" :key="product.id">
+            <ProductCard :product="product" />
+          </el-col>
+        </el-row>
       </div>
     </div>
-
-    <!-- 最新动态 -->
-    <div class="news-section">
-      <h2>最新动态</h2>
-      <div class="news-list">
-        <div 
-          v-for="news in newsList" 
-          :key="news.id"
-          class="news-item"
-        >
-          <h3>{{ news.title }}</h3>
-          <p>{{ news.content }}</p>
-          <span class="news-time">{{ formatTime(news.createTime) }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
+  </Layout>
 </template>
 
-<script setup>
-import { ref, onMounted } from 'vue'
+<script>
+import { ref, onMounted, computed } from 'vue'
+import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Search, Goods } from '@element-plus/icons-vue'
-import defaultApi from '../api/DefaultApi'
+import { Goods } from '@element-plus/icons-vue'
+import Layout from '@/components/Layout.vue'
+import ProductCard from '@/components/ProductCard.vue'
+import { formatDate } from '@/utils/format'
 
-const router = useRouter()
-
-const searchKeyword = ref('')
-const categories = ref([])
-const hotProducts = ref([])
-const newsList = ref([])
-
-onMounted(async () => {
-  await loadCategories()
-  await loadHotProducts()
-  await loadNews()
-})
-
-const loadCategories = async () => {
-  try {
-    const response = await defaultApi.getCategories()
-    if (response.code === 200) {
-      categories.value = response.data || []
+export default {
+  name: 'Home',
+  components: {
+    Layout,
+    ProductCard,
+    Goods
+  },
+  setup() {
+    const store = useStore()
+    const router = useRouter()
+    
+    // 轮播图数据
+    const banners = ref([
+      {
+        title: '欢迎来到跳蚤市场',
+        description: '一个让闲置物品重新焕发价值的平台',
+        image: 'https://picsum.photos/seed/flea1/1200/400.jpg'
+      },
+      {
+        title: '二手物品交易',
+        description: '环保节约，资源共享',
+        image: 'https://picsum.photos/seed/flea2/1200/400.jpg'
+      },
+      {
+        title: '让闲置流动起来',
+        description: '变废为宝，循环利用',
+        image: 'https://picsum.photos/seed/flea3/1200/400.jpg'
+      }
+    ])
+    
+    const categories = computed(() => store.state.categories)
+    const latestProducts = computed(() => store.state.latestProducts)
+    const latestNews = computed(() => store.state.latestNews)
+    
+    onMounted(async () => {
+      // 获取初始数据
+      await Promise.all([
+        store.dispatch('fetchCategories'),
+        store.dispatch('fetchLatestProducts'),
+        store.dispatch('fetchLatestNews')
+      ])
+    })
+    
+    const goToCategory = (categoryId) => {
+      router.push({
+        name: 'ProductList',
+        query: { categoryId }
+      })
     }
-  } catch (error) {
-    console.error('加载分类失败:', error)
-    ElMessage.error('加载分类失败')
-  }
-}
-
-const loadHotProducts = async () => {
-  try {
-    const response = await defaultApi.getHotProducts()
-    if (response.code === 200) {
-      hotProducts.value = response.data || []
+    
+    return {
+      banners,
+      categories,
+      latestProducts,
+      latestNews,
+      formatDate,
+      goToCategory
     }
-  } catch (error) {
-    console.error('加载热门商品失败:', error)
-    ElMessage.error('加载热门商品失败')
   }
-}
-
-const loadNews = async () => {
-  try {
-    const response = await defaultApi.getNews()
-    if (response.code === 200) {
-      newsList.value = response.data || []
-    }
-  } catch (error) {
-    console.error('加载新闻失败:', error)
-    ElMessage.error('加载新闻失败')
-  }
-}
-
-const handleSearch = () => {
-  if (searchKeyword.value.trim()) {
-    router.push(`/products?keyword=${encodeURIComponent(searchKeyword.value)}`)
-  }
-}
-
-const handleCategoryClick = (categoryId) => {
-  router.push(`/products?categoryId=${categoryId}`)
-}
-
-const formatTime = (timeString) => {
-  if (!timeString) return ''
-  return new Date(timeString).toLocaleDateString()
 }
 </script>
 
 <style scoped>
-.home {
+.home-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
 
-.search-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 40px 0;
-  margin-bottom: 40px;
-}
-
-.search-container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-.search-input {
-  width: 100%;
-}
-
-.category-section {
-  margin-bottom: 40px;
-}
-
-.category-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.category-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  background: #f5f7fa;
+.banner {
+  margin-bottom: 30px;
   border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.category-item:hover {
-  background: #e4e7ed;
-  transform: translateY(-2px);
-}
-
-.category-icon {
-  font-size: 24px;
-  color: #409eff;
-  margin-bottom: 10px;
-}
-
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.product-card {
-  background: white;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15);
-}
-
-.product-image {
-  width: 100%;
-  height: 200px;
   overflow: hidden;
-  border-radius: 4px;
-  margin-bottom: 12px;
 }
 
-.product-image img {
+.banner-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.product-name {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #303133;
+.banner-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  width: 80%;
 }
 
-.product-price {
+.banner-text h2 {
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.banner-text p {
   font-size: 18px;
-  font-weight: bold;
-  color: #f56c6c;
-  margin-bottom: 8px;
 }
 
-.product-seller {
-  font-size: 12px;
-  color: #909399;
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-.news-section {
-  margin-top: 40px;
+.section-header h3 {
+  margin: 0;
+  font-size: 20px;
 }
 
-.news-list {
-  margin-top: 20px;
+.news-card {
+  margin-bottom: 20px;
 }
 
-.news-item {
-  background: white;
-  padding: 16px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+.news-content h4 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
 }
 
-.news-item h3 {
-  margin: 0 0 8px 0;
-  color: #303133;
+.news-summary {
+  color: #666;
+  margin-bottom: 10px;
 }
 
-.news-item p {
-  margin: 0 0 8px 0;
-  color: #606266;
-  line-height: 1.5;
+.news-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #999;
+  font-size: 14px;
 }
 
-.news-time {
-  font-size: 12px;
-  color: #909399;
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.category-item {
+  cursor: pointer;
+}
+
+.category-card {
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.3s;
+}
+
+.category-card:hover {
+  transform: translateY(-5px);
+}
+
+.category-icon {
+  color: #409EFF;
+  margin-bottom: 10px;
+}
+
+.category-name {
+  font-size: 14px;
+  font-weight: 500;
 }
 </style>

@@ -1,407 +1,581 @@
 <template>
-  <div class="product-detail" v-if="product">
-    <div class="product-container">
-      <!-- 商品图片 -->
-      <div class="product-image-section">
-        <div class="main-image">
-          <img :src="product.image || '/placeholder-image.png'" :alt="product.name" />
-        </div>
-      </div>
-
-      <!-- 商品信息 -->
-      <div class="product-info-section">
-        <h1 class="product-title">{{ product.name }}</h1>
-        <p class="product-description">{{ product.description }}</p>
-        
-        <div class="price-section">
-          <span class="price">¥{{ product.price }}</span>
-          <span class="sales">已售 {{ product.sales || 0 }} 件</span>
-        </div>
-
-        <div class="seller-info">
-          <div class="seller-avatar">
-            <el-avatar :size="40" :src="product.sellerAvatar">{{ product.sellerName?.charAt(0) }}</el-avatar>
-          </div>
-          <div class="seller-details">
-            <div class="seller-name">{{ product.sellerName }}</div>
-            <div class="seller-rating">
-              <el-rate v-model="sellerRating" disabled show-score text-color="#ff9900" />
+  <Layout>
+    <div class="product-detail-container" v-if="!loading">
+      <el-row :gutter="20">
+        <!-- 左侧商品信息 -->
+        <el-col :xs="24" :lg="14">
+          <el-card class="product-info-card">
+            <div class="product-gallery">
+              <div class="main-image">
+                <img
+                  v-if="product.imageUrl"
+                  :src="product.imageUrl"
+                  :alt="product.productName"
+                  @error="handleImageError"
+                />
+                <el-image v-else style="width: 100%; height: 400px">
+                  <template #error>
+                    <div class="image-placeholder">
+                      <el-icon size="50"><Picture /></el-icon>
+                      <p>暂无图片</p>
+                    </div>
+                  </template>
+                </el-image>
+              </div>
             </div>
-          </div>
-        </div>
+            <div class="product-basic-info">
+              <h2 class="product-name">{{ product.productName }}</h2>
+              <div class="product-price">
+                <span class="price-label">价格</span>
+                <span class="price-value">¥{{ formatPrice(product.price) }}</span>
+              </div>
+              <div class="product-meta">
+                <el-tag :type="getProductStatusType(product.status)" size="large">
+                  {{ formatProductStatus(product.status) }}
+                </el-tag>
+                <el-tag type="info" size="large">
+                  {{ formatPaymentMethod(product.paymentMethod) }}
+                </el-tag>
+                <el-tag v-if="product.category" type="success" size="large">
+                  {{ product.category.name }}
+                </el-tag>
+              </div>
+              <div class="product-description">
+                <h4>商品描述</h4>
+                <p>{{ product.description || '暂无描述' }}</p>
+              </div>
+              <div class="product-actions" v-if="isLoggedIn && product.user?.id !== userId">
+                <el-button
+                  type="primary"
+                  size="large"
+                  :disabled="product.status !== 1"
+                  @click="createOrder"
+                >
+                  {{ getActionText() }}
+                </el-button>
+                <el-button size="large" @click="contactSeller">
+                  <el-icon><ChatDotRound /></el-icon>
+                  联系卖家
+                </el-button>
+              </div>
+              <div class="product-notice" v-else-if="!isLoggedIn">
+                <el-alert title="请先登录" type="info" show-icon :closable="false">
+                  <el-button type="text" @click="$router.push('/login')">立即登录</el-button>
+                  <el-button type="text" @click="$router.push('/register')">注册账号</el-button>
+                </el-alert>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
 
-        <div class="action-section" v-if="product.status === 1">
-          <el-button 
-            type="primary" 
-            size="large" 
-            @click="handleBuy"
-            :disabled="!userInfo"
-          >
-            立即购买
-          </el-button>
-          <el-button 
-            size="large" 
-            @click="handleAddToCart"
-            :disabled="!userInfo"
-          >
-            加入购物车
-          </el-button>
-        </div>
+        <!-- 右侧卖家信息 -->
+        <el-col :xs="24" :lg="10">
+          <el-card class="seller-info-card" v-if="product.user">
+            <template #header>
+              <div class="card-header">
+                <span>卖家信息</span>
+              </div>
+            </template>
+            <div class="seller-profile">
+              <el-avatar :size="80" :src="product.user.userAvatar">
+                {{ product.user.userName?.charAt(0) }}
+              </el-avatar>
+              <div class="seller-details">
+                <h3>{{ product.user.userName }}</h3>
+                <el-tag :type="getUserStatusType(product.user.userStatus)" size="small">
+                  {{ formatUserStatus(product.user.userStatus) }}
+                </el-tag>
+                <div class="seller-phone" v-if="product.user.userPhone">
+                  <el-icon><Phone /></el-icon>
+                  {{ product.user.userPhone }}
+                </div>
+              </div>
+            </div>
+            <div class="seller-stats">
+              <el-row :gutter="10">
+                <el-col :span="8">
+                  <div class="stat-item">
+                    <div class="stat-value">{{ product.user.point || 0 }}</div>
+                    <div class="stat-label">积分</div>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="stat-item">
+                    <div class="stat-value">{{ sellerStats.published || 0 }}</div>
+                    <div class="stat-label">发布</div>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="stat-item">
+                    <div class="stat-value">{{ sellerStats.completed || 0 }}</div>
+                    <div class="stat-label">成交</div>
+                  </div>
+                </el-col>
+              </el-row>
+            </div>
+            <div class="seller-actions">
+              <el-button plain style="width: 100%" @click="viewSellerProducts">
+                查看Ta的商品
+              </el-button>
+            </div>
+          </el-card>
 
-        <div class="sold-out" v-else>
-          <el-alert title="该商品已售出" type="warning" show-icon />
-        </div>
+          <!-- 商品评价 -->
+          <el-card class="review-card" v-if="product.id">
+            <template #header>
+              <div class="card-header">
+                <span>商品评价</span>
+                <el-link type="primary" @click="showAllReviews" v-if="reviewCount > 0">
+                  查看全部({{ reviewCount }})
+                </el-link>
+              </div>
+            </template>
+            <div v-if="reviews.length === 0" class="empty-reviews">
+              <el-empty description="暂无评价" />
+            </div>
+            <div v-else>
+              <div class="review-summary">
+                <el-rate v-model="averageRating" disabled text-color="#ff9900" />
+                <span class="rating-text">{{ averageRating }}分 ({{ reviewCount }}人评价)</span>
+              </div>
+              <div class="review-list">
+                <div v-for="review in reviews" :key="review.id" class="review-item">
+                  <div class="review-header">
+                    <el-avatar :size="30">{{ review.userId }}</el-avatar>
+                    <div class="review-info">
+                      <div class="review-user">用户{{ review.userId }}</div>
+                      <el-rate v-model="review.rating" disabled size="small" />
+                    </div>
+                    <div class="review-time">{{ formatDate(review.createTime, 'YYYY-MM-DD') }}</div>
+                  </div>
+                  <div class="review-content">{{ review.content }}</div>
+                </div>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
 
-        <!-- 商品详情 -->
-        <div class="product-details">
-          <h3>商品详情</h3>
-          <div class="detail-item">
-            <span class="label">商品分类：</span>
-            <span class="value">{{ product.categoryName }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">发布时间：</span>
-            <span class="value">{{ formatTime(product.createTime) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="label">商品状态：</span>
-            <span class="value">{{ product.status === 1 ? '在售' : '已售出' }}</span>
-          </div>
-        </div>
-      </div>
+      <!-- 相关商品推荐 -->
+      <el-card class="related-products-card" v-if="relatedProducts.length > 0">
+        <template #header>
+          <span>相关推荐</span>
+        </template>
+        <el-row :gutter="20">
+          <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="item in relatedProducts" :key="item.id">
+            <ProductCard :product="item" />
+          </el-col>
+        </el-row>
+      </el-card>
     </div>
 
-    <!-- 评论区域 -->
-    <div class="reviews-section">
-      <h2>商品评价</h2>
-      <div class="reviews-list">
-        <div 
-          v-for="review in reviews" 
-          :key="review.id"
-          class="review-item"
-        >
-          <div class="review-header">
-            <el-avatar :size="32" :src="review.userAvatar">{{ review.userName?.charAt(0) }}</el-avatar>
-            <div class="review-user">
-              <div class="user-name">{{ review.userName }}</div>
-              <div class="review-time">{{ formatTime(review.createTime) }}</div>
-            </div>
-            <div class="review-rating">
-              <el-rate v-model="review.rating" disabled size="small" />
-            </div>
-          </div>
-          <div class="review-content">
-            {{ review.content }}
-          </div>
-        </div>
-      </div>
-
-      <div v-if="reviews.length === 0" class="no-reviews">
-        <el-empty description="暂无评价" />
-      </div>
+    <div v-else class="loading-container">
+      <el-skeleton animated />
     </div>
-
-    <!-- 购买对话框 -->
-    <el-dialog v-model="showBuyDialog" title="确认购买" width="500px">
-      <div class="buy-dialog-content">
-        <div class="product-summary">
-          <img :src="product.image || '/placeholder-image.png'" :alt="product.name" />
-          <div class="summary-info">
-            <h4>{{ product.name }}</h4>
-            <p class="price">¥{{ product.price }}</p>
-          </div>
-        </div>
-        
-        <el-form :model="buyForm" label-width="80px">
-          <el-form-item label="购买数量">
-            <el-input-number v-model="buyForm.quantity" :min="1" :max="product.stock || 1" />
-          </el-form-item>
-          <el-form-item label="收货地址">
-            <el-input v-model="buyForm.address" placeholder="请输入收货地址" />
-          </el-form-item>
-          <el-form-item label="联系方式">
-            <el-input v-model="buyForm.contact" placeholder="请输入联系电话" />
-          </el-form-item>
-        </el-form>
-        
-        <div class="total-price">
-          总价：<span class="price">¥{{ (product.price * buyForm.quantity).toFixed(2) }}</span>
-        </div>
-      </div>
-      
-      <template #footer>
-        <el-button @click="showBuyDialog = false">取消</el-button>
-        <el-button type="primary" @click="confirmBuy">确认购买</el-button>
-      </template>
-    </el-dialog>
-  </div>
-
-  <div v-else class="loading">
-    <el-skeleton :rows="5" animated />
-  </div>
+  </Layout>
 </template>
 
-<script setup>
-import { ref, onMounted, computed } from 'vue'
+<script>
+import { ref, computed, onMounted, watch } from 'vue'
+import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import defaultApi from '../api/DefaultApi'
-import ApiClient from '../ApiClient'
+import { Picture, ChatDotRound, Phone } from '@element-plus/icons-vue'
+import Layout from '@/components/Layout.vue'
+import ProductCard from '@/components/ProductCard.vue'
+import api from '@/api'
+import {
+  formatPrice,
+  formatPaymentMethod,
+  formatProductStatus,
+  formatUserStatus,
+  formatDate,
+  getProductStatusType,
+  getUserStatusType
+} from '@/utils/format'
 
-const route = useRoute()
-const router = useRouter()
-const api = new DefaultApi(new ApiClient())
-
-const product = ref(null)
-const reviews = ref([])
-const sellerRating = ref(4.5)
-const showBuyDialog = ref(false)
-
-const buyForm = ref({
-  quantity: 1,
-  address: '',
-  contact: ''
-})
-
-const userInfo = computed(() => {
-  const saved = localStorage.getItem('userInfo')
-  return saved ? JSON.parse(saved) : null
-})
-
-onMounted(async () => {
-  const productId = route.params.id
-  if (productId) {
-    await loadProductDetail(productId)
-    await loadReviews(productId)
-  }
-})
-
-const loadProductDetail = async (productId) => {
-  try {
-    const response = await api.getProductByIdUsingGET(productId)
-    if (response.code === 200) {
-      product.value = response.data
-    } else {
-      ElMessage.error('加载商品详情失败')
+export default {
+  name: 'ProductDetail',
+  components: {
+    Layout,
+    ProductCard,
+    Picture,
+    ChatDotRound,
+    Phone
+  },
+  setup() {
+    const store = useStore()
+    const route = useRoute()
+    const router = useRouter()
+    
+    // 商品数据
+    const product = ref({})
+    const loading = ref(true)
+    const averageRating = ref(0)
+    const reviewCount = ref(0)
+    const reviews = ref([])
+    const relatedProducts = ref([])
+    const sellerStats = ref({ published: 0, completed: 0 })
+    
+    // 计算属性
+    const isLoggedIn = computed(() => store.getters.isLoggedIn)
+    const userId = computed(() => store.state.user?.id)
+    const productId = computed(() => parseInt(route.params.id))
+    
+    // 获取商品详情
+    const fetchProductDetail = async () => {
+      try {
+        loading.value = true
+        const response = await api.product.getProductById(productId.value)
+        product.value = response.data.data
+        
+        // 获取商品评价统计
+        const statsResponse = await api.review.getReviewStatistics(productId.value)
+        const stats = statsResponse.data.data
+        averageRating.value = stats.averageRating || 0
+        reviewCount.value = stats.totalReviews || 0
+        
+        // 获取评价列表（最多显示3条）
+        if (reviewCount.value > 0) {
+          const reviewsResponse = await api.review.getReviewListByProduct(productId.value, {
+            current: 1,
+            size: 3
+          })
+          reviews.value = reviewsResponse.data.data.records || []
+        }
+        
+        // 获取卖家统计信息
+        if (product.value.user) {
+          await fetchSellerStats(product.value.user.id)
+        }
+        
+        // 获取相关商品（同分类）
+        if (product.value.categoryId) {
+          await fetchRelatedProducts(product.value.categoryId)
+        }
+      } catch (error) {
+        console.error('获取商品详情失败:', error)
+        ElMessage.error('商品不存在或已被删除')
+        router.push('/products')
+      } finally {
+        loading.value = false
+      }
     }
-  } catch (error) {
-    console.error('加载商品详情失败:', error)
-    ElMessage.error('加载商品详情失败')
-  }
-}
-
-const loadReviews = async (productId) => {
-  try {
-    const response = await api.listReviewUsingGET({
-      productId: productId,
-      current: 1,
-      size: 10
-    })
-    if (response.code === 200) {
-      reviews.value = response.data.records || []
+    
+    // 获取卖家统计信息
+    const fetchSellerStats = async (sellerId) => {
+      try {
+        // 获取卖家发布的商品
+        const productsResponse = await api.product.getProductListByUser(sellerId, {
+          current: 1,
+          size: 1
+        })
+        sellerStats.value.published = productsResponse.data.data.total || 0
+        
+        // 获取卖家订单统计
+        const statsResponse = await api.statistics.getUserStatistics(sellerId)
+        if (statsResponse.data.code === 0) {
+          const stats = statsResponse.data.data
+          sellerStats.value.completed = stats.totalSales || 0
+        }
+      } catch (error) {
+        console.error('获取卖家统计失败:', error)
+      }
     }
-  } catch (error) {
-    console.error('加载评价失败:', error)
-  }
-}
-
-const handleBuy = () => {
-  if (!userInfo.value) {
-    ElMessage.warning('请先登录')
-    return
-  }
-  showBuyDialog.value = true
-}
-
-const handleAddToCart = () => {
-  if (!userInfo.value) {
-    ElMessage.warning('请先登录')
-    return
-  }
-  ElMessage.success('已加入购物车')
-}
-
-const confirmBuy = async () => {
-  try {
-    if (!buyForm.value.address || !buyForm.value.contact) {
-      ElMessage.warning('请填写完整的收货信息')
-      return
+    
+    // 获取相关商品
+    const fetchRelatedProducts = async (categoryId) => {
+      try {
+        const response = await api.product.getProductListByCategory(categoryId, {
+          current: 1,
+          size: 4
+        })
+        const products = response.data.data.records || []
+        
+        // 排除当前商品
+        relatedProducts.value = products.filter(item => item.id !== productId.value)
+      } catch (error) {
+        console.error('获取相关商品失败:', error)
+      }
     }
-
-    const orderData = {
-      productId: product.value.id,
-      quantity: buyForm.value.quantity,
-      totalPrice: product.value.price * buyForm.value.quantity,
-      address: buyForm.value.address,
-      contact: buyForm.value.contact
+    
+    // 创建订单
+    const createOrder = async () => {
+      try {
+        const response = await api.order.createOrder({
+          productId: productId.value
+        })
+        
+        if (response.data.code === 0) {
+          ElMessage.success('订单创建成功')
+          router.push(`/orders/${response.data.data}`)
+        }
+      } catch (error) {
+        console.error('创建订单失败:', error)
+      }
     }
-
-    const response = await api.createOrderUsingPOST(orderData)
-    if (response.code === 200) {
-      ElMessage.success('购买成功')
-      showBuyDialog.value = false
-      router.push('/orders')
-    } else {
-      ElMessage.error(response.message || '购买失败')
+    
+    // 联系卖家
+    const contactSeller = () => {
+      ElMessage.info('联系功能正在开发中')
     }
-  } catch (error) {
-    console.error('购买失败:', error)
-    ElMessage.error('购买失败')
+    
+    // 查看卖家商品
+    const viewSellerProducts = () => {
+      router.push({
+        name: 'ProductList',
+        query: { userId: product.value.user.id }
+      })
+    }
+    
+    // 查看所有评价
+    const showAllReviews = () => {
+      // 这里可以跳转到评价页面或打开对话框
+      ElMessage.info('查看所有评价功能正在开发中')
+    }
+    
+    // 获取操作按钮文本
+    const getActionText = () => {
+      if (product.value.status !== 1) {
+        return '商品不可购买'
+      }
+      
+      switch (product.value.paymentMethod) {
+        case 0:
+          return '立即购买'
+        case 1:
+          return '立即购买'
+        case 2:
+          return '积分兑换'
+        case 3:
+          return '申请交换'
+        default:
+          return '立即购买'
+      }
+    }
+    
+    // 处理图片加载错误
+    const handleImageError = () => {
+      console.log('图片加载失败')
+    }
+    
+    // 监听路由参数变化
+    watch(() => route.params.id, () => {
+      if (route.params.id) {
+        fetchProductDetail()
+      }
+    }, { immediate: true })
+    
+    return {
+      product,
+      loading,
+      averageRating,
+      reviewCount,
+      reviews,
+      relatedProducts,
+      sellerStats,
+      isLoggedIn,
+      userId,
+      formatPrice,
+      formatPaymentMethod,
+      formatProductStatus,
+      formatUserStatus,
+      formatDate,
+      getProductStatusType,
+      getUserStatusType,
+      createOrder,
+      contactSeller,
+      viewSellerProducts,
+      showAllReviews,
+      getActionText,
+      handleImageError
+    }
   }
-}
-
-const formatTime = (timeString) => {
-  if (!timeString) return ''
-  return new Date(timeString).toLocaleString()
 }
 </script>
 
 <style scoped>
-.product-detail {
+.product-detail-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
 }
 
-.product-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  margin-bottom: 40px;
+.product-info-card {
+  margin-bottom: 20px;
 }
 
-.product-image-section {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+.product-gallery {
+  margin-bottom: 20px;
 }
 
 .main-image {
-  width: 100%;
-  height: 400px;
-  overflow: hidden;
+  text-align: center;
+  background-color: #f5f7fa;
   border-radius: 4px;
+  overflow: hidden;
 }
 
 .main-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
 }
 
-.product-info-section {
-  background: white;
-  border-radius: 8px;
-  padding: 30px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  color: #909399;
 }
 
-.product-title {
+.product-basic-info {
+  padding: 0 10px;
+}
+
+.product-name {
+  margin: 0 0 15px 0;
   font-size: 24px;
   font-weight: 600;
-  margin-bottom: 16px;
   color: #303133;
 }
 
-.product-description {
-  color: #606266;
-  line-height: 1.6;
-  margin-bottom: 20px;
-}
-
-.price-section {
+.product-price {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
-.price {
+.price-label {
+  font-size: 16px;
+  color: #606266;
+  margin-right: 10px;
+}
+
+.price-value {
   font-size: 28px;
   font-weight: bold;
   color: #f56c6c;
-  margin-right: 20px;
 }
 
-.sales {
-  color: #909399;
-  font-size: 14px;
+.product-meta {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-.seller-info {
+.product-description {
+  margin-bottom: 20px;
+}
+
+.product-description h4 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+
+.product-description p {
+  margin: 0;
+  color: #606266;
+  line-height: 1.6;
+}
+
+.product-actions {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.product-notice {
+  margin-bottom: 20px;
+}
+
+.seller-info-card, .review-card {
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.seller-profile {
   display: flex;
   align-items: center;
-  margin-bottom: 30px;
-  padding: 16px;
-  background: #f5f7fa;
-  border-radius: 8px;
-}
-
-.seller-avatar {
-  margin-right: 12px;
+  margin-bottom: 20px;
 }
 
 .seller-details {
+  margin-left: 15px;
   flex: 1;
 }
 
-.seller-name {
-  font-weight: 600;
-  margin-bottom: 4px;
+.seller-details h3 {
+  margin: 0 0 5px 0;
+  font-size: 18px;
 }
 
-.action-section {
-  margin-bottom: 30px;
-}
-
-.action-section .el-button {
-  margin-right: 12px;
-  min-width: 120px;
-}
-
-.product-details {
-  border-top: 1px solid #e4e7ed;
-  padding-top: 20px;
-}
-
-.product-details h3 {
-  margin-bottom: 16px;
-  color: #303133;
-}
-
-.detail-item {
+.seller-phone {
   display: flex;
-  margin-bottom: 8px;
-}
-
-.detail-item .label {
-  width: 80px;
-  color: #909399;
-}
-
-.detail-item .value {
+  align-items: center;
+  margin-top: 8px;
   color: #606266;
 }
 
-.reviews-section {
-  background: white;
-  border-radius: 8px;
-  padding: 30px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+.seller-phone .el-icon {
+  margin-right: 5px;
 }
 
-.reviews-section h2 {
+.seller-stats {
   margin-bottom: 20px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: bold;
   color: #303133;
 }
 
+.stat-label {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 5px;
+}
+
+.seller-actions {
+  margin-top: 10px;
+}
+
+.review-summary {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.rating-text {
+  margin-left: 10px;
+  color: #606266;
+}
+
+.review-list {
+  margin-top: 15px;
+}
+
 .review-item {
-  border-bottom: 1px solid #e4e7ed;
-  padding: 16px 0;
+  border-bottom: 1px solid #ebeef5;
+  padding-bottom: 15px;
+  margin-bottom: 15px;
 }
 
 .review-item:last-child {
   border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
 }
 
 .review-header {
@@ -410,14 +584,14 @@ const formatTime = (timeString) => {
   margin-bottom: 8px;
 }
 
-.review-user {
+.review-info {
   flex: 1;
-  margin-left: 12px;
+  margin-left: 10px;
 }
 
-.user-name {
-  font-weight: 600;
-  margin-bottom: 2px;
+.review-user {
+  font-size: 14px;
+  margin-bottom: 3px;
 }
 
 .review-time {
@@ -427,41 +601,19 @@ const formatTime = (timeString) => {
 
 .review-content {
   color: #606266;
+  font-size: 14px;
   line-height: 1.5;
 }
 
-.buy-dialog-content {
-  padding: 20px 0;
-}
-
-.product-summary {
-  display: flex;
-  margin-bottom: 20px;
-}
-
-.product-summary img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 4px;
-  margin-right: 16px;
-}
-
-.summary-info h4 {
-  margin: 0 0 8px 0;
-  color: #303133;
-}
-
-.total-price {
-  text-align: right;
-  font-size: 18px;
-  font-weight: bold;
+.related-products-card {
   margin-top: 20px;
 }
 
-.loading {
-  max-width: 1200px;
-  margin: 0 auto;
+.empty-reviews {
+  padding: 20px 0;
+}
+
+.loading-container {
   padding: 20px;
 }
 </style>

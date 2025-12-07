@@ -28,9 +28,9 @@
           <template v-if="isLoggedIn">
             <el-dropdown @command="handleCommand">
               <span class="user-info">
-                <el-avatar :size="32" :src="user.userAvatar" v-if="user.userAvatar" />
-                <el-avatar :size="32" v-else>{{ user.userName?.charAt(0) }}</el-avatar>
-                <span class="username">{{ user.userName }}</span>
+                <el-avatar :size="32" :src="user?.userAvatar" v-if="user?.userAvatar" />
+                <el-avatar :size="32" v-else>{{ user?.userName?.charAt(0) || '?' }}</el-avatar>
+                <span class="username">{{ user?.userName || '用户' }}</span>
                 <el-icon class="el-icon--right"><arrow-down /></el-icon>
               </span>
               <template #dropdown>

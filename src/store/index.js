@@ -69,16 +69,33 @@ export default createStore({
       commit('SET_LOADING', true)
       try {
         const response = await userApi.login(credentials)
-        const { data } = response.data
+        const res = response.data
         
-        commit('SET_TOKEN', 'dummy_token') // 实际项目中应使用服务器返回的token
-        commit('SET_USER', data)
-        
-        return { success: true, data }
+        // 检查登录是否成功
+        if (res && res.code === 200) {
+          // 从hashMap中获取token
+          const token = res.hashMap?.token
+          if (token) {
+            commit('SET_TOKEN', token)
+            commit('SET_USER', res.data)
+            return { success: true, data: res.data, message: res.message }
+          } else {
+            return { 
+              success: false, 
+              message: '登录失败：未获取到token'
+            }
+          }
+        } else {
+          return { 
+            success: false, 
+            message: res?.message || '登录失败，请检查用户名和密码'
+          }
+        }
       } catch (error) {
+        console.error('登录错误详情:', error)
         return { 
           success: false, 
-          message: error.response?.data?.message
+          message: error.response?.data?.message || error.message || '登录失败，请稍后再试'
         }
       } finally {
         commit('SET_LOADING', false)

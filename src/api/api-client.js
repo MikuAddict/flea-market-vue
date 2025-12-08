@@ -1,5 +1,5 @@
 import axios from 'axios'
-import store from '@/store'
+import store from '../store/store'
 import { ElMessage } from 'element-plus'
 
 // 创建axios实例

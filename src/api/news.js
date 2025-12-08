@@ -1,4 +1,4 @@
-import { request } from './index'
+import { request } from './api-client'
 
 export default {
   // 分页获取新闻列表

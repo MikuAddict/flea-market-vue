@@ -3,8 +3,8 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
-import router from './router'
-import store from './store'
+import router from './router/router'
+import store from './store/store'
 
 // 应用初始化时尝试获取当前用户信息
 // 检查是否有token（包括localStorage中的）

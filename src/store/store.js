@@ -1,5 +1,5 @@
 import { createStore } from 'vuex'
-import { userApi, categoryApi, productApi, newsApi } from '@/api'
+import { userApi, categoryApi, productApi, newsApi } from '../api/api-client'
 
 export default createStore({
   state: {

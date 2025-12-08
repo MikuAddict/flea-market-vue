@@ -1,4 +1,4 @@
-import { request } from './index'
+import { request } from './api-client'
 
 export default {
   // 添加商品

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import store from '@/store'
+import store from '../store/store'
 
 // 路由组件
 const Home = () => import('@/views/Home.vue')

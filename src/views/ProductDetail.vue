@@ -2,7 +2,7 @@
   <Layout>
     <div class="product-detail-container" v-if="!loading">
       <el-row :gutter="20">
-        <!-- 左侧商品信息 -->
+        <!-- 左侧二手物品信息 -->
         <el-col :xs="24" :lg="14">
           <el-card class="product-info-card">
             <div class="product-gallery">
@@ -41,7 +41,7 @@
                 </el-tag>
               </div>
               <div class="product-description">
-                <h4>商品描述</h4>
+                <h4>二手物品描述</h4>
                 <p>{{ product.description || '暂无描述' }}</p>
               </div>
               <div class="product-actions" v-if="isLoggedIn && product.user?.id !== userId">
@@ -115,16 +115,16 @@
             </div>
             <div class="seller-actions">
               <el-button plain style="width: 100%" @click="viewSellerProducts">
-                查看Ta的商品
+                查看Ta的二手物品
               </el-button>
             </div>
           </el-card>
 
-          <!-- 商品评价 -->
+          <!-- 二手物品评价 -->
           <el-card class="review-card" v-if="product.id">
             <template #header>
               <div class="card-header">
-                <span>商品评价</span>
+                <span>二手物品评价</span>
                 <el-link type="primary" @click="showAllReviews" v-if="reviewCount > 0">
                   查看全部({{ reviewCount }})
                 </el-link>
@@ -156,7 +156,7 @@
         </el-col>
       </el-row>
 
-      <!-- 相关商品推荐 -->
+      <!-- 相关二手物品推荐 -->
       <el-card class="related-products-card" v-if="relatedProducts.length > 0">
         <template #header>
           <span>相关推荐</span>
@@ -209,7 +209,7 @@ export default {
     const route = useRoute()
     const router = useRouter()
     
-    // 商品数据
+    // 二手物品数据
     const product = ref({})
     const loading = ref(true)
     const averageRating = ref(0)
@@ -223,14 +223,14 @@ export default {
     const userId = computed(() => store.state.user?.id)
     const productId = computed(() => parseInt(route.params.id))
     
-    // 获取商品详情
+    // 获取二手物品详情
     const fetchProductDetail = async () => {
       try {
         loading.value = true
         const response = await productApi.getProductById(productId.value)
         product.value = response.data.data
         
-        // 获取商品评价统计
+        // 获取二手物品评价统计
         const statsResponse = await reviewApi.getReviewStatistics(productId.value)
         const stats = statsResponse.data.data
         averageRating.value = stats.averageRating || 0
@@ -250,13 +250,13 @@ export default {
           await fetchSellerStats(product.value.user.id)
         }
         
-        // 获取相关商品（同分类）
+        // 获取相关二手物品（同分类）
         if (product.value.categoryId) {
           await fetchRelatedProducts(product.value.categoryId)
         }
       } catch (error) {
-        console.error('获取商品详情失败:', error)
-        ElMessage.error('商品不存在或已被删除')
+        console.error('获取二手物品详情失败:', error)
+        ElMessage.error('二手物品不存在或已被删除')
         router.push('/products')
       } finally {
         loading.value = false
@@ -266,7 +266,7 @@ export default {
     // 获取卖家统计信息
     const fetchSellerStats = async (sellerId) => {
       try {
-        // 获取卖家发布的商品
+        // 获取卖家发布的二手物品
         const productsResponse = await productApi.getProductListByUser(sellerId, {
           current: 1,
           size: 1
@@ -284,7 +284,7 @@ export default {
       }
     }
     
-    // 获取相关商品
+    // 获取相关二手物品
     const fetchRelatedProducts = async (categoryId) => {
       try {
         const response = await productApi.getProductListByCategory(categoryId, {
@@ -293,10 +293,10 @@ export default {
         })
         const products = response.data.data.records || []
         
-        // 排除当前商品
+        // 排除当前二手物品
         relatedProducts.value = products.filter(item => item.id !== productId.value)
       } catch (error) {
-        console.error('获取相关商品失败:', error)
+        console.error('获取相关二手物品失败:', error)
       }
     }
     
@@ -321,7 +321,7 @@ export default {
       ElMessage.info('联系功能正在开发中')
     }
     
-    // 查看卖家商品
+    // 查看卖家二手物品
     const viewSellerProducts = () => {
       router.push({
         name: 'ProductList',
@@ -338,7 +338,7 @@ export default {
     // 获取操作按钮文本
     const getActionText = () => {
       if (product.value.status !== 1) {
-        return '商品不可购买'
+        return '二手物品不可购买'
       }
       
       switch (product.value.paymentMethod) {

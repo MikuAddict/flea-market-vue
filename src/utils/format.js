@@ -53,9 +53,9 @@ export function formatOrderStatus(status) {
 }
 
 /**
- * 格式化商品状态
- * @param {number} status 商品状态 (0-下架, 1-上架, 2-已售出)
- * @returns {string} 商品状态名称
+ * 格式化二手物品状态
+ * @param {number} status 二手物品状态 (0-下架, 1-上架, 2-已售出)
+ * @returns {string} 二手物品状态名称
  */
 export function formatProductStatus(status) {
   const statuses = {
@@ -109,8 +109,8 @@ export function getOrderStatusType(status) {
 }
 
 /**
- * 获取商品状态对应的标签类型
- * @param {number} status 商品状态
+ * 获取二手物品状态对应的标签类型
+ * @param {number} status 二手物品状态
  * @returns {string} Element Plus 标签类型
  */
 export function getProductStatusType(status) {

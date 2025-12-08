@@ -4,9 +4,9 @@
       <el-card class="products-card">
         <template #header>
           <div class="card-header">
-            <span>我的商品</span>
+            <span>我的二手物品</span>
             <el-button type="primary" @click="$router.push('/publish-product')">
-              发布新商品
+              发布新二手物品
             </el-button>
           </div>
         </template>
@@ -34,21 +34,21 @@
           </el-form>
         </div>
         
-        <!-- 商品列表 -->
+        <!-- 二手物品列表 -->
         <div v-if="loading" class="loading-container">
           <el-skeleton :rows="3" animated />
         </div>
         
         <div v-else-if="products.length === 0" class="empty-container">
-          <el-empty description="暂无商品">
+          <el-empty description="暂无二手物品">
             <el-button type="primary" @click="$router.push('/publish-product')">
-              发布第一个商品
+              发布第一个二手物品
             </el-button>
           </el-empty>
         </div>
         
         <el-table v-else :data="products" style="width: 100%">
-          <el-table-column label="商品图片" width="100">
+          <el-table-column label="二手物品图片" width="100">
             <template #default="scope">
               <div class="product-image">
                 <img v-if="scope.row.imageUrl" :src="scope.row.imageUrl" :alt="scope.row.productName" />
@@ -59,7 +59,7 @@
             </template>
           </el-table-column>
           
-          <el-table-column prop="productName" label="商品名称" min-width="200" />
+          <el-table-column prop="productName" label="二手物品名称" min-width="200" />
           
           <el-table-column prop="price" label="价格" width="120">
             <template #default="scope">
@@ -197,7 +197,7 @@ export default {
     // 计算属性
     const categories = computed(() => store.state.categories)
     
-    // 获取商品列表
+    // 获取二手物品列表
     const fetchProducts = async () => {
       loading.value = true
       try {
@@ -210,7 +210,7 @@ export default {
         products.value = response.data.data.records || []
         total.value = response.data.data.total || 0
       } catch (error) {
-        console.error('获取商品列表失败:', error)
+        console.error('获取二手物品列表失败:', error)
         products.value = []
         total.value = 0
       } finally {
@@ -218,12 +218,12 @@ export default {
       }
     }
     
-    // 查看商品详情
+    // 查看二手物品详情
     const viewProduct = (productId) => {
       router.push(`/products/${productId}`)
     }
     
-    // 编辑商品
+    // 编辑二手物品
     const editProduct = (product) => {
       router.push({
         name: 'EditProduct',
@@ -231,23 +231,23 @@ export default {
       })
     }
     
-    // 更改商品状态
+    // 更改二手物品状态
     const changeStatus = async (productId, status) => {
       try {
         await api.product.updateProductStatus(productId, status)
-        ElMessage.success('商品状态更新成功')
+        ElMessage.success('二手物品状态更新成功')
         fetchProducts()
       } catch (error) {
-        console.error('更新商品状态失败:', error)
-        ElMessage.error('更新商品状态失败')
+        console.error('更新二手物品状态失败:', error)
+        ElMessage.error('更新二手物品状态失败')
       }
     }
     
-    // 删除商品
+    // 删除二手物品
     const deleteProduct = async (product) => {
       try {
         await ElMessageBox.confirm(
-          `确定要删除商品"${product.productName}"吗？删除后不可恢复。`,
+          `确定要删除二手物品"${product.productName}"吗？删除后不可恢复。`,
           '删除确认',
           {
             confirmButtonText: '确定',
@@ -257,12 +257,12 @@ export default {
         )
         
         await api.product.deleteProduct(product.id)
-        ElMessage.success('商品删除成功')
+        ElMessage.success('二手物品删除成功')
         fetchProducts()
       } catch (error) {
         if (error !== 'cancel') {
-          console.error('删除商品失败:', error)
-          ElMessage.error('删除商品失败')
+          console.error('删除二手物品失败:', error)
+          ElMessage.error('删除二手物品失败')
         }
       }
     }
@@ -286,7 +286,7 @@ export default {
         await store.dispatch('fetchCategories')
       }
       
-      // 获取商品列表
+      // 获取二手物品列表
       fetchProducts()
     })
     

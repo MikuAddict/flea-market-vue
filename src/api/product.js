@@ -1,7 +1,7 @@
 import { request } from './api-client'
 
 export default {
-  // 添加商品
+  // 添加二手物品
   addProduct(data) {
     return request({
       url: '/product/add',
@@ -10,7 +10,7 @@ export default {
     })
   },
 
-  // 更新商品信息
+  // 更新二手物品信息
   updateProduct(data) {
     return request({
       url: '/product/update',
@@ -19,7 +19,7 @@ export default {
     })
   },
 
-  // 删除商品
+  // 删除二手物品
   deleteProduct(id) {
     return request({
       url: '/product/delete',
@@ -28,7 +28,7 @@ export default {
     })
   },
 
-  // 获取商品详情
+  // 获取二手物品详情
   getProductById(id) {
     return request({
       url: `/product/get/${id}`,
@@ -36,7 +36,7 @@ export default {
     })
   },
 
-  // 分页获取商品列表
+  // 分页获取二手物品列表
   getProductList(params) {
     return request({
       url: '/product/list/page',
@@ -45,7 +45,7 @@ export default {
     })
   },
 
-  // 根据分类获取商品列表
+  // 根据分类获取二手物品列表
   getProductListByCategory(categoryId, params) {
     return request({
       url: `/product/list/category/${categoryId}`,
@@ -54,7 +54,7 @@ export default {
     })
   },
 
-  // 搜索商品
+  // 搜索二手物品
   searchProducts(params) {
     return request({
       url: '/product/search',
@@ -63,7 +63,7 @@ export default {
     })
   },
 
-  // 高级搜索商品
+  // 高级搜索二手物品
   advancedSearchProducts(params) {
     return request({
       url: '/product/advanced-search',
@@ -72,7 +72,7 @@ export default {
     })
   },
 
-  // 获取用户发布的商品列表
+  // 获取用户发布的二手物品列表
   getProductListByUser(userId, params) {
     return request({
       url: `/product/list/user/${userId}`,
@@ -81,7 +81,7 @@ export default {
     })
   },
 
-  // 获取当前用户发布的商品列表
+  // 获取当前用户发布的二手物品列表
   getMyProductList(params) {
     return request({
       url: '/product/list/my',
@@ -90,7 +90,7 @@ export default {
     })
   },
 
-  // 更新商品状态
+  // 更新二手物品状态
   updateProductStatus(id, status) {
     return request({
       url: `/product/status/${id}`,
@@ -99,7 +99,7 @@ export default {
     })
   },
 
-  // 获取最新商品列表
+  // 获取最新二手物品列表
   getLatestProducts(params) {
     return request({
       url: '/product/latest',
@@ -108,7 +108,7 @@ export default {
     })
   },
 
-  // 管理员审核商品
+  // 管理员审核二手物品
   reviewProduct(id, status) {
     return request({
       url: `/product/review/${id}`,
@@ -117,7 +117,7 @@ export default {
     })
   },
 
-  // 管理员获取所有商品列表
+  // 管理员获取所有二手物品列表
   adminGetProductList(params) {
     return request({
       url: '/product/admin/list',

@@ -32,10 +32,10 @@
         </el-card>
       </div>
 
-      <!-- 商品分类 -->
+      <!-- 二手物品分类 -->
       <div class="card-container" v-if="categories.length > 0">
         <div class="section-header">
-          <h3>商品分类</h3>
+          <h3>二手物品分类</h3>
         </div>
         <div class="category-grid">
           <div
@@ -54,10 +54,10 @@
         </div>
       </div>
 
-      <!-- 最新商品 -->
+      <!-- 最新二手物品 -->
       <div class="card-container" v-if="latestProducts.length > 0">
         <div class="section-header">
-          <h3>最新商品</h3>
+          <h3>最新二手物品</h3>
           <el-link type="primary" @click="$router.push('/products')">查看更多</el-link>
         </div>
         <el-row :gutter="20">

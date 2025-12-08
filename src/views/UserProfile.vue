@@ -81,19 +81,19 @@
         <!-- 右侧内容区域 -->
         <el-col :xs="24" :md="16">
           <el-tabs v-model="activeTab" class="profile-tabs">
-            <!-- 我的商品 -->
-            <el-tab-pane label="我的商品" name="products">
+            <!-- 我的二手物品 -->
+            <el-tab-pane label="我的二手物品" name="products">
               <div class="tab-content">
                 <div class="tab-header">
-                  <h3>我的商品</h3>
+                  <h3>我的二手物品</h3>
                   <el-button type="primary" @click="$router.push('/publish-product')">
-                    发布商品
+                    发布二手物品
                   </el-button>
                 </div>
                 <div v-if="myProducts.length === 0" class="empty-content">
-                  <el-empty description="暂无发布的商品" />
+                  <el-empty description="暂无发布的二手物品" />
                   <el-button type="primary" @click="$router.push('/publish-product')">
-                    发布第一个商品
+                    发布第一个二手物品
                   </el-button>
                 </div>
                 <div v-else class="product-grid">
@@ -137,7 +137,7 @@
                           </el-tag>
                         </div>
                         <div class="order-product">
-                          <span>商品: {{ order.productName || '获取中...' }}</span>
+                          <span>二手物品: {{ order.productName || '获取中...' }}</span>
                           <span class="order-amount">¥{{ formatPrice(order.amount) }}</span>
                         </div>
                         <div class="order-actions">
@@ -172,8 +172,8 @@
                     </div>
                     <div class="review-content">{{ review.content }}</div>
                     <div class="review-product">
-                      商品: <el-link type="primary" @click="goToProduct(review.productId)">
-                        {{ review.productName || '查看商品' }}
+                      二手物品: <el-link type="primary" @click="goToProduct(review.productId)">
+                        {{ review.productName || '查看二手物品' }}
                       </el-link>
                     </div>
                   </el-card>
@@ -262,7 +262,7 @@ export default {
       profileForm.userPhone = user.value.userPhone || ''
     }
     
-    // 获取我的商品
+    // 获取我的二手物品
     const fetchMyProducts = async () => {
       try {
         const response = await productApi.getMyProductList({
@@ -271,7 +271,7 @@ export default {
         })
         myProducts.value = response.data.data.records || []
       } catch (error) {
-        console.error('获取我的商品失败:', error)
+        console.error('获取我的二手物品失败:', error)
       }
     }
     
@@ -380,7 +380,7 @@ export default {
       }
     }
     
-    // 跳转到商品详情
+    // 跳转到二手物品详情
     const goToProduct = (productId) => {
       router.push(`/products/${productId}`)
     }

@@ -32,9 +32,9 @@
           </el-descriptions>
         </div>
         
-        <!-- 商品信息 -->
+        <!-- 二手物品信息 -->
         <div class="product-section">
-          <h3>商品信息</h3>
+          <h3>二手物品信息</h3>
           <el-card shadow="never" v-if="order.product">
             <div class="product-content">
               <div class="product-image">
@@ -57,7 +57,7 @@
               </div>
             </div>
           </el-card>
-          <el-empty v-else description="商品信息不存在" />
+          <el-empty v-else description="二手物品信息不存在" />
         </div>
         
         <!-- 交易双方信息 -->
@@ -331,7 +331,7 @@ export default {
     const confirmOrder = async () => {
       try {
         await ElMessageBox.confirm(
-          '确认已收到商品吗？确认后订单将完成。',
+          '确认已收到二手物品吗？确认后订单将完成。',
           '确认收货',
           {
             confirmButtonText: '确认收货',

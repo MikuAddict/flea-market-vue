@@ -8,7 +8,7 @@
         <div class="search-bar">
           <el-input
             v-model="searchKeyword"
-            placeholder="搜索商品"
+            placeholder="搜索二手物品"
             class="search-input"
             @keyup.enter="handleSearch"
           >
@@ -20,7 +20,7 @@
         <div class="nav-menu">
           <el-menu mode="horizontal" :router="true" :default-active="$route.path">
             <el-menu-item index="/">首页</el-menu-item>
-            <el-menu-item index="/products">商品列表</el-menu-item>
+            <el-menu-item index="/products">二手物品列表</el-menu-item>
             <el-menu-item index="/news">新闻公告</el-menu-item>
           </el-menu>
         </div>
@@ -36,9 +36,9 @@
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-                  <el-dropdown-item command="my-products">我的商品</el-dropdown-item>
+                  <el-dropdown-item command="my-products">我的二手物品</el-dropdown-item>
                   <el-dropdown-item command="orders">我的订单</el-dropdown-item>
-                  <el-dropdown-item command="publish">发布商品</el-dropdown-item>
+                  <el-dropdown-item command="publish">发布二手物品</el-dropdown-item>
                   <el-dropdown-item v-if="isAdmin" command="admin">管理后台</el-dropdown-item>
                   <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
                 </el-dropdown-menu>

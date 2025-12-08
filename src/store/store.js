@@ -216,7 +216,7 @@ export default createStore({
       }
     },
     
-    // 获取商品分类
+    // 获取二手物品分类
     async fetchCategories({ commit }) {
       if (this.state.categories.length > 0) return
       
@@ -229,7 +229,7 @@ export default createStore({
       }
     },
     
-    // 获取最新商品
+    // 获取最新二手物品
     async fetchLatestProducts({ commit }) {
       if (this.state.latestProducts.length > 0) return
       
@@ -238,7 +238,7 @@ export default createStore({
         const { data } = response.data
         commit('SET_LATEST_PRODUCTS', data)
       } catch (error) {
-        console.error('获取最新商品失败:', error)
+        console.error('获取最新二手物品失败:', error)
       }
     },
     

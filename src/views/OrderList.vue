@@ -58,7 +58,7 @@
                   </div>
                 </div>
                 <div class="product-details">
-                  <h4>{{ order.product?.productName || '商品已删除' }}</h4>
+                  <h4>{{ order.product?.productName || '二手物品已删除' }}</h4>
                   <p v-if="order.product">
                     分类: {{ order.product.category?.name }}
                   </p>
@@ -290,7 +290,7 @@ export default {
     const confirmOrder = async (orderId) => {
       try {
         await ElMessageBox.confirm(
-          '确认已收到商品吗？确认后订单将完成。',
+          '确认已收到二手物品吗？确认后订单将完成。',
           '确认收货',
           {
             confirmButtonText: '确认收货',

@@ -44,13 +44,13 @@ const routes = [
     path: '/products',
     name: 'ProductList',
     component: ProductList,
-    meta: { title: '商品列表' }
+    meta: { title: '二手物品列表' }
   },
   {
     path: '/products/:id',
     name: 'ProductDetail',
     component: ProductDetail,
-    meta: { title: '商品详情' }
+    meta: { title: '二手物品详情' }
   },
   {
     path: '/profile',
@@ -62,19 +62,19 @@ const routes = [
     path: '/my-products',
     name: 'MyProducts',
     component: MyProducts,
-    meta: { title: '我的商品', requiresAuth: true }
+    meta: { title: '我的二手物品', requiresAuth: true }
   },
   {
     path: '/publish-product',
     name: 'PublishProduct',
     component: PublishProduct,
-    meta: { title: '发布商品', requiresAuth: true }
+    meta: { title: '发布二手物品', requiresAuth: true }
   },
   {
     path: '/edit-product/:id',
     name: 'EditProduct',
     component: PublishProduct,
-    meta: { title: '编辑商品', requiresAuth: true }
+    meta: { title: '编辑二手物品', requiresAuth: true }
   },
   {
     path: '/orders',
@@ -116,7 +116,7 @@ const routes = [
     path: '/admin/products',
     name: 'AdminProducts',
     component: AdminProducts,
-    meta: { title: '商品管理', requiresAuth: true, requiresAdmin: true }
+    meta: { title: '二手物品管理', requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/admin/orders',

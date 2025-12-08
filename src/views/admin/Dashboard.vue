@@ -19,7 +19,7 @@
             </el-menu-item>
             <el-menu-item index="products">
               <el-icon><Goods /></el-icon>
-              <span>商品管理</span>
+              <span>二手物品管理</span>
             </el-menu-item>
             <el-menu-item index="orders">
               <el-icon><ShoppingCart /></el-icon>
@@ -72,7 +72,7 @@
                   </div>
                   <div class="stat-info">
                     <div class="stat-value">{{ comprehensiveStats.totalProducts || 0 }}</div>
-                    <div class="stat-label">总商品数</div>
+                    <div class="stat-label">总二手物品数</div>
                   </div>
                 </div>
               </el-col>
@@ -175,7 +175,7 @@
                 <div class="stat-item">
                   <div class="stat-info">
                     <div class="stat-value">{{ monthlyStats.newProducts || 0 }}</div>
-                    <div class="stat-label">新商品</div>
+                    <div class="stat-label">新二手物品</div>
                   </div>
                 </div>
               </el-col>
@@ -206,13 +206,13 @@
             </div>
           </el-card>
           
-          <!-- 商品排行 -->
+          <!-- 二手物品排行 -->
           <el-row :gutter="20">
             <el-col :xs="24" :md="12">
               <el-card class="ranking-card" shadow="never">
                 <template #header>
                   <div class="card-header">
-                    <span>交易商品排行</span>
+                    <span>交易二手物品排行</span>
                     <el-date-picker
                       v-model="productRankMonth"
                       type="month"
@@ -225,7 +225,7 @@
                 </template>
                 <el-table :data="productRanking" style="width: 100%">
                   <el-table-column type="index" label="排名" width="60" />
-                  <el-table-column prop="productName" label="商品名称" />
+                  <el-table-column prop="productName" label="二手物品名称" />
                   <el-table-column prop="transactionCount" label="交易次数" width="100" />
                   <el-table-column prop="totalAmount" label="总金额" width="100">
                     <template #default="scope">
@@ -321,7 +321,7 @@ export default {
       }
     }
     
-    // 获取商品排行
+    // 获取二手物品排行
     const fetchProductRanking = async () => {
       if (!productRankMonth.value) return
       
@@ -334,8 +334,8 @@ export default {
         })
         productRanking.value = response.data.data || []
       } catch (error) {
-        console.error('获取商品排行失败:', error)
-        ElMessage.error('获取商品排行失败')
+        console.error('获取二手物品排行失败:', error)
+        ElMessage.error('获取二手物品排行失败')
       }
     }
     

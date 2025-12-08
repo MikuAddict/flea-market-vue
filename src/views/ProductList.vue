@@ -7,7 +7,7 @@
           <el-form-item label="关键词">
             <el-input
               v-model="filters.keyword"
-              placeholder="搜索商品"
+              placeholder="搜索二手物品"
               clearable
               @keyup.enter="handleSearch"
             />
@@ -75,13 +75,13 @@
         </el-form>
       </el-card>
 
-      <!-- 商品列表 -->
+      <!-- 二手物品列表 -->
       <el-card class="product-card" shadow="never">
         <div class="product-header">
-          <h3>商品列表</h3>
+          <h3>二手物品列表</h3>
           <div class="product-actions">
             <el-link v-if="isLoggedIn" type="primary" @click="$router.push('/publish-product')">
-              发布商品
+              发布二手物品
             </el-link>
           </div>
         </div>
@@ -91,7 +91,7 @@
         </div>
         
         <div v-else-if="productList.length === 0" class="empty-container">
-          <el-empty description="暂无商品" />
+          <el-empty description="暂无二手物品" />
         </div>
         
         <el-row v-else :gutter="20" class="product-grid">
@@ -137,7 +137,7 @@ export default {
     const route = useRoute()
     const router = useRouter()
     
-    // 商品列表数据
+    // 二手物品列表数据
     const productList = ref([])
     const total = ref(0)
     const loading = ref(false)
@@ -176,11 +176,11 @@ export default {
       if (newQuery.current) pagination.current = Number(newQuery.current)
       if (newQuery.size) pagination.size = Number(newQuery.size)
       
-      // 搜索商品
+      // 搜索二手物品
       searchProducts()
     }, { immediate: true })
     
-    // 获取商品列表
+    // 获取二手物品列表
     const fetchProducts = async () => {
       loading.value = true
       try {
@@ -208,7 +208,7 @@ export default {
         productList.value = response.data.data.records || []
         total.value = response.data.data.total || 0
       } catch (error) {
-        console.error('获取商品列表失败:', error)
+        console.error('获取二手物品列表失败:', error)
         productList.value = []
         total.value = 0
       } finally {
@@ -216,7 +216,7 @@ export default {
       }
     }
     
-    // 搜索商品
+    // 搜索二手物品
     const searchProducts = () => {
       // 更新URL查询参数
       const query = {
@@ -234,7 +234,7 @@ export default {
       
       router.replace({ query })
       
-      // 获取商品列表
+      // 获取二手物品列表
       fetchProducts()
     }
     

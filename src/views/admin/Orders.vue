@@ -11,7 +11,7 @@
       <div class="filter-container">
         <el-input
           v-model="searchKeyword"
-          placeholder="搜索订单号或商品名称"
+          placeholder="搜索订单号或二手物品名称"
           style="width: 300px; margin-right: 10px"
           @keyup.enter="handleSearch"
         />
@@ -37,7 +37,7 @@
       <!-- 订单列表 -->
       <el-table :data="orderList" v-loading="loading" style="width: 100%; margin-top: 20px">
         <el-table-column prop="id" label="订单号" width="120" />
-        <el-table-column prop="productName" label="商品名称" />
+        <el-table-column prop="productName" label="二手物品名称" />
         <el-table-column prop="buyerName" label="买家" width="120" />
         <el-table-column prop="sellerName" label="卖家" width="120" />
         <el-table-column prop="price" label="金额" width="100">
@@ -105,7 +105,7 @@
       <div v-if="currentOrder" class="order-detail">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="订单号">{{ currentOrder.id }}</el-descriptions-item>
-          <el-descriptions-item label="商品名称">{{ currentOrder.productName }}</el-descriptions-item>
+          <el-descriptions-item label="二手物品名称">{{ currentOrder.productName }}</el-descriptions-item>
           <el-descriptions-item label="买家">{{ currentOrder.buyerName }}</el-descriptions-item>
           <el-descriptions-item label="卖家">{{ currentOrder.sellerName }}</el-descriptions-item>
           <el-descriptions-item label="单价">¥{{ currentOrder.price }}</el-descriptions-item>

@@ -121,7 +121,7 @@ export default {
     })
   },
 
-  // 积分兑换商品
+  // 积分兑换二手物品
   pointsPay(orderId) {
     return request({
       url: `/order/pay/points/${orderId}`,

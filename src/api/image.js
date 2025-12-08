@@ -15,7 +15,7 @@ export default {
     })
   },
 
-  // 上传商品图片
+  // 上传二手物品图片
   uploadProductImage(file) {
     const formData = new FormData()
     formData.append('file', file)

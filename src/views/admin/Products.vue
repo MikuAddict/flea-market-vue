@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>商品管理</span>
+          <span>二手物品管理</span>
         </div>
       </template>
       
@@ -11,11 +11,11 @@
       <div class="filter-container">
         <el-input
           v-model="searchKeyword"
-          placeholder="搜索商品名称或描述"
+          placeholder="搜索二手物品名称或描述"
           style="width: 300px; margin-right: 10px"
           @keyup.enter="handleSearch"
         />
-        <el-select v-model="filterCategory" placeholder="商品分类" clearable style="width: 150px; margin-right: 10px">
+        <el-select v-model="filterCategory" placeholder="二手物品分类" clearable style="width: 150px; margin-right: 10px">
           <el-option 
             v-for="category in categories" 
             :key="category.id" 
@@ -23,7 +23,7 @@
             :value="category.id" 
           />
         </el-select>
-        <el-select v-model="filterStatus" placeholder="商品状态" clearable style="width: 120px; margin-right: 10px">
+        <el-select v-model="filterStatus" placeholder="二手物品状态" clearable style="width: 120px; margin-right: 10px">
           <el-option label="上架" value="active" />
           <el-option label="下架" value="inactive" />
           <el-option label="已售出" value="sold" />
@@ -32,10 +32,10 @@
         <el-button @click="resetSearch">重置</el-button>
       </div>
 
-      <!-- 商品列表 -->
+      <!-- 二手物品列表 -->
       <el-table :data="productList" v-loading="loading" style="width: 100%; margin-top: 20px">
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="name" label="商品名称" />
+        <el-table-column prop="name" label="二手物品名称" />
         <el-table-column prop="categoryName" label="分类" width="120" />
         <el-table-column prop="price" label="价格" width="100">
           <template #default="{ row }">
@@ -84,8 +84,8 @@
       </div>
     </el-card>
 
-    <!-- 商品详情对话框 -->
-    <el-dialog v-model="detailDialogVisible" title="商品详情" width="600px">
+    <!-- 二手物品详情对话框 -->
+    <el-dialog v-model="detailDialogVisible" title="二手物品详情" width="600px">
       <div v-if="currentProduct" class="product-detail">
         <el-row :gutter="20">
           <el-col :span="12">
@@ -109,7 +109,7 @@
           </el-col>
         </el-row>
         <el-divider />
-        <h4>商品描述</h4>
+        <h4>二手物品描述</h4>
         <p>{{ currentProduct.description }}</p>
       </div>
     </el-dialog>
@@ -137,7 +137,7 @@ export default {
     const detailDialogVisible = ref(false)
     const currentProduct = ref(null)
 
-    // 获取商品列表
+    // 获取二手物品列表
     const fetchProducts = async () => {
       loading.value = true
       try {
@@ -152,8 +152,8 @@ export default {
         productList.value = response.data.products
         total.value = response.data.total
       } catch (error) {
-        console.error('获取商品列表失败:', error)
-        ElMessage.error('获取商品列表失败')
+        console.error('获取二手物品列表失败:', error)
+        ElMessage.error('获取二手物品列表失败')
       } finally {
         loading.value = false
       }
@@ -215,17 +215,17 @@ export default {
       fetchProducts()
     }
 
-    // 查看商品详情
+    // 查看二手物品详情
     const handleView = (product) => {
       currentProduct.value = product
       detailDialogVisible.value = true
     }
 
-    // 切换商品状态
+    // 切换二手物品状态
     const handleToggleStatus = async (product) => {
       try {
         await ElMessageBox.confirm(
-          `确定要${product.status === 'active' ? '下架' : '上架'}商品 "${product.name}" 吗？`,
+          `确定要${product.status === 'active' ? '下架' : '上架'}二手物品 "${product.name}" 吗？`,
           '提示',
           {
             confirmButtonText: '确定',
@@ -236,21 +236,21 @@ export default {
         
         const newStatus = product.status === 'active' ? 'inactive' : 'active'
         await productApi.updateProductStatus(product.id, newStatus)
-        ElMessage.success('商品状态更新成功')
+        ElMessage.success('二手物品状态更新成功')
         fetchProducts()
       } catch (error) {
         if (error !== 'cancel') {
-          console.error('更新商品状态失败:', error)
-          ElMessage.error('更新商品状态失败')
+          console.error('更新二手物品状态失败:', error)
+          ElMessage.error('更新二手物品状态失败')
         }
       }
     }
 
-    // 删除商品
+    // 删除二手物品
     const handleDelete = async (product) => {
       try {
         await ElMessageBox.confirm(
-          `确定要删除商品 "${product.name}" 吗？此操作不可恢复。`,
+          `确定要删除二手物品 "${product.name}" 吗？此操作不可恢复。`,
           '警告',
           {
             confirmButtonText: '确定',
@@ -260,12 +260,12 @@ export default {
         )
         
         await productApi.deleteProduct(product.id)
-        ElMessage.success('商品删除成功')
+        ElMessage.success('二手物品删除成功')
         fetchProducts()
       } catch (error) {
         if (error !== 'cancel') {
-          console.error('删除商品失败:', error)
-          ElMessage.error('删除商品失败')
+          console.error('删除二手物品失败:', error)
+          ElMessage.error('删除二手物品失败')
         }
       }
     }

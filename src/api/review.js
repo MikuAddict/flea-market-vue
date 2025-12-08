@@ -45,7 +45,7 @@ export default {
     })
   },
 
-  // 根据商品ID获取评价列表
+  // 根据二手物品ID获取评价列表
   getReviewListByProduct(productId, params) {
     return request({
       url: `/review/list/product/${productId}`,
@@ -72,7 +72,7 @@ export default {
     })
   },
 
-  // 获取用户对商品的评价
+  // 获取用户对二手物品的评价
   getUserReviewForProduct(userId, productId) {
     return request({
       url: `/review/get/user/${userId}/product/${productId}`,
@@ -80,7 +80,7 @@ export default {
     })
   },
 
-  // 获取当前用户对商品的评价
+  // 获取当前用户对二手物品的评价
   getMyReviewForProduct(productId) {
     return request({
       url: `/review/get/my/product/${productId}`,
@@ -88,7 +88,7 @@ export default {
     })
   },
 
-  // 获取商品平均评分
+  // 获取二手物品平均评分
   getAverageRating(productId) {
     return request({
       url: `/review/average/${productId}`,
@@ -96,7 +96,7 @@ export default {
     })
   },
 
-  // 获取商品评价统计信息
+  // 获取二手物品评价统计信息
   getReviewStatistics(productId) {
     return request({
       url: `/review/statistics/${productId}`,

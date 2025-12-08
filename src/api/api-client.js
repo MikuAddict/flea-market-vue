@@ -17,11 +17,17 @@ request.interceptors.request.use(
     // 添加token到请求头
     const token = store.state.token
     if (token) {
+      if (!config.headers) {
+        config.headers = {}
+      }
       config.headers.Authorization = `Bearer ${token}`
     } else {
       // 检查localStorage中是否有token
       const localToken = localStorage.getItem('token');
       if (localToken) {
+        if (!config.headers) {
+          config.headers = {}
+        }
         config.headers.Authorization = `Bearer ${localToken}`
         // 同步token到store
         store.commit('SET_TOKEN', localToken)

@@ -161,9 +161,12 @@ export default {
     // 计算属性
     const categories = computed(() => store.state.categories)
     const uploadUrl = '/api/image/upload/product'
-    const uploadHeaders = computed(() => ({
-      Authorization: `Bearer ${store.state.token}`
-    }))
+    const uploadHeaders = computed(() => {
+      const token = store.state.token || localStorage.getItem('token')
+      return token ? {
+        Authorization: `Bearer ${token}`
+      } : {}
+    })
     
     // 获取商品详情（编辑模式）
     const fetchProductDetail = async (productId) => {

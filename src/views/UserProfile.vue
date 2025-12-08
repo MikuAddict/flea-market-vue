@@ -249,9 +249,12 @@ export default {
     
     // 头像上传相关
     const uploadUrl = '/api/image/upload/avatar'
-    const uploadHeaders = computed(() => ({
-      Authorization: `Bearer ${store.state.token}`
-    }))
+    const uploadHeaders = computed(() => {
+      const token = store.state.token || localStorage.getItem('token')
+      return token ? {
+        Authorization: `Bearer ${token}`
+      } : {}
+    })
     
     // 初始化表单数据
     const initProfileForm = () => {

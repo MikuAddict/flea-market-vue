@@ -140,7 +140,7 @@ export default {
           keyword: searchKeyword.value,
           role: filterRole.value
         }
-        const response = await userApi.getUsers(params)
+        const response = await userApi.getUserList(params)
         userList.value = response.data.users
         total.value = response.data.total
       } catch (error) {
@@ -209,7 +209,7 @@ export default {
         )
         
         const newStatus = user.status === 'active' ? 'inactive' : 'active'
-        await userApi.updateUserStatus(user.id, newStatus)
+        await userApi.updateUser({ id: user.id, status: newStatus })
         ElMessage.success('用户状态更新成功')
         fetchUsers()
       } catch (error) {

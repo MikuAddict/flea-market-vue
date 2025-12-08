@@ -144,9 +144,23 @@ const router = createRouter({
 })
 
 // 导航守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   // 设置页面标题
   document.title = to.meta.title ? `${to.meta.title} - 跳蚤市场` : '跳蚤市场'
+  
+  // 检查是否有token（包括localStorage中的）
+  const token = store.state.token || localStorage.getItem('token')
+  
+  // 如果有token但用户信息为空，尝试恢复用户信息
+  if (token && !store.state.user) {
+    try {
+      await store.dispatch('getCurrentUser')
+    } catch (error) {
+      console.error('恢复用户信息失败:', error)
+      // 如果恢复失败，清除无效的token
+      store.commit('CLEAR_USER')
+    }
+  }
   
   // 检查是否需要登录
   const isLoggedIn = store.getters.isLoggedIn

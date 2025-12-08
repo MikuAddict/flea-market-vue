@@ -70,20 +70,61 @@
             />
           </el-form-item>
           
-          <el-form-item label="二手物品图片" prop="imageUrl">
-            <el-upload
-              class="image-uploader"
-              :action="uploadUrl"
-              :headers="uploadHeaders"
-              :show-file-list="false"
-              :on-success="handleImageSuccess"
-              :before-upload="beforeImageUpload"
-            >
-              <img v-if="productForm.imageUrl" :src="productForm.imageUrl" class="uploaded-image" />
-              <el-icon v-else class="image-uploader-icon"><Plus /></el-icon>
-            </el-upload>
-            <div class="upload-tip">
-              支持jpg、png格式，大小不超过2MB
+          <el-form-item label="二手物品图片" prop="imageUrls">
+            <div class="multi-image-uploader">
+              <!-- 已上传图片列表 -->
+              <div class="uploaded-images">
+                <div 
+                  v-for="(image, index) in tempImages" 
+                  :key="index"
+                  class="image-item"
+                  :class="{ 'main-image': index === 0 }"
+                >
+                  <img :src="image.url" :alt="`图片${index + 1}`" />
+                  <div class="image-actions">
+                    <el-button 
+                      v-if="index > 0"
+                      size="small" 
+                      type="primary" 
+                      circle
+                      @click.stop="setAsMainImage(index)"
+                      title="设为主图"
+                    >
+                      <el-icon><Star /></el-icon>
+                    </el-button>
+                    <el-button 
+                      size="small" 
+                      type="danger" 
+                      circle
+                      @click.stop="removeImage(index)"
+                      title="删除图片"
+                    >
+                      <el-icon><Delete /></el-icon>
+                    </el-button>
+                  </div>
+                  <div v-if="index === 0" class="main-image-badge">主图</div>
+                </div>
+              </div>
+              
+              <!-- 上传按钮 -->
+              <el-upload
+                v-if="tempImages.length < 5"
+                class="image-uploader"
+                action=""
+                :show-file-list="false"
+                :auto-upload="false"
+                :on-change="handleImageChange"
+                :multiple="true"
+                :before-upload="beforeImageUpload"
+              >
+                <div class="upload-area">
+                  <el-icon class="image-uploader-icon"><Plus /></el-icon>
+                </div>
+              </el-upload>
+            </div>
+            <div class="upload-info">
+              <p>• 支持jpg、png格式，大小不超过2MB</p>
+              <p>• 最多可上传5张图片，第一张将自动设为主图</p>
             </div>
           </el-form-item>
           
@@ -104,9 +145,9 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Star, Delete } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
-import api from '@/api'
+import { request } from '@/api/api-client'
 import { productApi } from '@/api'
 
 export default {
@@ -127,6 +168,9 @@ export default {
     const submitting = ref(false)
     const isEdit = ref(false)
     
+    // 临时图片存储（本地文件对象）
+    const tempImages = ref([])
+    
     // 表单数据
     const productForm = reactive({
       productName: '',
@@ -134,7 +178,7 @@ export default {
       price: 0,
       paymentMethod: 0,
       description: '',
-      imageUrl: ''
+      imageUrls: [] // 仅显示用，实际存储在tempImages中
     })
     
     // 表单验证规则
@@ -158,9 +202,9 @@ export default {
       ]
     }
     
-    // 计算属性
+        // 计算属性
     const categories = computed(() => store.state.categories)
-    const uploadUrl = '/api/image/upload/product'
+    const uploadUrl = '/image/product'
     const uploadHeaders = computed(() => {
       const token = store.state.token || localStorage.getItem('token')
       return token ? {
@@ -177,7 +221,21 @@ export default {
         // 填充表单
         Object.keys(productForm).forEach(key => {
           if (product[key] !== undefined) {
-            productForm[key] = product[key]
+            if (key === 'imageUrls' && product[key]) {
+              // 处理图片URL，将逗号分隔的字符串转换为数组
+              const imageUrls = product[key].split(',').filter(url => url.trim())
+              
+              // 填充临时图片数据（编辑模式下已有正式URL）
+              tempImages.value = imageUrls.map(url => ({
+                url,
+                file: null, // 编辑模式下没有文件对象
+                isExisting: true // 标记为已存在的图片
+              }))
+              
+              productForm[key] = imageUrls
+            } else {
+              productForm[key] = product[key]
+            }
           }
         })
       } catch (error) {
@@ -193,23 +251,91 @@ export default {
       
       try {
         await productFormRef.value.validate()
+        
+        // 检查图片
+        if (tempImages.value.length === 0) {
+          ElMessage.warning('请至少上传一张图片')
+          return
+        }
+        
         submitting.value = true
+        
+        // 上传图片
+        const imageUrls = []
+        
+        for (const image of tempImages.value) {
+          if (image.isExisting) {
+            // 已存在的图片（编辑模式）
+            imageUrls.push(image.url)
+          } else {
+            // 新上传的图片
+            try {
+              const formData = new FormData()
+              formData.append('files', image.file)
+              
+              const uploadResponse = await request({
+                url: '/image/product',
+                method: 'post',
+                data: formData,
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                  Authorization: `Bearer ${store.state.token || localStorage.getItem('token')}`
+                }
+              })
+              
+              if (uploadResponse.data.code === 200) {
+                // 根据OpenAPI文档，返回的是BaseResponseObject，需要根据实际响应结构调整
+                const responseData = uploadResponse.data.data
+                
+                // 尝试不同的响应格式处理
+                if (responseData.originalUrl) {
+                  imageUrls.push(responseData.originalUrl)
+                } else if (responseData.url) {
+                  imageUrls.push(responseData.url)
+                } else if (Array.isArray(responseData) && responseData.length > 0) {
+                  // 如果是数组格式，取第一个
+                  const firstImage = responseData[0]
+                  imageUrls.push(firstImage.originalUrl || firstImage.url || responseData)
+                } else {
+                  // 直接使用返回的数据
+                  imageUrls.push(responseData)
+                }
+              } else {
+                throw new Error(uploadResponse.data.message || '图片上传失败')
+              }
+            } catch (uploadError) {
+              console.error('图片上传失败:', uploadError)
+              ElMessage.error(`上传图片失败: ${uploadError.message}`)
+              throw uploadError
+            }
+          }
+        }
+        
+        // 准备提交数据
+        const submitData = {
+          ...productForm,
+          // 将图片数组转换为逗号分隔的字符串
+          imageUrls: imageUrls.join(','),
+          // 设置主图为第一张图片
+          mainImageUrl: imageUrls[0]
+        }
         
         let response
         
         if (isEdit.value) {
           // 编辑二手物品
           response = await productApi.updateProduct({
-            ...productForm,
+            ...submitData,
             id: route.params.id
           })
         } else {
           // 发布新二手物品
-          response = await productApi.addProduct(productForm)
+          response = await productApi.addProduct(submitData)
         }
         
         if (response.data.code === 200) {
           ElMessage.success(isEdit.value ? '二手物品修改成功' : '二手物品发布成功')
+          clearTempImages() // 成功后清理临时图片
           router.push('/my-products')
         }
       } catch (error) {
@@ -222,16 +348,54 @@ export default {
     
     // 取消操作
     const handleCancel = () => {
+      clearTempImages() // 取消时清理临时图片
       router.push('/my-products')
     }
     
-    // 图片上传成功
-    const handleImageSuccess = (res) => {
-      if (res.code === 200) {
-        productForm.imageUrl = res.data.originalUrl
-        ElMessage.success('图片上传成功')
-      } else {
-        ElMessage.error(res.message || '图片上传失败')
+    // 清理临时图片
+    const clearTempImages = () => {
+      tempImages.value = []
+      productForm.imageUrls = []
+    }
+    
+    // 图片选择（本地临时存储）
+    const handleImageChange = (file) => {
+      // 验证文件
+      if (!beforeImageUpload(file.raw)) {
+        return false
+      }
+      
+      // 创建本地预览URL
+      const url = URL.createObjectURL(file.raw)
+      
+      // 添加到临时图片数组
+      tempImages.value.push({
+        url,
+        file: file.raw,
+        isExisting: false
+      })
+      
+      return false // 阻止自动上传
+    }
+    
+    // 删除图片
+    const removeImage = (index) => {
+      // 释放URL对象
+      if (!tempImages.value[index].isExisting) {
+        URL.revokeObjectURL(tempImages.value[index].url)
+      }
+      
+      tempImages.value.splice(index, 1)
+      ElMessage.success('图片已删除')
+    }
+    
+    // 设置主图
+    const setAsMainImage = (index) => {
+      if (index > 0 && index < tempImages.value.length) {
+        const mainImage = tempImages.value[index]
+        tempImages.value.splice(index, 1)
+        tempImages.value.unshift(mainImage)
+        ElMessage.success('已设为主图')
       }
     }
     
@@ -271,13 +435,17 @@ export default {
       productFormRef,
       submitting,
       isEdit,
+      tempImages,
       categories,
       uploadUrl,
       uploadHeaders,
       handleSubmit,
       handleCancel,
-      handleImageSuccess,
-      beforeImageUpload
+      handleImageChange,
+      removeImage,
+      setAsMainImage,
+      beforeImageUpload,
+      clearTempImages
     }
   }
 }
@@ -296,42 +464,145 @@ export default {
   align-items: center;
 }
 
-.image-uploader {
-  border: 1px dashed #d9d9d9;
+/* 多图上传样式 */
+.multi-image-uploader {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.uploaded-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.image-item {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.image-item.main-image {
+  border: 2px solid #409eff;
+  box-shadow: 0 0 0 1px rgba(64, 158, 255, 0.2);
+}
+
+.image-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.image-item:hover .image-actions {
+  opacity: 1;
+}
+
+.image-actions .el-button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+}
+
+.main-image-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(64, 158, 255, 0.9);
+  color: white;
+  font-size: 12px;
+  text-align: center;
+  padding: 2px 4px;
+}
+
+/* Element Plus Upload组件样式覆盖 */
+.image-uploader :deep(.el-upload) {
+  border: 2px dashed #d9d9d9;
   border-radius: 6px;
   cursor: pointer;
+  width: 120px;
+  height: 120px;
+  transition: all 0.3s ease;
+  background-color: #fafafa;
   position: relative;
   overflow: hidden;
-  width: 178px;
-  height: 178px;
+}
+
+.image-uploader :deep(.el-upload:hover) {
+  border-color: #409eff;
+  background-color: #f0f7ff;
+}
+
+.upload-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.image-uploader:hover {
-  border-color: #409eff;
+  z-index: 1;
 }
 
 .image-uploader-icon {
-  font-size: 28px;
+  font-size: 32px;
   color: #8c939d;
-  width: 178px;
-  height: 178px;
-  text-align: center;
-  line-height: 178px;
+  pointer-events: none; /* 防止图标阻挡点击事件 */
 }
 
-.uploaded-image {
-  width: 178px;
-  height: 178px;
-  object-fit: cover;
-  display: block;
+/* 响应式布局适配 */
+@media (max-width: 768px) {
+  .image-uploader :deep(.el-upload) {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .image-uploader-icon {
+    font-size: 28px;
+  }
 }
 
-.upload-tip {
-  margin-top: 10px;
+@media (max-width: 480px) {
+  .image-uploader :deep(.el-upload) {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .image-uploader-icon {
+    font-size: 24px;
+  }
+}
+
+.upload-info {
+  margin-top: 8px;
   font-size: 12px;
   color: #909399;
+  line-height: 1.4;
+}
+
+.upload-info p {
+  margin: 2px 0;
 }
 </style>

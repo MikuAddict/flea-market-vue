@@ -260,7 +260,16 @@ export default {
         if (response.data && response.data.code === 200) {
           // 根据OpenAPI规范，返回的是分类数组，没有父子级关系
           const categories = response.data.data || []
-          categoryList.value = categories
+          
+          // 处理大整数ID，确保精度不丢失
+          const processedCategories = categories.map(category => ({
+            ...category,
+            id: typeof category.id === 'number' && category.id > Number.MAX_SAFE_INTEGER 
+                 ? category.id.toString() 
+                 : category.id
+          }))
+          
+          categoryList.value = processedCategories
         } else {
           ElMessage.error('获取分类列表失败')
         }

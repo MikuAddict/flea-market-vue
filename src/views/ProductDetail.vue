@@ -5,24 +5,38 @@
         <!-- 左侧二手物品信息 -->
         <el-col :xs="24" :lg="14">
           <el-card class="product-info-card">
-            <div class="product-gallery">
-              <div class="main-image">
-                <img
-                  v-if="product.imageUrl"
-                  :src="product.imageUrl"
-                  :alt="product.productName"
-                  @error="handleImageError"
-                />
-                <el-image v-else style="width: 100%; height: 400px">
-                  <template #error>
-                    <div class="image-placeholder">
-                      <el-icon size="50"><Picture /></el-icon>
-                      <p>暂无图片</p>
-                    </div>
-                  </template>
-                </el-image>
+          <div class="product-gallery">
+            <!-- 主图 -->
+            <div class="main-image">
+              <img
+                v-if="product.mainImageUrl || product.imageUrl"
+                :src="product.mainImageUrl || product.imageUrl"
+                :alt="product.productName"
+                @error="handleImageError"
+              />
+              <el-image v-else style="width: 100%; height: 400px">
+                <template #error>
+                  <div class="image-placeholder">
+                    <el-icon size="50"><Picture /></el-icon>
+                    <p>暂无图片</p>
+                  </div>
+                </template>
+              </el-image>
+            </div>
+            
+            <!-- 缩略图列表 -->
+            <div v-if="productImages.length > 1" class="thumbnail-list">
+              <div 
+                v-for="(image, index) in productImages" 
+                :key="index"
+                class="thumbnail-item"
+                :class="{ active: currentImageIndex === index }"
+                @click="currentImageIndex = index"
+              >
+                <img :src="image" :alt="`图片${index + 1}`" />
               </div>
             </div>
+          </div>
             <div class="product-basic-info">
               <h2 class="product-name">{{ product.productName }}</h2>
               <div class="product-price">
@@ -217,6 +231,21 @@ export default {
     const reviews = ref([])
     const relatedProducts = ref([])
     const sellerStats = ref({ published: 0, completed: 0 })
+    const currentImageIndex = ref(0)
+    
+    // 计算属性：处理图片数组
+    const productImages = computed(() => {
+      if (product.value.imageUrls && typeof product.value.imageUrls === 'string') {
+        // 将逗号分隔的字符串转换为数组
+        return product.value.imageUrls.split(',').filter(url => url.trim())
+      } else if (Array.isArray(product.value.imageUrls)) {
+        return product.value.imageUrls
+      } else {
+        // 如果没有多图，使用单图
+        const mainImage = product.value.mainImageUrl || product.value.imageUrl
+        return mainImage ? [mainImage] : []
+      }
+    })
     
     // 计算属性
     const isLoggedIn = computed(() => store.getters.isLoggedIn)
@@ -375,6 +404,8 @@ export default {
       reviews,
       relatedProducts,
       sellerStats,
+      productImages,
+      currentImageIndex,
       isLoggedIn,
       userId,
       formatPrice,
@@ -414,12 +445,48 @@ export default {
   background-color: #f5f7fa;
   border-radius: 4px;
   overflow: hidden;
+  margin-bottom: 16px;
 }
 
 .main-image img {
   max-width: 100%;
   max-height: 400px;
   object-fit: contain;
+}
+
+/* 缩略图列表样式 */
+.thumbnail-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.thumbnail-item {
+  width: 80px;
+  height: 80px;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.thumbnail-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.thumbnail-item.active {
+  border-color: #409eff;
+  box-shadow: 0 0 0 1px rgba(64, 158, 255, 0.2);
+}
+
+.thumbnail-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .image-placeholder {

@@ -2,10 +2,50 @@ import axios from 'axios'
 import store from '../store/store'
 import { ElMessage } from 'element-plus'
 
+// 自定义JSON解析器，处理大整数
+const bigIntJsonParser = (data) => {
+  if (typeof data !== 'string') {
+    return data
+  }
+  
+  // 正则表达式匹配JSON中的大数字值
+  const bigIntRegex = /"([^"]+)":\s*([0-9]{15,})([,}\s])/g
+  const processedData = data.replace(bigIntRegex, (match, key, numberStr, suffix) => {
+    // 如果数字大于最大安全整数，转换为字符串
+    try {
+      const num = BigInt(numberStr)
+      if (num > BigInt(Number.MAX_SAFE_INTEGER)) {
+        return `"${key}":"${numberStr}"${suffix}`
+      }
+    } catch (e) {
+      // 无法转换为BigInt，保持原样
+    }
+    return match
+  })
+  
+  return JSON.parse(processedData)
+}
+
 // 创建axios实例
 const request = axios.create({
   baseURL: '/api',
-  timeout: 10000
+  timeout: 10000,
+  transformResponse: [
+    function (data) {
+      try {
+        // 先使用自定义解析器处理大整数
+        const parsedData = bigIntJsonParser(data)
+        return parsedData
+      } catch (error) {
+        // 如果解析失败，尝试使用默认JSON解析
+        try {
+          return JSON.parse(data)
+        } catch (e) {
+          return data
+        }
+      }
+    }
+  ]
 })
 
 // 请求拦截器
@@ -47,7 +87,7 @@ request.interceptors.response.use(
   response => {
     store.commit('SET_LOADING', false)
     
-    const res = response.data
+    let res = response.data
     
     // 检查是否有code字段，如果有且不为200，则处理为错误
     if (res && typeof res.code !== 'undefined' && res.code !== 200) {

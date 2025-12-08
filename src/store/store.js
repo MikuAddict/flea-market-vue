@@ -223,7 +223,16 @@ export default createStore({
       try {
         const response = await categoryApi.getCategoryList()
         const { data } = response.data
-        commit('SET_CATEGORIES', data)
+        
+        // 处理大整数ID，确保精度不丢失
+        const processedCategories = data.map(category => ({
+          ...category,
+          id: typeof category.id === 'number' && category.id > Number.MAX_SAFE_INTEGER 
+               ? category.id.toString() 
+               : category.id
+        }))
+        
+        commit('SET_CATEGORIES', processedCategories)
       } catch (error) {
         console.error('获取分类失败:', error)
       }

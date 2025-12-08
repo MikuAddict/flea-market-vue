@@ -2,7 +2,7 @@
   <el-card class="unified-card product-card" @click="goToDetail">
     <div class="product-image-container">
       <div class="product-image">
-        <img v-if="product.imageUrl" :src="product.imageUrl" :alt="product.productName" />
+        <img v-if="product.mainImageUrl || product.imageUrl" :src="product.mainImageUrl || product.imageUrl" :alt="product.productName" />
         <div v-else class="image-placeholder">
           <el-icon><Picture /></el-icon>
         </div>

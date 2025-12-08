@@ -69,30 +69,27 @@ paths:
     post:
       summary: 上传二手物品图片
       deprecated: false
-      description: 上传二手物品相关图片
+      description: 上传二手物品相关图片，支持单张或多张图片上传
       operationId: uploadProductImage
       tags:
         - 图片管理
-      parameters: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-                  description: 二手物品图片文件
-              required:
-                - file
+      parameters:
+        - name: files
+          in: query
+          description: 二手物品图片文件，支持单个文件或多个文件
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+              format: binary
       responses:
         '200':
           description: OK
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/BaseResponseImageUploadResponse'
+                $ref: '#/components/schemas/BaseResponseObject'
           headers: {}
       security: []
   /image/news:
@@ -271,6 +268,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ImageUploadResponse'
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    BaseResponseObject:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data: {}
         message:
           type: string
         hashMap:

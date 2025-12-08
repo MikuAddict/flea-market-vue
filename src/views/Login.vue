@@ -15,7 +15,6 @@
             <el-icon size="40" color="var(--primary-color)"><Shop /></el-icon>
             <h1 class="site-title">校园跳蚤市场</h1>
           </div>
-          <p class="auth-subtitle unified-text-secondary">登录账号，享受二手交易乐趣</p>
         </div>
         
         <el-form
@@ -48,11 +47,6 @@
             />
           </el-form-item>
           
-          <div class="auth-options unified-flex unified-flex-between">
-            <el-checkbox v-model="rememberMe">记住我</el-checkbox>
-            <el-link type="primary">忘记密码？</el-link>
-          </div>
-          
           <el-form-item>
             <el-button
               type="primary"
@@ -71,23 +65,6 @@
           <el-link type="primary" @click="$router.push('/register')">立即注册</el-link>
         </div>
         
-        <div class="auth-divider">
-          <el-divider>
-            <span class="divider-text unified-text-secondary">其他登录方式</span>
-          </el-divider>
-        </div>
-        
-        <div class="social-login unified-flex unified-flex-center">
-          <div class="social-icon unified-flex unified-flex-center">
-            <el-icon><Phone /></el-icon>
-          </div>
-          <div class="social-icon unified-flex unified-flex-center">
-            <el-icon><Message /></el-icon>
-          </div>
-          <div class="social-icon unified-flex unified-flex-center">
-            <el-icon><ChatLineSquare /></el-icon>
-          </div>
-        </div>
       </el-card>
     </div>
   </div>

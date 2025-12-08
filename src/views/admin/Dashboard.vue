@@ -1,749 +1,693 @@
 <template>
-  <div class="admin-dashboard">
-    <el-row :gutter="20">
-      <!-- 左侧导航菜单 -->
-      <el-col :xs="24" :md="6">
-        <el-card class="nav-card">
-          <el-menu
-            :default-active="activeMenu"
-            mode="vertical"
-            @select="handleMenuSelect"
-          >
-            <el-menu-item index="dashboard">
-              <el-icon><Odometer /></el-icon>
-              <span>数据统计</span>
-            </el-menu-item>
-            <el-menu-item index="users">
-              <el-icon><User /></el-icon>
-              <span>用户管理</span>
-            </el-menu-item>
-            <el-menu-item index="products">
-              <el-icon><Goods /></el-icon>
-              <span>二手物品管理</span>
-            </el-menu-item>
-            <el-menu-item index="orders">
-              <el-icon><ShoppingCart /></el-icon>
-              <span>订单管理</span>
-            </el-menu-item>
-            <el-menu-item index="news">
-              <el-icon><Document /></el-icon>
-              <span>新闻管理</span>
-            </el-menu-item>
-          </el-menu>
+  <Layout>
+    <div class="admin-dashboard unified-page-container fade-in">
+      <!-- 页面标题 -->
+      <div class="page-header">
+        <h1 class="unified-title-xl">管理仪表盘</h1>
+      </div>
+            
+      <!-- 快速操作区域 -->
+      <div class="actions-container">
+        <el-card class="unified-card actions-card fade-in">
+          <template #header>
+            <h3 class="unified-title-base">快速操作</h3>
+          </template>
+          <div class="actions-grid unified-grid unified-grid-4">
+            <div 
+              class="action-item fade-in" 
+              v-for="(action, index) in quickActions" 
+              :key="action.title"
+              @click="action.handler"
+              :style="{ animationDelay: `${index * 0.1}s` }"
+            >
+              <div class="action-icon unified-flex unified-flex-center">
+                <el-icon :size="24"><component :is="action.icon" /></el-icon>
+              </div>
+              <p class="action-title">{{ action.title }}</p>
+            </div>
+          </div>
         </el-card>
-      </el-col>
-      
-      <!-- 右侧内容区域 -->
-      <el-col :xs="24" :md="18">
-        <div v-if="activeMenu === 'dashboard'" class="stats-container">
-          <!-- 时间选择器 -->
-          <el-card class="time-selector-card" shadow="never">
-            <template #header>
-              <div class="card-header">
-                <span>统计时间范围</span>
-                <div class="time-controls">
-                  <el-date-picker
-                    v-model="selectedMonth"
-                    type="month"
-                    placeholder="选择月份"
-                    format="YYYY年MM月"
-                    value-format="YYYY-MM"
-                    @change="fetchAllData"
-                  />
-                  <el-button type="primary" @click="setCurrentMonth">
-                    当月数据
-                  </el-button>
+      </div>
+      <!-- 统计卡片区域 -->
+      <div class="stats-container">
+        <div class="unified-grid unified-grid-4">
+          <div class="stat-card fade-in" v-for="(stat, index) in statsData" :key="stat.title" :style="{ animationDelay: `${index * 0.1}s` }">
+            <el-card class="unified-card stat-item" :class="`stat-item-${stat.type}`">
+              <div class="stat-content unified-flex unified-flex-col">
+                <div class="stat-icon unified-flex unified-flex-center">
+                  <el-icon :size="32"><component :is="stat.icon" /></el-icon>
+                </div>
+                <div class="stat-info">
+                  <h3 class="stat-value">{{ stat.value }}</h3>
+                  <p class="stat-title">{{ stat.title }}</p>
+                </div>
+                <div class="stat-trend unified-flex unified-flex-center" :class="`trend-${stat.trend}`">
                 </div>
               </div>
-            </template>
-          </el-card>
-          
-          <!-- 四个主要数据模块 -->
-          <el-row :gutter="20">
-            <!-- 1. 当月交易成功物品排行榜 -->
-            <el-col :xs="24" :lg="12">
-              <el-card class="stat-card" shadow="hover">
-                <template #header>
-                  <div class="card-header">
-                    <span>当月交易成功物品排行榜</span>
-                    <el-tag type="success">TOP 10</el-tag>
-                  </div>
-                </template>
-                <div class="chart-container">
-                  <v-chart :option="productRankingChartOption" autoresize />
-                </div>
-                <el-table :data="productRanking" size="small" class="ranking-table">
-                  <el-table-column type="index" label="排名" width="60" align="center" />
-                  <el-table-column prop="productName" label="物品名称" show-overflow-tooltip />
-                  <el-table-column prop="transactionCount" label="交易次数" width="90" align="center" />
-                  <el-table-column prop="totalAmount" label="总金额" width="100" align="center">
-                    <template #default="scope">
-                      ¥{{ formatPrice(scope.row.totalAmount) }}
-                    </template>
-                  </el-table-column>
-                </el-table>
-              </el-card>
-            </el-col>
-            
-            <!-- 2. 活跃用户排行榜 -->
-            <el-col :xs="24" :lg="12">
-              <el-card class="stat-card" shadow="hover">
-                <template #header>
-                  <div class="card-header">
-                    <span>活跃用户排行榜</span>
-                    <el-tag type="warning">活跃度</el-tag>
-                  </div>
-                </template>
-                <div class="chart-container">
-                  <v-chart :option="userRankingChartOption" autoresize />
-                </div>
-                <el-table :data="userRanking" size="small" class="ranking-table">
-                  <el-table-column type="index" label="排名" width="60" align="center" />
-                  <el-table-column prop="userName" label="用户名" show-overflow-tooltip />
-                  <el-table-column prop="activityScore" label="活跃度" width="90" align="center" />
-                  <el-table-column prop="transactionCount" label="交易次数" width="90" align="center" />
-                </el-table>
-              </el-card>
-            </el-col>
-            
-            <!-- 3. 需求量大的二手物品排行 -->
-            <el-col :xs="24" :lg="12">
-              <el-card class="stat-card" shadow="hover">
-                <template #header>
-                  <div class="card-header">
-                    <span>需求量大的二手物品排行</span>
-                    <el-tag type="danger">高需求</el-tag>
-                  </div>
-                </template>
-                <div class="chart-container">
-                  <v-chart :option="demandChartOption" autoresize />
-                </div>
-                <el-table :data="highDemandProducts" size="small" class="ranking-table">
-                  <el-table-column type="index" label="排名" width="60" align="center" />
-                  <el-table-column prop="productName" label="物品名称" show-overflow-tooltip />
-                  <el-table-column prop="viewCount" label="浏览量" width="90" align="center" />
-                  <el-table-column prop="inquiryCount" label="咨询次数" width="90" align="center" />
-                  <el-table-column prop="demandScore" label="需求指数" width="90" align="center" />
-                </el-table>
-              </el-card>
-            </el-col>
-            
-            <!-- 4. 闲置量大的二手物品排行 -->
-            <el-col :xs="24" :lg="12">
-              <el-card class="stat-card" shadow="hover">
-                <template #header>
-                  <div class="card-header">
-                    <span>闲置量大的二手物品排行</span>
-                    <el-tag type="info">高库存</el-tag>
-                  </div>
-                </template>
-                <div class="chart-container">
-                  <v-chart :option="inventoryChartOption" autoresize />
-                </div>
-                <el-table :data="highInventoryProducts" size="small" class="ranking-table">
-                  <el-table-column type="index" label="排名" width="60" align="center" />
-                  <el-table-column prop="productName" label="物品名称" show-overflow-tooltip />
-                  <el-table-column prop="inventoryCount" label="库存量" width="90" align="center" />
-                  <el-table-column prop="daysOnMarket" label="上架天数" width="90" align="center" />
-                  <el-table-column prop="inventoryScore" label="闲置指数" width="90" align="center" />
-                </el-table>
-              </el-card>
-            </el-col>
-          </el-row>
-          
-          <!-- 月度统计概览 -->
-          <el-card class="overview-card" shadow="never">
-            <template #header>
-              <span>月度统计概览 - {{ selectedMonthDisplay }}</span>
-            </template>
-            <el-row :gutter="20">
-              <el-col :xs="12" :sm="6" :md="3">
-                <div class="overview-item">
-                  <div class="overview-icon user-icon">
-                    <el-icon><User /></el-icon>
-                  </div>
-                  <div class="overview-content">
-                    <div class="overview-value">{{ monthlyStats.newUsers || 0 }}</div>
-                    <div class="overview-label">新用户</div>
-                  </div>
-                </div>
-              </el-col>
-              <el-col :xs="12" :sm="6" :md="3">
-                <div class="overview-item">
-                  <div class="overview-icon product-icon">
-                    <el-icon><Goods /></el-icon>
-                  </div>
-                  <div class="overview-content">
-                    <div class="overview-value">{{ monthlyStats.newProducts || 0 }}</div>
-                    <div class="overview-label">新物品</div>
-                  </div>
-                </div>
-              </el-col>
-              <el-col :xs="12" :sm="6" :md="3">
-                <div class="overview-item">
-                  <div class="overview-icon order-icon">
-                    <el-icon><ShoppingCart /></el-icon>
-                  </div>
-                  <div class="overview-content">
-                    <div class="overview-value">{{ monthlyStats.completedOrders || 0 }}</div>
-                    <div class="overview-label">完成订单</div>
-                  </div>
-                </div>
-              </el-col>
-              <el-col :xs="12" :sm="6" :md="3">
-                <div class="overview-item">
-                  <div class="overview-icon revenue-icon">
-                    <el-icon><Money /></el-icon>
-                  </div>
-                  <div class="overview-content">
-                    <div class="overview-value">¥{{ formatPrice(monthlyStats.totalRevenue || 0) }}</div>
-                    <div class="overview-label">总金额</div>
-                  </div>
-                </div>
-              </el-col>
-            </el-row>
-          </el-card>
+            </el-card>
+          </div>
         </div>
-      </el-col>
-    </el-row>
-  </div>
+      </div>
+      
+      <!-- 图表和数据区域 -->
+      <div class="charts-container">
+        <el-row :gutter="24">
+          <!-- 交易趋势图表 -->
+          <el-col :xs="24" :lg="16">
+            <el-card class="unified-card chart-card fade-in">
+              <template #header>
+                <div class="card-header unified-flex unified-flex-between">
+                  <h3 class="unified-title-base">交易趋势</h3>
+                  <div class="date-range-selector">
+                    <el-select v-model="trendPeriod" @change="updateTrendChart" size="small">
+                      <el-option label="最近7天" value="7" />
+                      <el-option label="最近30天" value="30" />
+                      <el-option label="最近90天" value="90" />
+                    </el-select>
+                  </div>
+                </div>
+              </template>
+              <div class="chart-container" ref="trendChart"></div>
+            </el-card>
+          </el-col>
+          
+          <!-- 分类占比图表 -->
+          <el-col :xs="24" :lg="8">
+            <el-card class="unified-card chart-card fade-in">
+              <template #header>
+                <h3 class="unified-title-base">分类占比</h3>
+              </template>
+              <div class="chart-container" ref="categoryChart"></div>
+            </el-card>
+          </el-col>
+        </el-row>
+      </div>
+      
+      <!-- 数据表格区域 -->
+      <div class="tables-container">
+        <el-row :gutter="24">
+          <!-- 需求量大的二手物品分类 -->
+          <el-col :xs="24" :lg="12">
+            <el-card class="unified-card table-card fade-in">
+              <template #header>
+                <div class="card-header unified-flex unified-flex-between">
+                  <h3 class="unified-title-base">需求量大的二手物品</h3>
+                  <el-button type="text" @click="goToProducts" class="view-more-btn">
+                    查看更多
+                    <el-icon><ArrowRight /></el-icon>
+                  </el-button>
+                </div>
+              </template>
+              <el-table :data="hotProducts" style="width: 100%">
+                <el-table-column prop="productName" label="名称" min-width="120" />
+                <el-table-column prop="viewCount" label="售出量" width="100" />
+              </el-table>
+            </el-card>
+          </el-col>
+          
+          <!-- 待审核用户 -->
+          <el-col :xs="24" :lg="12">
+            <el-card class="unified-card table-card fade-in">
+              <template #header>
+                <div class="card-header unified-flex unified-flex-between">
+                  <h3 class="unified-title-base">待审核用户</h3>
+                  <el-button type="text" @click="goToUsers" class="view-more-btn">
+                    查看更多
+                    <el-icon><ArrowRight /></el-icon>
+                  </el-button>
+                </div>
+              </template>
+              <el-table :data="latestUsers" style="width: 100%">
+                <el-table-column prop="userName" label="用户名" min-width="100">
+                  <template #default="scope">
+                    <div class="user-info unified-flex unified-flex-center">
+                      <span class="user-name">{{ scope.row.userName }}</span>
+                    </div>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="registerTime" label="注册时间" width="150">
+                  <template #default="scope">
+                    {{ formatDate(scope.row.registerTime) }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="userStatus" label="状态" width="80">
+                  <template #default="scope">
+                    <el-tag :type="getUserStatusType(scope.row.userStatus)" size="small">
+                      {{ getUserStatusText(scope.row.userStatus) }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="80">
+                  <template #default="scope">
+                    <el-button type="text" @click="auditUser(scope.row)">审核</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-card>
+          </el-col>
+        </el-row>
+      </div>
+    </div>
+  </Layout>
 </template>
 
 <script>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { 
+  TrendCharts, 
+  PieChart, 
+  User, 
+  Goods, 
+  ShoppingCartFull, 
+  CreditCard,
+  ArrowUp,
+  ArrowDown,
+  Plus,
+  Edit,
+  Message,
+  ArrowRight
+} from '@element-plus/icons-vue'
+import { formatPrice, formatDate } from '@/utils/format'
 import { ElMessage } from 'element-plus'
-import { User, Goods, ShoppingCart, Document, Odometer, Money } from '@element-plus/icons-vue'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { BarChart, LineChart, PieChart } from 'echarts/charts'
-import { GridComponent, TooltipComponent, LegendComponent, TitleComponent } from 'echarts/components'
-import VChart from 'vue-echarts'
-import statisticsApi from '@/api/statistics'
-import { formatPrice } from '@/utils/format'
-
-use([
-  CanvasRenderer,
-  BarChart,
-  LineChart,
-  PieChart,
-  GridComponent,
-  TooltipComponent,
-  LegendComponent,
-  TitleComponent
-])
+import * as echarts from 'echarts'
+import { adminApi } from '@/api'
+import Layout from '@/components/Layout.vue'
 
 export default {
   name: 'AdminDashboard',
   components: {
-    User,
-    Goods,
-    ShoppingCart,
-    Document,
-    Odometer,
-    Money,
-    VChart
+    Layout
   },
   setup() {
     const router = useRouter()
     
-    // 响应式数据
-    const activeMenu = ref('dashboard')
-    const selectedMonth = ref('')
+    // 图表引用
+    const trendChart = ref(null)
+    const categoryChart = ref(null)
+    const trendPeriod = ref('30')
     
-    const monthlyStats = ref({})
-    const productRanking = ref([])
-    const userRanking = ref([])
-    const highDemandProducts = ref([])
-    const highInventoryProducts = ref([])
-
-    // 计算属性
-    const selectedMonthDisplay = computed(() => {
-      if (!selectedMonth.value) return ''
-      const [year, month] = selectedMonth.value.split('-')
-      return `${year}年${month}月`
-    })
-
-    // 图表配置
-    const productRankingChartOption = computed(() => ({
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'shadow' }
+    // 统计数据
+    const statsData = ref([
+      {
+        title: '总用户数',
+        value: 1234,
+        icon: 'User',
+        type: 'primary',
+        trend: 'up',
+        trendIcon: 'ArrowUp',
+        trendText: '12.5%'
       },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
+      {
+        title: '二手物品数',
+        value: 567,
+        icon: 'Goods',
+        type: 'success',
+        trend: 'up',
+        trendIcon: 'ArrowUp',
+        trendText: '8.3%'
       },
-      xAxis: {
-        type: 'category',
-        data: productRanking.value.map(item => 
-          item.productName.length > 8 ? item.productName.substring(0, 8) + '...' : item.productName
-        ),
-        axisLabel: {
-          rotate: 45
-        }
+      {
+        title: '交易订单数',
+        value: 890,
+        icon: 'ShoppingCartFull',
+        type: 'warning',
+        trend: 'down',
+        trendIcon: 'ArrowDown',
+        trendText: '3.2%'
       },
-      yAxis: {
-        type: 'value',
-        name: '交易次数'
-      },
-      series: [{
-        data: productRanking.value.map(item => item.transactionCount),
-        type: 'bar',
-        itemStyle: {
-          color: '#67C23A'
-        }
-      }]
-    }))
-
-    const userRankingChartOption = computed(() => ({
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'shadow' }
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: userRanking.value.map(item => 
-          item.userName.length > 6 ? item.userName.substring(0, 6) + '...' : item.userName
-        ),
-        axisLabel: {
-          rotate: 45
-        }
-      },
-      yAxis: {
-        type: 'value',
-        name: '活跃度'
-      },
-      series: [{
-        data: userRanking.value.map(item => item.activityScore),
-        type: 'bar',
-        itemStyle: {
-          color: '#E6A23C'
-        }
-      }]
-    }))
-
-    const demandChartOption = computed(() => ({
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'shadow' }
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: highDemandProducts.value.map(item => 
-          item.productName.length > 8 ? item.productName.substring(0, 8) + '...' : item.productName
-        ),
-        axisLabel: {
-          rotate: 45
-        }
-      },
-      yAxis: {
-        type: 'value',
-        name: '需求指数'
-      },
-      series: [{
-        data: highDemandProducts.value.map(item => item.demandScore),
-        type: 'line',
-        itemStyle: {
-          color: '#F56C6C'
-        },
-        lineStyle: {
-          color: '#F56C6C'
-        }
-      }]
-    }))
-
-    const inventoryChartOption = computed(() => ({
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'shadow' }
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: highInventoryProducts.value.map(item => 
-          item.productName.length > 8 ? item.productName.substring(0, 8) + '...' : item.productName
-        ),
-        axisLabel: {
-          rotate: 45
-        }
-      },
-      yAxis: {
-        type: 'value',
-        name: '闲置指数'
-      },
-      series: [{
-        data: highInventoryProducts.value.map(item => item.inventoryScore),
-        type: 'bar',
-        itemStyle: {
-          color: '#909399'
-        }
-      }]
-    }))
-
-    // 获取月度统计
-    const fetchMonthlyStats = async () => {
-      if (!selectedMonth.value) return
-      
-      try {
-        const [year, month] = selectedMonth.value.split('-')
-        const response = await statisticsApi.getMonthlyStatistics({
-          year: parseInt(year),
-          month: parseInt(month)
-        })
-        monthlyStats.value = response.data.data || {}
-      } catch (error) {
-        console.error('获取月度统计失败:', error)
-        ElMessage.error('获取月度统计失败')
+      {
+        title: '总收入',
+        value: '¥12,345',
+        icon: 'CreditCard',
+        type: 'danger',
+        trend: 'up',
+        trendIcon: 'ArrowUp',
+        trendText: '15.7%'
       }
-    }
+    ])
     
-    // 获取二手物品排行
-    const fetchProductRanking = async () => {
-      if (!selectedMonth.value) return
-      
-      try {
-        const [year, month] = selectedMonth.value.split('-')
-        const response = await statisticsApi.getMonthlyProductRanking({
-          year: parseInt(year),
-          month: parseInt(month),
-          limit: 10
-        })
-        productRanking.value = response.data.data || []
-      } catch (error) {
-        console.error('获取二手物品排行失败:', error)
-        ElMessage.error('获取二手物品排行失败')
+    // 热门二手物品
+    const hotProducts = ref([
+      {
+        id: 1,
+        productName: '二手笔记本电脑',
+        price: 2999,
+        viewCount: 1250
+      },
+      {
+        id: 2,
+        productName: '二手智能手机',
+        price: 1599,
+        viewCount: 980
+      },
+      {
+        id: 3,
+        productName: '二手教材',
+        price: 35,
+        viewCount: 756
+      },
+      {
+        id: 4,
+        productName: '二手运动鞋',
+        price: 299,
+        viewCount: 634
       }
-    }
+    ])
     
-    // 获取用户排行
-    const fetchUserRanking = async () => {
-      if (!selectedMonth.value) return
-      
-      try {
-        const [year, month] = selectedMonth.value.split('-')
-        const startDate = `${year}-${month}-01`
-        const endDate = new Date(parseInt(year), parseInt(month), 0).toISOString().split('T')[0]
-        
-        const response = await statisticsApi.getActiveUserRanking({
-          startDate,
-          endDate,
-          limit: 10
-        })
-        userRanking.value = response.data.data || []
-      } catch (error) {
-        console.error('获取用户排行失败:', error)
-        ElMessage.error('获取用户排行失败')
+    // 最新用户
+    const latestUsers = ref([
+      {
+        id: 1,
+        userName: '张三',
+        userAvatar: '',
+        registerTime: '2023-12-08T10:30:00',
+        userStatus: 0
+      },
+      {
+        id: 2,
+        userName: '李四',
+        userAvatar: '',
+        registerTime: '2023-12-07T15:45:00',
+        userStatus: 1
+      },
+      {
+        id: 3,
+        userName: '王五',
+        userAvatar: '',
+        registerTime: '2023-12-06T09:20:00',
+        userStatus: 1
       }
-    }
-
-    // 获取高需求物品排行
-    const fetchHighDemandProducts = async () => {
-      if (!selectedMonth.value) return
-      
-      try {
-        const [year, month] = selectedMonth.value.split('-')
-        const response = await statisticsApi.getHighDemandProducts({
-          year: parseInt(year),
-          month: parseInt(month),
-          limit: 10
-        })
-        highDemandProducts.value = response.data.data || []
-      } catch (error) {
-        console.error('获取高需求物品排行失败:', error)
-        ElMessage.error('获取高需求物品排行失败')
+    ])
+    
+    // 快速操作
+    const quickActions = ref([
+      {
+        title: '用户管理',
+        icon: 'Plus',
+        handler: () => router.push('/admin/users?action=add')
+      },
+      {
+        title: '添加分类',
+        icon: 'Plus',
+        handler: () => router.push('/admin/categories?action=add')
+      },
+      {
+        title: '发布公告',
+        icon: 'Message',
+        handler: () => router.push('/admin/news?action=add')
+      },
+      {
+        title: '审核二手物品',
+        icon: 'Edit',
+        handler: () => router.push('/admin/products?filter=pending')
       }
-    }
-
-    // 获取高库存物品排行
-    const fetchHighInventoryProducts = async () => {
-      if (!selectedMonth.value) return
-      
-      try {
-        const [year, month] = selectedMonth.value.split('-')
-        const response = await statisticsApi.getHighInventoryProducts({
-          year: parseInt(year),
-          month: parseInt(month),
-          limit: 10
-        })
-        highInventoryProducts.value = response.data.data || []
-      } catch (error) {
-        console.error('获取高库存物品排行失败:', error)
-        ElMessage.error('获取高库存物品排行失败')
+    ])
+    
+    // 初始化图表
+    const initCharts = () => {
+      // 初始化趋势图表
+      if (trendChart.value) {
+        const trendChartInstance = echarts.init(trendChart.value)
+        const trendOption = {
+          tooltip: {
+            trigger: 'axis'
+          },
+          legend: {
+            data: ['交易量', '交易额']
+          },
+          xAxis: {
+            type: 'category',
+            data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+          },
+          yAxis: [
+            {
+              type: 'value',
+              name: '交易量',
+              position: 'left'
+            },
+            {
+              type: 'value',
+              name: '交易额(元)',
+              position: 'right'
+            }
+          ],
+          series: [
+            {
+              name: '交易量',
+              type: 'bar',
+              data: [20, 30, 40, 35, 50, 45, 60],
+              itemStyle: {
+                color: '#409EFF'
+              }
+            },
+            {
+              name: '交易额',
+              type: 'line',
+              data: [2000, 3000, 4000, 3500, 5000, 4500, 6000],
+              itemStyle: {
+                color: '#67C23A'
+              }
+            }
+          ]
+        }
+        trendChartInstance.setOption(trendOption)
       }
-    }
-
-    // 获取所有数据
-    const fetchAllData = async () => {
-      await Promise.all([
-        fetchMonthlyStats(),
-        fetchProductRanking(),
-        fetchUserRanking(),
-        fetchHighDemandProducts(),
-        fetchHighInventoryProducts()
-      ])
-    }
-
-    // 设置当前月份
-    const setCurrentMonth = () => {
-      const now = new Date()
-      selectedMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-      fetchAllData()
+      
+      // 初始化分类图表
+      if (categoryChart.value) {
+        const categoryChartInstance = echarts.init(categoryChart.value)
+        const categoryOption = {
+          tooltip: {
+            trigger: 'item',
+            formatter: '{a} <br/>{b}: {c} ({d}%)'
+          },
+          legend: {
+            orient: 'vertical',
+            left: 'left'
+          },
+          series: [
+            {
+              name: '分类占比',
+              type: 'pie',
+              radius: '50%',
+              data: [
+                { value: 35, name: '电子产品' },
+                { value: 25, name: '图书教材' },
+                { value: 20, name: '服饰鞋包' },
+                { value: 15, name: '生活用品' },
+                { value: 5, name: '其他' }
+              ],
+              emphasis: {
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+              }
+            }
+          ]
+        }
+        categoryChartInstance.setOption(categoryOption)
+      }
     }
     
-    // 菜单选择处理
-    const handleMenuSelect = (index) => {
-      if (index === 'dashboard') {
-        activeMenu.value = index
-      } else {
-        router.push(`/admin/${index}`)
+    // 更新趋势图表
+    const updateTrendChart = () => {
+      // 这里可以根据选择的周期更新图表数据
+      ElMessage.success(`已切换到最近${trendPeriod.value}天的数据`)
+    }
+    
+    // 查看产品详情
+    const viewProduct = (id) => {
+      router.push(`/products/${id}`)
+    }
+    
+    // 审核用户
+    const auditUser = (user) => {
+      router.push(`/admin/users?action=audit&id=${user.id}`)
+    }
+    
+    // 获取用户状态文本
+    const getUserStatusText = (status) => {
+      const statusMap = {
+        0: '待审核',
+        1: '已通过',
+        2: '已拒绝'
       }
+      return statusMap[status] || '未知'
+    }
+    
+    // 获取用户状态类型
+    const getUserStatusType = (status) => {
+      const typeMap = {
+        0: 'warning',
+        1: 'success',
+        2: 'danger'
+      }
+      return typeMap[status] || 'info'
+    }
+    
+    // 跳转到产品管理
+    const goToProducts = () => {
+      router.push('/admin/products')
+    }
+    
+    // 跳转到用户管理
+    const goToUsers = () => {
+      router.push('/admin/users')
     }
     
     onMounted(() => {
-      setCurrentMonth()
+      // 等待DOM渲染完成后初始化图表
+      setTimeout(() => {
+        initCharts()
+      }, 100)
     })
     
     return {
-      activeMenu,
-      selectedMonth,
-      selectedMonthDisplay,
-      monthlyStats,
-      productRanking,
-      userRanking,
-      highDemandProducts,
-      highInventoryProducts,
-      productRankingChartOption,
-      userRankingChartOption,
-      demandChartOption,
-      inventoryChartOption,
+      statsData,
+      hotProducts,
+      latestUsers,
+      quickActions,
+      trendPeriod,
+      trendChart,
+      categoryChart,
+      updateTrendChart,
+      viewProduct,
+      auditUser,
+      getUserStatusText,
+      getUserStatusType,
+      goToProducts,
+      goToUsers,
       formatPrice,
-      handleMenuSelect,
-      fetchAllData,
-      setCurrentMonth
+      formatDate
     }
   }
 }
 </script>
 
 <style scoped>
-.admin-dashboard {
-  padding: 20px;
-  background-color: #f5f7fa;
-  min-height: 100vh;
-}
-
-.nav-card {
-  margin-bottom: 20px;
-  height: fit-content;
-}
-
-.stats-container {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* 时间选择器样式 */
-.time-selector-card {
-  margin-bottom: 0;
-}
-
-.time-selector-card .card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0;
-}
-
-.time-controls {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+/* 页面头部样式 */
+.page-header {
+  margin-bottom: var(--spacing-xl);
+  text-align: center;
 }
 
 /* 统计卡片样式 */
+.stats-container {
+  margin-bottom: var(--spacing-xl);
+}
+
 .stat-card {
-  margin-bottom: 20px;
-  transition: all 0.3s ease;
-  border: 1px solid #ebeef5;
+  height: 100%;
 }
 
-.stat-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+.stat-item {
+  height: 160px;
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-base);
 }
 
-.stat-card .card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0;
-  margin-bottom: 0;
+.stat-item:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
 }
 
-.stat-card .card-header span {
-  font-size: 16px;
-  font-weight: 600;
-  color: #303133;
+.stat-item-primary {
+  border-left: 4px solid var(--primary-color);
 }
 
-/* 图表容器样式 */
-.chart-container {
-  height: 200px;
-  margin-bottom: 16px;
+.stat-item-success {
+  border-left: 4px solid var(--success-color);
 }
 
-/* 排行表格样式 */
-.ranking-table {
-  margin-top: 16px;
+.stat-item-warning {
+  border-left: 4px solid var(--warning-color);
 }
 
-.ranking-table :deep(.el-table__header) th {
-  background-color: #f5f7fa;
-  color: #606266;
-  font-weight: 600;
+.stat-item-danger {
+  border-left: 4px solid var(--danger-color);
 }
 
-.ranking-table :deep(.el-table__row:hover) {
-  background-color: #f5f7fa;
+.stat-content {
+  height: 100%;
+  position: relative;
 }
 
-/* 概览卡片样式 */
-.overview-card {
-  margin-top: 20px;
-}
-
-.overview-card .el-card__header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.overview-item {
-  display: flex;
-  align-items: center;
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-.overview-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.overview-icon {
-  width: 50px;
-  height: 50px;
+.stat-icon {
+  position: absolute;
+  top: var(--spacing-base);
+  right: var(--spacing-base);
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 15px;
-  font-size: 24px;
-  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
 }
 
-.user-icon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.stat-item-primary .stat-icon {
+  color: var(--primary-color);
+  background-color: rgba(64, 158, 255, 0.1);
 }
 
-.product-icon {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+.stat-item-success .stat-icon {
+  color: var(--success-color);
+  background-color: rgba(103, 194, 58, 0.1);
 }
 
-.order-icon {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+.stat-item-warning .stat-icon {
+  color: var(--warning-color);
+  background-color: rgba(230, 162, 60, 0.1);
 }
 
-.revenue-icon {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+.stat-item-danger .stat-icon {
+  color: var(--danger-color);
+  background-color: rgba(245, 108, 108, 0.1);
 }
 
-.overview-content {
-  flex: 1;
+.stat-info {
+  padding: var(--spacing-base);
+  padding-right: 80px;
 }
 
-.overview-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #303133;
-  line-height: 1;
-  margin-bottom: 4px;
+.stat-value {
+  font-size: var(--font-size-xxl);
+  font-weight: 600;
+  margin: 0 0 var(--spacing-xs) 0;
+  color: var(--text-primary);
 }
 
-.overview-label {
-  font-size: 14px;
-  color: #909399;
+.stat-title {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.stat-trend {
+  position: absolute;
+  bottom: var(--spacing-base);
+  right: var(--spacing-base);
+  font-size: var(--font-size-sm);
+}
+
+.trend-up {
+  color: var(--success-color);
+}
+
+.trend-down {
+  color: var(--danger-color);
+}
+
+/* 图表区域样式 */
+.charts-container {
+  margin-bottom: var(--spacing-xl);
+}
+
+.chart-card {
+  height: 400px;
+}
+
+.card-header {
+  margin-bottom: var(--spacing-base);
+}
+
+.chart-container {
+  height: 320px;
+}
+
+/* 数据表格样式 */
+.tables-container {
+  margin-bottom: var(--spacing-xl);
+}
+
+.table-card {
+  margin-bottom: var(--spacing-base);
+}
+
+.user-info {
+  gap: var(--spacing-sm);
+}
+
+.user-name {
   font-weight: 500;
 }
 
+/* 快速操作样式 */
+.actions-container {
+  margin-bottom: var(--spacing-xl);
+}
+
+.actions-card {
+  padding: var(--spacing-lg);
+}
+
+.action-item {
+  padding: var(--spacing-lg);
+  text-align: center;
+  cursor: pointer;
+  border-radius: var(--border-radius-base);
+  transition: all var(--transition-base);
+}
+
+.action-item:hover {
+  background-color: var(--bg-lighter);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-base);
+}
+
+.action-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto var(--spacing-base);
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.action-title {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
 /* 响应式设计 */
-@media (max-width: 768px) {
-  .admin-dashboard {
-    padding: 10px;
-  }
-  
-  .stat-card {
-    margin-bottom: 15px;
-  }
-  
-  .chart-container {
-    height: 150px;
-  }
-  
-  .overview-item {
-    padding: 15px;
-    margin-bottom: 10px;
-  }
-  
-  .overview-value {
-    font-size: 20px;
-  }
-  
-  .overview-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
+@media (max-width: 992px) {
+  .unified-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 576px) {
-  .time-controls {
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
+@media (max-width: 768px) {
+  .unified-grid-4 {
+    grid-template-columns: 1fr;
   }
   
-  .time-controls .el-date-picker {
-    width: 100%;
+  .stat-item {
+    height: 140px;
   }
   
-  .time-controls .el-button {
-    width: 100%;
+  .chart-card {
+    height: 350px;
   }
+  
+  .chart-container {
+    height: 280px;
+  }
+}
+
+/* 动画效果 */
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.view-more-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-weight: 500;
 }
 </style>

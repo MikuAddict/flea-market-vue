@@ -36,10 +36,10 @@ export default {
   },
 
   // 更新个人信息
-  updateProfile(data) {
+  updateMyUser(data) {
     return request({
-      url: '/user/update/my',
-      method: 'post',
+      url: '/user/profile',
+      method: 'put',
       data
     })
   },
@@ -53,25 +53,33 @@ export default {
     })
   },
 
-  // 管理员删除用户
-  deleteUser(id) {
-    return request({
-      url: '/user/delete',
-      method: 'post',
-      data: { id }
-    })
-  },
-
-  // 管理员更新用户
+  // 管理员更新用户信息
   updateUser(data) {
     return request({
-      url: '/user/update',
-      method: 'post',
+      url: `/user/${data.id}`,
+      method: 'put',
       data
     })
   },
 
-  // 管理员根据ID获取用户
+  // 管理员删除用户
+  deleteUser(id) {
+    return request({
+      url: `/user/${id}`,
+      method: 'delete'
+    })
+  },
+
+  // 管理员更新用户状态
+  updateUserStatus(id, status) {
+    return request({
+      url: `/user/${id}/status`,
+      method: 'put',
+      params: { status }
+    })
+  },
+
+  // 根据ID获取用户
   getUserById(id) {
     return request({
       url: '/user/get',
@@ -81,7 +89,7 @@ export default {
   },
 
   // 根据ID获取用户视图
-  getUserVoById(id) {
+  getUserVOById(id) {
     return request({
       url: '/user/get/vo',
       method: 'get',
@@ -89,61 +97,8 @@ export default {
     })
   },
 
-  // 分页获取用户列表（管理员）
-  getUserList(params) {
-    return request({
-      url: '/user/list/page',
-      method: 'post',
-      data: params
-    })
-  },
-
   // 分页获取用户视图列表
   getUserVoList(params) {
-    return request({
-      url: '/user/list/page/vo',
-      method: 'get',
-      params
-    })
-  },
-
-  // 管理员审核用户
-  auditUser(data) {
-    return request({
-      url: '/user/admin/audit',
-      method: 'post',
-      data
-    })
-  },
-
-  // 获取待审核用户列表（管理员）
-  getPendingUsers(params) {
-    return request({
-      url: '/user/admin/pending',
-      method: 'get',
-      params
-    })
-  },
-
-  // 获取已拒绝用户数量（管理员）
-  getRejectedUsersCount() {
-    return request({
-      url: '/user/admin/rejected/count',
-      method: 'get'
-    })
-  },
-
-  // 批量删除已拒绝用户（管理员）
-  deleteRejectedUsers(data) {
-    return request({
-      url: '/user/admin/rejected/delete-all',
-      method: 'post',
-      data
-    })
-  },
-
-  // 获取用户审核状态列表（根据API文档新增）
-  getUserVoListWithAudit(params) {
     return request({
       url: '/user/list/page/vo',
       method: 'get',

@@ -6,7 +6,7 @@ export default {
     const formData = new FormData()
     formData.append('file', file)
     return request({
-      url: '/image/upload/avatar',
+      url: '/image/avatar',
       method: 'post',
       data: formData,
       headers: {
@@ -20,7 +20,7 @@ export default {
     const formData = new FormData()
     formData.append('file', file)
     return request({
-      url: '/image/upload/product',
+      url: '/image/product',
       method: 'post',
       data: formData,
       headers: {
@@ -34,21 +34,7 @@ export default {
     const formData = new FormData()
     formData.append('file', file)
     return request({
-      url: '/image/upload/news',
-      method: 'post',
-      data: formData,
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
-  },
-
-  // 上传横幅图片
-  uploadBannerImage(file) {
-    const formData = new FormData()
-    formData.append('file', file)
-    return request({
-      url: '/image/upload/banner',
+      url: '/image/news',
       method: 'post',
       data: formData,
       headers: {
@@ -61,10 +47,10 @@ export default {
   uploadImage(file, type) {
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('type', type)
     return request({
-      url: '/image/upload',
+      url: '/image',
       method: 'post',
+      params: { type },
       data: formData,
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -78,10 +64,10 @@ export default {
     files.forEach(file => {
       formData.append('files', file)
     })
-    formData.append('type', type)
     return request({
-      url: '/image/upload/batch',
+      url: '/image/batch',
       method: 'post',
+      params: { type },
       data: formData,
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -92,18 +78,18 @@ export default {
   // 删除图片
   deleteImage(imageUrl) {
     return request({
-      url: '/image/delete',
+      url: '/image',
       method: 'delete',
-      data: { imageUrl }
+      params: { imageUrl }
     })
   },
 
   // 批量删除图片
   deleteImages(imageUrls) {
     return request({
-      url: '/image/delete/batch',
+      url: '/image/batch',
       method: 'delete',
-      data: { imageUrls }
+      params: { imageUrls }
     })
   }
 }

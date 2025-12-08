@@ -19,14 +19,14 @@ export default {
   },
 
   // 获取新闻详情
-  getNewsById(id) {
+  getNewsDetail(id) {
     return request({
-      url: `/news/detail/${id}`,
+      url: `/news/${id}`,
       method: 'get'
     })
   },
 
-  // 添加新闻（管理员）
+  // 添加新闻
   addNews(data) {
     return request({
       url: '/news/add',
@@ -35,19 +35,19 @@ export default {
     })
   },
 
-  // 更新新闻（管理员）
+  // 更新新闻
   updateNews(data) {
     return request({
-      url: '/news/update',
+      url: `/news/${data.id}`,
       method: 'put',
       data
     })
   },
 
-  // 删除新闻（管理员）
+  // 删除新闻
   deleteNews(id) {
     return request({
-      url: `/news/delete/${id}`,
+      url: `/news/${id}`,
       method: 'delete'
     })
   }

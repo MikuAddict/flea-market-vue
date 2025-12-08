@@ -1,0 +1,466 @@
+openapi: 3.0.1
+info:
+  title: 默认模块
+  description: 跳蚤市场系统接口文档
+  version: 1.0.0
+tags:
+  - name: 二手物品评价管理
+paths:
+  /review:
+    post:
+      summary: 添加评价
+      deprecated: false
+      description: 用户对已完成的订单进行评价
+      operationId: addReview
+      tags:
+        - 二手物品评价管理
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Review'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseLong'
+          headers: {}
+      security: []
+  /review/{id}:
+    get:
+      summary: 获取评价详情
+      deprecated: false
+      description: 根据评价ID获取评价详细信息
+      operationId: getReviewById
+      tags:
+        - 二手物品评价管理
+      parameters:
+        - name: id
+          in: path
+          description: 评价ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseReviewVO'
+          headers: {}
+      security: []
+    delete:
+      summary: 删除评价
+      deprecated: false
+      description: 用户删除自己的评价
+      operationId: deleteReview
+      tags:
+        - 二手物品评价管理
+      parameters:
+        - name: id
+          in: path
+          description: 评价ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseBoolean'
+          headers: {}
+      security: []
+  /review/user/{userId}:
+    get:
+      summary: 根据用户ID获取评价列表
+      deprecated: false
+      description: 根据用户ID分页获取评价列表
+      operationId: listReviewsByUserId
+      tags:
+        - 二手物品评价管理
+      parameters:
+        - name: userId
+          in: path
+          description: 用户ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+        - name: current
+          in: query
+          description: 当前页码
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: size
+          in: query
+          description: 每页大小
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponsePageReview'
+          headers: {}
+      security: []
+  /review/order/{orderId}:
+    get:
+      summary: 根据订单ID获取评价
+      deprecated: false
+      description: 根据订单ID获取评价信息（一个订单只能有一条评价）
+      operationId: getReviewByOrderId
+      tags:
+        - 二手物品评价管理
+      parameters:
+        - name: orderId
+          in: path
+          description: 订单ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseReview'
+          headers: {}
+      security: []
+  /review/list/page:
+    get:
+      summary: 分页获取评价列表
+      deprecated: false
+      description: 分页获取所有评价列表
+      operationId: listReviewByPage
+      tags:
+        - 二手物品评价管理
+      parameters:
+        - name: current
+          in: query
+          description: 当前页码
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: size
+          in: query
+          description: 每页大小
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponsePageReview'
+          headers: {}
+      security: []
+  /review/list/my:
+    get:
+      summary: 获取当前用户的评价列表
+      deprecated: false
+      description: 获取当前登录用户的评价列表
+      operationId: listMyReviews
+      tags:
+        - 二手物品评价管理
+      parameters:
+        - name: current
+          in: query
+          description: 当前页码
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: size
+          in: query
+          description: 每页大小
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponsePageReview'
+          headers: {}
+      security: []
+  /review/admin/list:
+    get:
+      summary: 管理员获取所有评价列表
+      deprecated: false
+      description: 管理员获取所有评价列表
+      operationId: adminListReviews
+      tags:
+        - 二手物品评价管理
+      parameters:
+        - name: current
+          in: query
+          description: 当前页码
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: size
+          in: query
+          description: 每页大小
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+        - name: productId
+          in: query
+          description: 二手物品ID
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: userId
+          in: query
+          description: 用户ID
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: orderId
+          in: query
+          description: 订单ID
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: minRating
+          in: query
+          description: 最低评分
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: maxRating
+          in: query
+          description: 最高评分
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponsePageReview'
+          headers: {}
+      security: []
+components:
+  schemas:
+    OrderItem:
+      type: object
+      properties:
+        column:
+          type: string
+        asc:
+          type: boolean
+    BaseResponsePageReview:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          $ref: '#/components/schemas/PageReview'
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    PageReview:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+        total:
+          type: integer
+          format: int64
+        size:
+          type: integer
+          format: int64
+        current:
+          type: integer
+          format: int64
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+          writeOnly: true
+        optimizeCountSql:
+          $ref: '#/components/schemas/PageReview'
+        searchCount:
+          $ref: '#/components/schemas/PageReview'
+        optimizeJoinOfCountSql:
+          type: boolean
+          writeOnly: true
+        maxLimit:
+          type: integer
+          format: int64
+          writeOnly: true
+        countId:
+          type: string
+          writeOnly: true
+        pages:
+          type: integer
+          format: int64
+    BaseResponseReview:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          $ref: '#/components/schemas/Review'
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    Review:
+      type: object
+      description: 评价信息
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        productId:
+          type: integer
+          format: int64
+        orderId:
+          type: integer
+          format: int64
+        rating:
+          type: integer
+          format: int32
+        content:
+          type: string
+        createTime:
+          type: string
+          format: date-time
+        deleted:
+          type: integer
+          format: int32
+    BaseResponseBoolean:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          type: boolean
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    BaseResponseLong:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          type: integer
+          format: int64
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    BaseResponseReviewVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          $ref: '#/components/schemas/ReviewVO'
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    ReviewVO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        userName:
+          type: string
+        userAvatar:
+          type: string
+        productId:
+          type: integer
+          format: int64
+        productName:
+          type: string
+        orderId:
+          type: integer
+          format: int64
+        rating:
+          type: integer
+          format: int32
+        content:
+          type: string
+        createTime:
+          type: string
+          format: date-time
+  responses: {}
+  securitySchemes: {}
+servers: []
+security: []

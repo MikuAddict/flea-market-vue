@@ -2,42 +2,42 @@ import { request } from './api-client'
 
 export default {
   // 创建订单
-  createOrder(data) {
+  createOrder(productId) {
     return request({
-      url: '/order/create',
+      url: '/order',
       method: 'post',
-      data
+      params: { productId }
     })
   },
 
   // 支付订单
   payOrder(orderId) {
     return request({
-      url: `/order/pay/${orderId}`,
-      method: 'post'
+      url: `/order/${orderId}/pay`,
+      method: 'put'
     })
   },
 
   // 取消订单
   cancelOrder(orderId) {
     return request({
-      url: `/order/cancel/${orderId}`,
-      method: 'post'
+      url: `/order/${orderId}/cancel`,
+      method: 'put'
     })
   },
 
   // 完成订单
   completeOrder(orderId) {
     return request({
-      url: `/order/complete/${orderId}`,
-      method: 'post'
+      url: `/order/${orderId}/complete`,
+      method: 'put'
     })
   },
 
   // 获取订单详情
   getOrderById(orderId) {
     return request({
-      url: `/order/get/${orderId}`,
+      url: `/order/${orderId}`,
       method: 'get'
     })
   },
@@ -55,24 +55,6 @@ export default {
   getSellerOrderList(params) {
     return request({
       url: '/order/list/seller',
-      method: 'get',
-      params
-    })
-  },
-
-  // 根据状态获取买家订单列表
-  getBuyerOrderListByStatus(status, params) {
-    return request({
-      url: `/order/list/buyer/status/${status}`,
-      method: 'get',
-      params
-    })
-  },
-
-  // 根据状态获取卖家订单列表
-  getSellerOrderListByStatus(status, params) {
-    return request({
-      url: `/order/list/seller/status/${status}`,
       method: 'get',
       params
     })
@@ -98,41 +80,41 @@ export default {
   // 提交支付凭证
   submitPaymentProof(data) {
     return request({
-      url: '/order/submit/proof',
+      url: '/order/payment-proof',
       method: 'post',
       data
     })
   },
 
   // 确认订单（买家确认收货）
-  confirmOrder(orderId) {
+  confirmOrder(data) {
     return request({
       url: '/order/confirm',
-      method: 'post',
-      data: { orderId }
+      method: 'put',
+      data
     })
   },
 
   // 模拟微信支付
-  wechatPay(orderId) {
+  simulateWechatPay(orderId) {
     return request({
-      url: `/order/pay/wechat/${orderId}`,
-      method: 'post'
+      url: `/order/${orderId}/pay/wechat`,
+      method: 'put'
     })
   },
 
   // 积分兑换二手物品
-  pointsPay(orderId) {
+  exchangeWithPoints(orderId) {
     return request({
-      url: `/order/pay/points/${orderId}`,
-      method: 'post'
+      url: `/order/${orderId}/pay/points`,
+      method: 'put'
     })
   },
 
   // 申请物品交换
-  applyExchange(orderId) {
+  applyForExchange(orderId) {
     return request({
-      url: `/order/exchange/apply/${orderId}`,
+      url: `/order/${orderId}/exchange/apply`,
       method: 'post'
     })
   },
@@ -140,8 +122,8 @@ export default {
   // 确认物品交换
   confirmExchange(orderId) {
     return request({
-      url: `/order/exchange/confirm/${orderId}`,
-      method: 'post'
+      url: `/order/${orderId}/exchange/confirm`,
+      method: 'put'
     })
   }
 }

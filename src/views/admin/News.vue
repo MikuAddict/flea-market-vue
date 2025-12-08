@@ -1,147 +1,331 @@
 <template>
-  <div class="admin-news">
-    <el-card>
-      <template #header>
-        <div class="card-header">
-          <span>新闻管理</span>
-          <el-button type="primary" @click="handleCreate">发布新闻</el-button>
+  <Layout>
+    <div class="admin-news unified-page-container fade-in">
+      <!-- 页面标题和操作区域 -->
+      <div class="page-header unified-flex unified-flex-between">
+        <div>
+          <h1 class="unified-title-xl">新闻管理</h1>
+          <p class="unified-text-secondary">管理系统中的所有新闻公告</p>
         </div>
-      </template>
+        <el-button 
+          type="primary" 
+          class="unified-button unified-button-primary"
+          @click="showAddNewsDialog"
+        >
+          <el-icon><Plus /></el-icon>
+          发布新闻
+        </el-button>
+      </div>
       
-      <!-- 搜索和筛选 -->
-      <div class="filter-container">
-        <el-input
-          v-model="searchKeyword"
-          placeholder="搜索新闻标题或内容"
-          style="width: 300px; margin-right: 10px"
-          @keyup.enter="handleSearch"
-        />
-        <el-select v-model="filterStatus" placeholder="发布状态" clearable style="width: 120px; margin-right: 10px">
-          <el-option label="已发布" value="published" />
-          <el-option label="草稿" value="draft" />
-        </el-select>
-        <el-button type="primary" @click="handleSearch">搜索</el-button>
-        <el-button @click="resetSearch">重置</el-button>
+      <!-- 新闻统计卡片 -->
+      <div class="stats-cards unified-grid unified-grid-4">
+        <div class="stat-card fade-in" v-for="(stat, index) in newsStats" :key="stat.title" :style="{ animationDelay: `${index * 0.1}s` }">
+          <el-card class="unified-card stat-item" :class="`stat-item-${stat.type}`">
+            <div class="stat-content unified-flex unified-flex-center">
+              <div class="stat-icon unified-flex unified-flex-center">
+                <el-icon :size="24"><component :is="stat.icon" /></el-icon>
+              </div>
+              <div class="stat-info">
+                <h3 class="stat-value">{{ stat.value }}</h3>
+                <p class="stat-title">{{ stat.title }}</p>
+              </div>
+            </div>
+          </el-card>
+        </div>
       </div>
-
+      
       <!-- 新闻列表 -->
-      <el-table :data="newsList" v-loading="loading" style="width: 100%; margin-top: 20px">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="title" label="新闻标题" />
-        <el-table-column prop="author" label="作者" width="120" />
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 'published' ? 'success' : 'warning'">
-              {{ row.status === 'published' ? '已发布' : '草稿' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="viewCount" label="浏览数" width="100" />
-        <el-table-column prop="createdAt" label="发布时间" width="180">
-          <template #default="{ row }">
-            {{ formatDate(row.createdAt) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="200">
-          <template #default="{ row }">
-            <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button 
-              size="small" 
-              :type="row.status === 'published' ? 'warning' : 'success'"
-              @click="handleToggleStatus(row)"
-            >
-              {{ row.status === 'published' ? '撤回' : '发布' }}
-            </el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- 分页 -->
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          :page-sizes="[10, 20, 50, 100]"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
-    </el-card>
-
-    <!-- 编辑/创建新闻对话框 -->
-    <el-dialog 
-      v-model="editDialogVisible" 
-      :title="isEdit ? '编辑新闻' : '发布新闻'" 
-      width="800px"
-    >
-      <el-form :model="editForm" label-width="80px">
-        <el-form-item label="新闻标题" required>
-          <el-input v-model="editForm.title" placeholder="请输入新闻标题" />
-        </el-form-item>
-        <el-form-item label="新闻内容" required>
-          <el-input
-            v-model="editForm.content"
-            type="textarea"
-            :rows="10"
-            placeholder="请输入新闻内容"
+      <el-card class="unified-card news-list-card fade-in">
+        <template #header>
+          <div class="card-header unified-flex unified-flex-between">
+            <h3 class="unified-title-base">新闻列表</h3>
+            <div class="batch-actions unified-flex unified-flex-center">
+              <el-button
+                v-if="selectedNews.length > 0"
+                type="primary"
+                size="small"
+                class="unified-button"
+                @click="batchPublishNews"
+              >
+                批量发布
+              </el-button>
+              <el-button
+                v-if="selectedNews.length > 0"
+                type="danger"
+                size="small"
+                class="unified-button"
+                @click="batchDeleteNews"
+              >
+                批量删除
+              </el-button>
+            </div>
+          </div>
+        </template>
+        
+        <el-table
+          v-loading="loading"
+          :data="newsList"
+          @selection-change="handleSelectionChange"
+          style="width: 100%"
+        >
+          <el-table-column type="selection" width="55" />
+          
+          <el-table-column label="新闻信息" min-width="200">
+            <template #default="scope">
+              <div class="news-info unified-flex">
+                <el-image
+                  :src="scope.row.imageUrl"
+                  class="news-image"
+                  fit="cover"
+                >
+                  <template #error>
+                    <div class="image-placeholder">
+                      <el-icon><Picture /></el-icon>
+                    </div>
+                  </template>
+                </el-image>
+                <div class="news-details">
+                  <h4 class="news-title">{{ scope.row.title }}</h4>
+                  <p class="news-summary">{{ scope.row.content?.substring(0, 50) }}...</p>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="authorName" label="作者" width="120" />
+          
+          <el-table-column prop="status" label="状态" width="100">
+            <template #default="scope">
+              <el-tag :type="getStatusType(scope.row.status)" size="small">
+                {{ getStatusText(scope.row.status) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="createTime" label="发布时间" width="160">
+            <template #default="scope">
+              {{ formatDate(scope.row.createTime) }}
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="操作" width="200" fixed="right">
+            <template #default="scope">
+              <div class="action-buttons unified-flex">
+                <el-button
+                  size="small"
+                  type="text"
+                  @click="viewNews(scope.row)"
+                >
+                  查看
+                </el-button>
+                
+                <el-button
+                  size="small"
+                  type="text"
+                  @click="showEditNewsDialog(scope.row)"
+                >
+                  编辑
+                </el-button>
+                
+                <el-dropdown @command="(command) => handleNewsAction(command, scope.row)">
+                  <el-button size="small" type="text">
+                    更多
+                    <el-icon><ArrowDown /></el-icon>
+                  </el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="publish" v-if="scope.row.status === 'draft'">
+                        发布
+                      </el-dropdown-item>
+                      <el-dropdown-item command="unpublish" v-if="scope.row.status === 'published'">
+                        取消发布
+                      </el-dropdown-item>
+                      <el-dropdown-item divided command="delete">删除</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+        
+        <!-- 分页 -->
+        <div class="pagination-container unified-flex unified-flex-center">
+          <el-pagination
+            v-model:current-page="pagination.current"
+            v-model:page-size="pagination.size"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="pagination.total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            background
           />
-        </el-form-item>
-        <el-form-item label="发布状态">
-          <el-radio-group v-model="editForm.status">
-            <el-radio label="draft">草稿</el-radio>
-            <el-radio label="published">立即发布</el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="editDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleEditSubmit">确定</el-button>
-      </template>
-    </el-dialog>
-  </div>
+        </div>
+      </el-card>
+      
+      <!-- 添加/编辑新闻对话框 -->
+      <el-dialog
+        v-model="newsDialogVisible"
+        :title="dialogMode === 'add' ? '发布新闻' : '编辑新闻'"
+        width="800px"
+      >
+        <el-form :model="newsForm" :rules="newsFormRules" ref="newsFormRef" label-width="100px">
+          <el-form-item label="新闻标题" prop="title">
+            <el-input v-model="newsForm.title" placeholder="请输入新闻标题" />
+          </el-form-item>
+          
+          <el-form-item label="新闻图片" prop="imageUrl">
+            <el-input v-model="newsForm.imageUrl" placeholder="请输入图片URL" />
+          </el-form-item>
+          
+          <el-form-item label="新闻内容" prop="content">
+            <el-input
+              v-model="newsForm.content"
+              type="textarea"
+              :rows="10"
+              placeholder="请输入新闻内容"
+            />
+          </el-form-item>
+          
+          <el-form-item label="发布状态" prop="status">
+            <el-radio-group v-model="newsForm.status">
+              <el-radio label="draft">保存草稿</el-radio>
+              <el-radio label="published">立即发布</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </el-form>
+        
+        <template #footer>
+          <div class="dialog-footer unified-flex unified-flex-end">
+            <el-button @click="newsDialogVisible = false">取消</el-button>
+            <el-button 
+              type="primary" 
+              :loading="newsFormSubmitting"
+              @click="submitNewsForm"
+            >
+              确定
+            </el-button>
+          </div>
+        </template>
+      </el-dialog>
+    </div>
+  </Layout>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { newsApi } from '@/api'
+import { 
+  Plus, 
+  Search, 
+  Edit, 
+  Delete, 
+  ArrowDown,
+  Picture
+} from '@element-plus/icons-vue'
 import { formatDate } from '@/utils/format'
+import { adminApi } from '@/api'
+import Layout from '@/components/Layout.vue'
 
 export default {
   name: 'AdminNews',
+  components: {
+    Layout
+  },
   setup() {
+    const router = useRouter()
+    
+    // 表单引用
+    const newsFormRef = ref(null)
+    
+    // 响应式数据
     const loading = ref(false)
     const newsList = ref([])
-    const searchKeyword = ref('')
-    const filterStatus = ref('')
-    const currentPage = ref(1)
-    const pageSize = ref(10)
-    const total = ref(0)
-    const editDialogVisible = ref(false)
-    const isEdit = ref(false)
-    const editForm = ref({
+    const selectedNews = ref([])
+    const newsDialogVisible = ref(false)
+    const dialogMode = ref('add')
+    const newsFormSubmitting = ref(false)
+    
+    // 分页信息
+    const pagination = reactive({
+      current: 1,
+      size: 10,
+      total: 0
+    })
+    
+    // 筛选条件
+    const filters = reactive({
+      keyword: '',
+      status: '',
+      dateRange: null
+    })
+    
+    // 新闻统计数据
+    const newsStats = computed(() => [
+      {
+        title: '总新闻数',
+        value: newsList.value.length,
+        icon: 'Document',
+        type: 'primary'
+      },
+      {
+        title: '已发布',
+        value: newsList.value.filter(news => news.status === 'published').length,
+        icon: 'View',
+        type: 'success'
+      }
+    ])
+    
+    // 新闻表单
+    const newsForm = reactive({
       id: '',
       title: '',
       content: '',
+      imageUrl: '',
       status: 'draft'
     })
-
+    
+    // 新闻表单验证规则
+    const newsFormRules = {
+      title: [
+        { required: true, message: '请输入新闻标题', trigger: 'blur' },
+        { min: 5, max: 100, message: '新闻标题长度在5到100个字符', trigger: 'blur' }
+      ],
+      content: [
+        { required: true, message: '请输入新闻内容', trigger: 'blur' },
+        { min: 10, max: 2000, message: '新闻内容长度在10到2000个字符', trigger: 'blur' }
+      ],
+      status: [
+        { required: true, message: '请选择发布状态', trigger: 'change' }
+      ]
+    }
+    
     // 获取新闻列表
     const fetchNews = async () => {
       loading.value = true
       try {
         const params = {
-          page: currentPage.value,
-          pageSize: pageSize.value,
-          keyword: searchKeyword.value,
-          status: filterStatus.value
+          page: pagination.current,
+          pageSize: pagination.size,
+          keyword: filters.keyword,
+          status: filters.status
         }
-        const response = await newsApi.getNews(params)
-        newsList.value = response.data.news
-        total.value = response.data.total
+        
+        // 处理日期范围
+        if (filters.dateRange && filters.dateRange.length === 2) {
+          params.startDate = filters.dateRange[0]
+          params.endDate = filters.dateRange[1]
+        }
+        
+        const response = await adminApi.news.getNewsList(params)
+        if (response.data && response.data.code === 200) {
+          newsList.value = response.data.data || []
+          pagination.total = response.data.total || 0
+        } else {
+          ElMessage.error('获取新闻列表失败')
+        }
       } catch (error) {
         console.error('获取新闻列表失败:', error)
         ElMessage.error('获取新闻列表失败')
@@ -149,148 +333,248 @@ export default {
         loading.value = false
       }
     }
-
-    // 搜索
-    const handleSearch = () => {
-      currentPage.value = 1
+    
+    // 重置筛选条件
+    const resetFilters = () => {
+      Object.keys(filters).forEach(key => {
+        if (key === 'dateRange') {
+          filters[key] = null
+        } else {
+          filters[key] = ''
+        }
+      })
+      pagination.current = 1
       fetchNews()
     }
-
-    // 重置搜索
-    const resetSearch = () => {
-      searchKeyword.value = ''
-      filterStatus.value = ''
-      currentPage.value = 1
-      fetchNews()
+    
+    // 处理表格选择变化
+    const handleSelectionChange = (selection) => {
+      selectedNews.value = selection
     }
-
-    // 分页处理
+    
+    // 处理分页大小变化
     const handleSizeChange = (size) => {
-      pageSize.value = size
+      pagination.size = size
+      pagination.current = 1
       fetchNews()
     }
-
-    const handleCurrentChange = (page) => {
-      currentPage.value = page
+    
+    // 处理当前页变化
+    const handleCurrentChange = (current) => {
+      pagination.current = current
       fetchNews()
     }
-
-    // 创建新闻
-    const handleCreate = () => {
-      isEdit.value = false
-      editForm.value = {
+    
+    // 查看新闻详情
+    const viewNews = (news) => {
+      router.push(`/news/${news.id}`)
+    }
+    
+    // 显示添加新闻对话框
+    const showAddNewsDialog = () => {
+      dialogMode.value = 'add'
+      resetNewsForm()
+      newsDialogVisible.value = true
+    }
+    
+    // 显示编辑新闻对话框
+    const showEditNewsDialog = (news) => {
+      dialogMode.value = 'edit'
+      Object.assign(newsForm, {
+        id: news.id,
+        title: news.title,
+        content: news.content,
+        imageUrl: news.imageUrl,
+        status: news.status
+      })
+      newsDialogVisible.value = true
+    }
+    
+    // 重置新闻表单
+    const resetNewsForm = () => {
+      Object.assign(newsForm, {
         id: '',
         title: '',
         content: '',
+        imageUrl: '',
         status: 'draft'
+      })
+      if (newsFormRef.value) {
+        newsFormRef.value.resetFields()
       }
-      editDialogVisible.value = true
     }
-
-    // 编辑新闻
-    const handleEdit = (news) => {
-      isEdit.value = true
-      editForm.value = { ...news }
-      editDialogVisible.value = true
-    }
-
-    // 提交编辑
-    const handleEditSubmit = async () => {
+    
+    // 提交新闻表单
+    const submitNewsForm = async () => {
+      if (!newsFormRef.value) return
+      
       try {
-        if (!editForm.value.title || !editForm.value.content) {
-          ElMessage.warning('请填写标题和内容')
-          return
-        }
-
-        if (isEdit.value) {
-          await newsApi.updateNews(editForm.value.id, editForm.value)
-          ElMessage.success('新闻更新成功')
+        await newsFormRef.value.validate()
+        newsFormSubmitting.value = true
+        
+        let result
+        if (dialogMode.value === 'add') {
+          result = await adminApi.news.addNews({
+            title: newsForm.title,
+            content: newsForm.content,
+            imageUrl: newsForm.imageUrl,
+            status: newsForm.status
+          })
+          ElMessage.success('新闻添加成功')
         } else {
-          await newsApi.createNews(editForm.value)
-          ElMessage.success('新闻发布成功')
+          result = await adminApi.news.updateNews({
+            id: newsForm.id,
+            title: newsForm.title,
+            content: newsForm.content,
+            imageUrl: newsForm.imageUrl,
+            status: newsForm.status
+          })
+          ElMessage.success('新闻更新成功')
         }
         
-        editDialogVisible.value = false
+        newsDialogVisible.value = false
         fetchNews()
       } catch (error) {
-        console.error('操作失败:', error)
+        console.error('新闻操作失败:', error)
         ElMessage.error('操作失败')
+      } finally {
+        newsFormSubmitting.value = false
       }
     }
-
-    // 切换新闻状态
-    const handleToggleStatus = async (news) => {
-      try {
-        await ElMessageBox.confirm(
-          `确定要${news.status === 'published' ? '撤回' : '发布'}新闻 "${news.title}" 吗？`,
-          '提示',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
+    
+    // 处理新闻操作
+    const handleNewsAction = async (command, news) => {
+      switch (command) {
+        case 'publish':
+          try {
+            await ElMessageBox.confirm(`确定要发布新闻 "${news.title}" 吗？`, '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            })
+            
+            // 更新新闻状态功能在API中未定义，需要实现
+            ElMessage.warning('更新新闻状态功能暂未实现')
+            return
+          } catch (error) {
+            if (error !== 'cancel') {
+              ElMessage.error('新闻发布失败')
+            }
           }
-        )
+          break
+          
+        case 'unpublish':
+          try {
+            await ElMessageBox.confirm(`确定要取消发布新闻 "${news.title}" 吗？`, '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            })
+            
+            // 更新新闻状态功能在API中未定义，需要实现
+            ElMessage.warning('更新新闻状态功能暂未实现')
+            return
+          } catch (error) {
+            if (error !== 'cancel') {
+              ElMessage.error('取消发布失败')
+            }
+          }
+          break
+      }
+    }
+    
+    // 批量发布新闻
+    const batchPublishNews = async () => {
+      try {
+        await ElMessageBox.confirm(`确定要发布选中的 ${selectedNews.value.length} 条新闻吗？`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
         
-        const newStatus = news.status === 'published' ? 'draft' : 'published'
-        await newsApi.updateNewsStatus(news.id, newStatus)
-        ElMessage.success('新闻状态更新成功')
-        fetchNews()
+        // 批量发布功能在API中未定义，需要实现
+        ElMessage.warning('批量发布功能暂未实现')
+        return
       } catch (error) {
         if (error !== 'cancel') {
-          console.error('更新新闻状态失败:', error)
-          ElMessage.error('更新新闻状态失败')
+          ElMessage.error('批量发布失败')
         }
       }
     }
-
-    // 删除新闻
-    const handleDelete = async (news) => {
+    
+    // 批量删除新闻
+    const batchDeleteNews = async () => {
       try {
-        await ElMessageBox.confirm(
-          `确定要删除新闻 "${news.title}" 吗？此操作不可恢复。`,
-          '警告',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'error'
-          }
+        await ElMessageBox.confirm(`确定要删除选中的 ${selectedNews.value.length} 条新闻吗？此操作不可恢复。`, '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'error'
+        })
+        
+        const promises = selectedNews.value.map(news => 
+          adminApi.news.deleteNews(news.id)
         )
         
-        await newsApi.deleteNews(news.id)
-        ElMessage.success('新闻删除成功')
+        await Promise.all(promises)
+        ElMessage.success('批量删除成功')
         fetchNews()
       } catch (error) {
         if (error !== 'cancel') {
-          console.error('删除新闻失败:', error)
-          ElMessage.error('删除新闻失败')
+          ElMessage.error('批量删除失败')
         }
       }
     }
-
+    
+    // 获取状态文本
+    const getStatusText = (status) => {
+      const statusMap = {
+        draft: '草稿',
+        published: '已发布'
+      }
+      return statusMap[status] || '未知'
+    }
+    
+    // 获取状态类型
+    const getStatusType = (status) => {
+      const typeMap = {
+        draft: 'warning',
+        published: 'success'
+      }
+      return typeMap[status] || 'info'
+    }
+    
     onMounted(() => {
       fetchNews()
     })
-
+    
     return {
       loading,
       newsList,
-      searchKeyword,
-      filterStatus,
-      currentPage,
-      pageSize,
-      total,
-      editDialogVisible,
-      isEdit,
-      editForm,
-      handleSearch,
-      resetSearch,
+      selectedNews,
+      pagination,
+      filters,
+      newsStats,
+      newsDialogVisible,
+      dialogMode,
+      newsForm,
+      newsFormRef,
+      newsFormRules,
+      newsFormSubmitting,
+      fetchNews,
+      resetFilters,
+      handleSelectionChange,
       handleSizeChange,
       handleCurrentChange,
-      handleCreate,
-      handleEdit,
-      handleEditSubmit,
-      handleToggleStatus,
-      handleDelete,
+      viewNews,
+      showAddNewsDialog,
+      showEditNewsDialog,
+      resetNewsForm,
+      submitNewsForm,
+      handleNewsAction,
+      batchPublishNews,
+      batchDeleteNews,
+      getStatusText,
+      getStatusType,
       formatDate
     }
   }
@@ -298,20 +582,176 @@ export default {
 </script>
 
 <style scoped>
-.filter-container {
-  margin-bottom: 20px;
+/* 页面头部样式 */
+.page-header {
+  margin-bottom: var(--spacing-xl);
 }
 
-.pagination-container {
-  margin-top: 20px;
-  text-align: center;
+.page-header h1 {
+  margin-bottom: var(--spacing-xs);
+}
+
+/* 统计卡片样式 */
+.stats-cards {
+  margin-bottom: var(--spacing-xl);
+}
+
+.stat-card {
+  height: 100%;
+}
+
+.stat-item {
+  height: 120px;
+  padding: var(--spacing-lg);
+}
+
+.stat-content {
+  height: 100%;
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: var(--spacing-base);
+}
+
+.stat-item-primary .stat-icon {
+  background-color: rgba(64, 158, 255, 0.1);
+  color: var(--primary-color);
+}
+
+.stat-item-success .stat-icon {
+  background-color: rgba(103, 194, 58, 0.1);
+  color: var(--success-color);
+}
+
+.stat-item-warning .stat-icon {
+  background-color: rgba(230, 162, 60, 0.1);
+  color: var(--warning-color);
+}
+
+.stat-item-danger .stat-icon {
+  background-color: rgba(245, 108, 108, 0.1);
+  color: var(--danger-color);
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.stat-title {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* 筛选区域样式 */
+.filter-card {
+  margin-bottom: var(--spacing-xl);
 }
 
 .card-header {
+  margin-bottom: var(--spacing-base);
+}
+
+.reset-btn {
+  color: var(--text-secondary);
+}
+
+.filter-select {
+  width: 150px;
+}
+
+/* 新闻列表样式 */
+.news-list-card {
+  margin-bottom: var(--spacing-xl);
+}
+
+.news-info {
+  gap: var(--spacing-base);
+}
+
+.news-image {
+  width: 120px;
+  height: 80px;
+  border-radius: var(--border-radius-base);
+  overflow: hidden;
+  box-shadow: var(--shadow-light);
+}
+
+.news-details {
+  flex: 1;
+}
+
+.news-title {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+}
+
+.news-summary {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+.action-buttons {
+  gap: var(--spacing-xs);
+}
+
+.pagination-container {
+  margin-top: var(--spacing-xl);
+}
+
+.image-placeholder {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  font-size: 18px;
-  font-weight: bold;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-lighter);
+  color: var(--text-placeholder);
+  font-size: var(--font-size-lg);
+}
+
+/* 对话框样式 */
+.dialog-footer {
+  gap: var(--spacing-sm);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .stats-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-base);
+  }
+  
+  .news-info {
+    flex-direction: column;
+  }
+  
+  .news-image {
+    width: 100%;
+    height: 160px;
+  }
+}
+
+/* 动画效果 */
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
 }
 </style>

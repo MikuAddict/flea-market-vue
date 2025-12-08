@@ -9,7 +9,7 @@ export default {
     })
   },
 
-  // 添加二手物品分类（管理员）
+  // 添加二手物品分类
   addCategory(data) {
     return request({
       url: '/category/add',
@@ -18,19 +18,19 @@ export default {
     })
   },
 
-  // 更新二手物品分类（管理员）
+  // 更新二手物品分类
   updateCategory(data) {
     return request({
-      url: '/category/update',
+      url: `/category/${data.id}`,
       method: 'put',
       data
     })
   },
 
-  // 删除二手物品分类（管理员）
+  // 删除二手物品分类
   deleteCategory(id) {
     return request({
-      url: `/category/delete/${id}`,
+      url: `/category/${id}`,
       method: 'delete'
     })
   }

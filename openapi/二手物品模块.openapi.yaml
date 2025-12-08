@@ -1,0 +1,659 @@
+openapi: 3.0.1
+info:
+  title: 默认模块
+  description: 跳蚤市场系统接口文档
+  version: 1.0.0
+tags:
+  - name: 二手物品管理
+paths:
+  /product/{id}:
+    get:
+      summary: 获取二手物品详情
+      deprecated: false
+      description: 根据二手物品ID获取二手物品详细信息
+      operationId: getProductById
+      tags:
+        - 二手物品管理
+      parameters:
+        - name: id
+          in: path
+          description: 二手物品ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseProductVO'
+          headers: {}
+      security: []
+    put:
+      summary: 更新二手物品信息
+      deprecated: false
+      description: 用户更新自己的二手物品信息
+      operationId: updateProduct
+      tags:
+        - 二手物品管理
+      parameters:
+        - name: id
+          in: path
+          description: ''
+          required: true
+          example: ''
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseBoolean'
+          headers: {}
+      security: []
+    delete:
+      summary: 删除二手物品
+      deprecated: false
+      description: 用户删除自己的二手物品
+      operationId: deleteProduct
+      tags:
+        - 二手物品管理
+      parameters:
+        - name: id
+          in: path
+          description: 二手物品ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseBoolean'
+          headers: {}
+      security: []
+  /product/{id}/status:
+    put:
+      summary: 更新二手物品状态
+      deprecated: false
+      description: 更新二手物品状态（上架/下架/售出等）
+      operationId: updateProductStatus
+      tags:
+        - 二手物品管理
+      parameters:
+        - name: id
+          in: path
+          description: 二手物品ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          description: 二手物品状态
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseBoolean'
+          headers: {}
+      security: []
+  /product/{id}/review:
+    put:
+      summary: 审核二手物品
+      deprecated: false
+      description: 管理员审核二手物品（上架/拒绝）
+      operationId: reviewProduct
+      tags:
+        - 二手物品管理
+      parameters:
+        - name: id
+          in: path
+          description: 二手物品ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          description: 审核状态
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseBoolean'
+          headers: {}
+      security: []
+  /product/add:
+    post:
+      summary: 添加二手物品
+      deprecated: false
+      description: 用户添加新的二手物品
+      operationId: addProduct
+      tags:
+        - 二手物品管理
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductAddRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseLong'
+          headers: {}
+      security: []
+  /product/user/{userId}:
+    get:
+      summary: 获取用户发布的二手物品列表
+      deprecated: false
+      description: 根据用户ID获取该用户发布的二手物品列表
+      operationId: listUserProducts
+      tags:
+        - 二手物品管理
+      parameters:
+        - name: userId
+          in: path
+          description: 用户ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+        - name: current
+          in: query
+          description: 当前页码
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: size
+          in: query
+          description: 每页大小
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponsePageProduct'
+          headers: {}
+      security: []
+  /product/list/my:
+    get:
+      summary: 获取当前用户发布的二手物品列表
+      deprecated: false
+      description: 获取当前登录用户发布的二手物品列表
+      operationId: listMyProducts
+      tags:
+        - 二手物品管理
+      parameters:
+        - name: current
+          in: query
+          description: 当前页码
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: size
+          in: query
+          description: 每页大小
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponsePageProduct'
+          headers: {}
+      security: []
+  /product/latest:
+    get:
+      summary: 获取最新二手物品列表
+      deprecated: false
+      description: 获取最新发布的二手物品列表
+      operationId: getLatestProducts
+      tags:
+        - 二手物品管理
+      parameters:
+        - name: limit
+          in: query
+          description: 限制数量
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseListProduct'
+          headers: {}
+      security: []
+  /product/advanced-search:
+    get:
+      summary: 高级搜索二手物品
+      deprecated: false
+      description: 多条件组合搜索二手物品，支持分类、价格、支付方式筛选和排序
+      operationId: advancedSearchProducts
+      tags:
+        - 二手物品管理
+      parameters:
+        - name: keyword
+          in: query
+          description: 搜索关键词
+          required: false
+          schema:
+            type: string
+        - name: categoryId
+          in: query
+          description: 分类ID
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: minPrice
+          in: query
+          description: 最低价格
+          required: false
+          schema:
+            type: number
+        - name: maxPrice
+          in: query
+          description: 最高价格
+          required: false
+          schema:
+            type: number
+        - name: paymentMethod
+          in: query
+          description: 支付方式 (0-现金, 1-微信, 2-积分, 3-交换)
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: sortField
+          in: query
+          description: 排序字段 (price/createtime/name)
+          required: false
+          schema:
+            type: string
+        - name: sortOrder
+          in: query
+          description: 排序顺序 (asc/desc)
+          required: false
+          schema:
+            type: string
+            default: desc
+        - name: current
+          in: query
+          description: 当前页码
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: size
+          in: query
+          description: 每页大小
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponsePageProduct'
+          headers: {}
+      security: []
+  /product/admin/list:
+    get:
+      summary: 管理员获取所有二手物品列表
+      deprecated: false
+      description: 管理员获取所有二手物品列表（包括未审核的）
+      operationId: adminListProducts
+      tags:
+        - 二手物品管理
+      parameters:
+        - name: current
+          in: query
+          description: 当前页码
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: size
+          in: query
+          description: 每页大小
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+        - name: keyword
+          in: query
+          description: 关键词
+          required: false
+          schema:
+            type: string
+        - name: categoryId
+          in: query
+          description: 分类ID
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          description: 二手物品状态
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponsePageProduct'
+          headers: {}
+      security: []
+components:
+  schemas:
+    OrderItem:
+      type: object
+      properties:
+        column:
+          type: string
+        asc:
+          type: boolean
+    ProductAddRequest:
+      type: object
+      description: 二手物品添加信息
+      properties:
+        productName:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        imageUrls:
+          type: string
+        categoryId:
+          type: integer
+          format: int64
+        paymentMethod:
+          type: integer
+          format: int32
+    BaseResponsePageProduct:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          $ref: '#/components/schemas/PageProduct'
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    PageProduct:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        total:
+          type: integer
+          format: int64
+        size:
+          type: integer
+          format: int64
+        current:
+          type: integer
+          format: int64
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+          writeOnly: true
+        optimizeCountSql:
+          $ref: '#/components/schemas/PageProduct'
+        searchCount:
+          $ref: '#/components/schemas/PageProduct'
+        optimizeJoinOfCountSql:
+          type: boolean
+          writeOnly: true
+        maxLimit:
+          type: integer
+          format: int64
+          writeOnly: true
+        countId:
+          type: string
+          writeOnly: true
+        pages:
+          type: integer
+          format: int64
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        productName:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        mainImageUrl:
+          type: string
+        imageUrls:
+          type: string
+        status:
+          type: integer
+          format: int32
+        paymentMethod:
+          type: integer
+          format: int32
+        categoryId:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        createTime:
+          type: string
+          format: date-time
+        updateTime:
+          type: string
+          format: date-time
+        deleted:
+          type: integer
+          format: int32
+    BaseResponseListProduct:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    BaseResponseBoolean:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          type: boolean
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    ProductUpdateRequest:
+      type: object
+      description: 二手物品更新信息
+      properties:
+        id:
+          type: integer
+          format: int64
+        productName:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        imageUrls:
+          type: string
+        categoryId:
+          type: integer
+          format: int64
+        status:
+          type: integer
+          format: int32
+        paymentMethod:
+          type: integer
+          format: int32
+    BaseResponseLong:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          type: integer
+          format: int64
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    BaseResponseProductVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          $ref: '#/components/schemas/ProductVO'
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    ProductVO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        productName:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        mainImageUrl:
+          type: string
+        imageUrls:
+          type: array
+          items:
+            type: string
+        status:
+          type: integer
+          format: int32
+        paymentMethod:
+          type: integer
+          format: int32
+        categoryId:
+          type: integer
+          format: int64
+        categoryName:
+          type: string
+        userId:
+          type: integer
+          format: int64
+        userName:
+          type: string
+        userAvatar:
+          type: string
+        createTime:
+          type: string
+          format: date-time
+        updateTime:
+          type: string
+          format: date-time
+  responses: {}
+  securitySchemes: {}
+servers: []
+security: []

@@ -125,6 +125,9 @@ import newsApi from './news'
 import reviewApi from './review'
 import statisticsApi from './statistics'
 import imageApi from './image'
+import adminApi from './admin'
+import cartApi from './cart'
+import tradeApi from './trade'
 
 // 导出所有API模块
 export {
@@ -135,7 +138,10 @@ export {
   newsApi,
   reviewApi,
   statisticsApi,
-  imageApi
+  imageApi,
+  adminApi,
+  cartApi,
+  tradeApi
 }
 
 export default {
@@ -146,5 +152,8 @@ export default {
   newsApi,
   reviewApi,
   statisticsApi,
-  imageApi
+  imageApi,
+  adminApi,
+  cartApi,
+  tradeApi
 }

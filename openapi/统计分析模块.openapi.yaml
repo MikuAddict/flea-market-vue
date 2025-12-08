@@ -1,0 +1,367 @@
+openapi: 3.0.1
+info:
+  title: 默认模块
+  description: 跳蚤市场系统接口文档
+  version: 1.0.0
+tags:
+  - name: 统计分析
+paths:
+  /statistics/user/{userId}:
+    get:
+      summary: 获取用户交易统计
+      deprecated: false
+      description: 获取指定用户的交易统计数据
+      operationId: getUserTradeStatistics
+      tags:
+        - 统计分析
+      parameters:
+        - name: userId
+          in: path
+          description: 用户ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseStatisticsResponse'
+          headers: {}
+      security: []
+  /statistics/product/{productId}:
+    get:
+      summary: 获取二手物品交易统计
+      deprecated: false
+      description: 获取指定二手物品的交易统计数据
+      operationId: getProductTradeStatistics
+      tags:
+        - 统计分析
+      parameters:
+        - name: productId
+          in: path
+          description: 二手物品ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseStatisticsResponse'
+          headers: {}
+      security: []
+  /statistics/monthly:
+    get:
+      summary: 获取月度统计数据
+      deprecated: false
+      description: 获取指定月份的统计数据
+      operationId: getMonthlyStatistics
+      tags:
+        - 统计分析
+      parameters:
+        - name: month
+          in: query
+          description: 月份
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: year
+          in: query
+          description: 年份
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseStatisticsResponse'
+          headers: {}
+      security: []
+  /statistics/monthly-products:
+    get:
+      summary: 获取月度交易二手物品排行
+      deprecated: false
+      description: 获取指定月份的交易二手物品排行榜
+      operationId: getMonthlyTopSellingProducts
+      tags:
+        - 统计分析
+      parameters:
+        - name: month
+          in: query
+          description: 月份
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: year
+          in: query
+          description: 年份
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          description: 限制数量
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseListProductRankingItem'
+          headers: {}
+      security: []
+  /statistics/high-inventory-products:
+    get:
+      summary: 获取闲置量大二手物品排行
+      deprecated: false
+      description: 获取闲置量大的二手物品排行榜
+      operationId: getHighInventoryProducts
+      tags:
+        - 统计分析
+      parameters:
+        - name: limit
+          in: query
+          description: 限制数量
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseListProductRankingItem'
+          headers: {}
+      security: []
+  /statistics/high-demand-products:
+    get:
+      summary: 获取需求量大二手物品排行
+      deprecated: false
+      description: 获取需求量大的二手物品排行榜
+      operationId: getHighDemandProducts
+      tags:
+        - 统计分析
+      parameters:
+        - name: limit
+          in: query
+          description: 限制数量
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseListProductRankingItem'
+          headers: {}
+      security: []
+  /statistics/comprehensive:
+    get:
+      summary: 获取综合统计信息
+      deprecated: false
+      description: 获取指定时间范围内的综合统计信息
+      operationId: getComprehensiveStatistics
+      tags:
+        - 统计分析
+      parameters:
+        - name: startDate
+          in: query
+          description: 开始日期
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: 结束日期
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseStatisticsResponse'
+          headers: {}
+      security: []
+  /statistics/active-users:
+    get:
+      summary: 获取活跃用户排行
+      deprecated: false
+      description: 获取指定时间范围内的活跃用户排行榜
+      operationId: getActiveUsersRanking
+      tags:
+        - 统计分析
+      parameters:
+        - name: limit
+          in: query
+          description: 限制数量
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+        - name: startDate
+          in: query
+          description: 开始日期
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: 结束日期
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseListUserRankingItem'
+          headers: {}
+      security: []
+components:
+  schemas:
+    BaseResponseStatisticsResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          $ref: '#/components/schemas/StatisticsResponse'
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    ProductRankingItem:
+      type: object
+      properties:
+        productId:
+          type: integer
+          format: int64
+        productName:
+          type: string
+        tradeCount:
+          type: integer
+          format: int64
+        tradeAmount:
+          type: number
+        imageUrl:
+          type: string
+    StatisticsResponse:
+      type: object
+      properties:
+        statisticsType:
+          type: string
+        statisticsTime:
+          type: string
+          format: date-time
+        totalTradeAmount:
+          type: number
+        totalTradeCount:
+          type: integer
+          format: int64
+        monthlyProductRanking:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductRankingItem'
+        activeUserRanking:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRankingItem'
+        highDemandRanking:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductRankingItem'
+        highInventoryRanking:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductRankingItem'
+    UserRankingItem:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        userName:
+          type: string
+        tradeCount:
+          type: integer
+          format: int64
+        tradeAmount:
+          type: number
+        avatar:
+          type: string
+    BaseResponseListProductRankingItem:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductRankingItem'
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    BaseResponseListUserRankingItem:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRankingItem'
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+  responses: {}
+  securitySchemes: {}
+servers: []
+security: []

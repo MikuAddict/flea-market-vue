@@ -1,0 +1,274 @@
+openapi: 3.0.1
+info:
+  title: 默认模块
+  description: 跳蚤市场系统接口文档
+  version: 1.0.0
+tags:
+  - name: 平台公告管理
+paths:
+  /news/{id}:
+    get:
+      summary: 获取新闻详情
+      deprecated: false
+      description: 根据ID获取新闻的详细信息
+      operationId: getNewsDetail
+      tags:
+        - 平台公告管理
+      parameters:
+        - name: id
+          in: path
+          description: 新闻ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseNewsVO'
+          headers: {}
+      security: []
+    put:
+      summary: 更新新闻
+      deprecated: false
+      description: 管理员更新新闻信息
+      operationId: updateNews
+      tags:
+        - 平台公告管理
+      parameters:
+        - name: id
+          in: path
+          description: 新闻ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseBoolean'
+          headers: {}
+      security: []
+    delete:
+      summary: 删除新闻
+      deprecated: false
+      description: 管理员根据ID删除新闻
+      operationId: deleteNews
+      tags:
+        - 平台公告管理
+      parameters:
+        - name: id
+          in: path
+          description: 新闻ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseBoolean'
+          headers: {}
+      security: []
+  /news/add:
+    post:
+      summary: 添加新闻
+      deprecated: false
+      description: 管理员添加新的新闻
+      operationId: addNews
+      tags:
+        - 平台公告管理
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsAddRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseLong'
+          headers: {}
+      security: []
+  /news/list:
+    get:
+      summary: 分页获取新闻列表
+      deprecated: false
+      description: 分页获取系统中的新闻信息
+      operationId: getNewsList
+      tags:
+        - 平台公告管理
+      parameters:
+        - name: current
+          in: query
+          description: 当前页码
+          required: false
+          example: 1
+          schema:
+            type: integer
+            format: int64
+            default: 1
+        - name: size
+          in: query
+          description: 每页大小
+          required: false
+          example: 10
+          schema:
+            type: integer
+            format: int64
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseListNewsVO'
+          headers: {}
+      security: []
+  /news/latest:
+    get:
+      summary: 获取最新新闻
+      deprecated: false
+      description: 获取系统中最新的一条新闻信息
+      operationId: getLatestNews
+      tags:
+        - 平台公告管理
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseNewsVO'
+          headers: {}
+      security: []
+components:
+  schemas:
+    NewsAddRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        imageUrl:
+          type: string
+    BaseResponseBoolean:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          type: boolean
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    NewsUpdateRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        content:
+          type: string
+        imageUrl:
+          type: string
+    BaseResponseLong:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          type: integer
+          format: int64
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    BaseResponseListNewsVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewsVO'
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    NewsVO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        content:
+          type: string
+        imageUrl:
+          type: string
+        authorId:
+          type: integer
+          format: int64
+        authorName:
+          type: string
+        createTime:
+          type: string
+          format: date-time
+    BaseResponseNewsVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          $ref: '#/components/schemas/NewsVO'
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+  responses: {}
+  securitySchemes: {}
+servers: []
+security: []

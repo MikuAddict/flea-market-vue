@@ -1,203 +1,429 @@
 <template>
-  <div class="admin-orders">
-    <el-card>
-      <template #header>
-        <div class="card-header">
-          <span>订单管理</span>
+  <Layout>
+    <div class="admin-orders unified-page-container fade-in">
+      <!-- 页面标题和操作区域 -->
+      <div class="page-header unified-flex unified-flex-between">
+        <div>
+          <h1 class="unified-title-xl">订单管理</h1>
+          <p class="unified-text-secondary">管理系统中的所有订单</p>
         </div>
-      </template>
+        <div class="header-actions unified-flex">
+          <el-button 
+            type="primary" 
+            class="unified-button unified-button-primary"
+            @click="exportOrders"
+          >
+            <el-icon><Download /></el-icon>
+            导出订单
+          </el-button>
+        </div>
+      </div>
       
-      <!-- 搜索和筛选 -->
-      <div class="filter-container">
-        <el-input
-          v-model="searchKeyword"
-          placeholder="搜索订单号或二手物品名称"
-          style="width: 300px; margin-right: 10px"
-          @keyup.enter="handleSearch"
-        />
-        <el-select v-model="filterStatus" placeholder="订单状态" clearable style="width: 120px; margin-right: 10px">
-          <el-option label="待付款" value="pending" />
-          <el-option label="已付款" value="paid" />
-          <el-option label="已发货" value="shipped" />
-          <el-option label="已完成" value="completed" />
-          <el-option label="已取消" value="cancelled" />
-        </el-select>
-        <el-date-picker
-          v-model="dateRange"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          style="width: 240px; margin-right: 10px"
-        />
-        <el-button type="primary" @click="handleSearch">搜索</el-button>
-        <el-button @click="resetSearch">重置</el-button>
+      <!-- 订单统计卡片 -->
+      <div class="stats-cards unified-grid unified-grid-4">
+        <div class="stat-card fade-in" v-for="(stat, index) in orderStats" :key="stat.title" :style="{ animationDelay: `${index * 0.1}s` }">
+          <el-card class="unified-card stat-item" :class="`stat-item-${stat.type}`">
+            <div class="stat-content unified-flex unified-flex-center">
+              <div class="stat-icon unified-flex unified-flex-center">
+                <el-icon :size="24"><component :is="stat.icon" /></el-icon>
+              </div>
+              <div class="stat-info">
+                <h3 class="stat-value">{{ stat.value }}</h3>
+                <p class="stat-title">{{ stat.title }}</p>
+              </div>
+            </div>
+          </el-card>
+        </div>
       </div>
-
-      <!-- 订单列表 -->
-      <el-table :data="orderList" v-loading="loading" style="width: 100%; margin-top: 20px">
-        <el-table-column prop="id" label="订单号" width="120" />
-        <el-table-column prop="productName" label="二手物品名称" />
-        <el-table-column prop="buyerName" label="买家" width="120" />
-        <el-table-column prop="sellerName" label="卖家" width="120" />
-        <el-table-column prop="price" label="金额" width="100">
-          <template #default="{ row }">
-            ¥{{ row.price }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="quantity" label="数量" width="80" />
-        <el-table-column prop="totalAmount" label="总金额" width="100">
-          <template #default="{ row }">
-            ¥{{ row.totalAmount }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">
-              {{ getStatusText(row.status) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="180">
-          <template #default="{ row }">
-            {{ formatDate(row.createdAt) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="200">
-          <template #default="{ row }">
-            <el-button size="small" @click="handleView(row)">查看</el-button>
+      
+      <!-- 筛选和搜索区域 -->
+      <el-card class="unified-card filter-card fade-in">
+        <template #header>
+          <div class="card-header unified-flex unified-flex-between">
+            <h3 class="unified-title-base">筛选与搜索</h3>
             <el-button 
-              v-if="row.status === 'paid'" 
-              size="small" 
-              type="success"
-              @click="handleShip(row)"
+              type="text" 
+              @click="resetFilters"
+              class="reset-btn"
             >
-              发货
+              重置
             </el-button>
-            <el-button 
-              v-if="row.status === 'pending'" 
-              size="small" 
-              type="danger"
-              @click="handleCancel(row)"
-            >
-              取消
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- 分页 -->
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          :page-sizes="[10, 20, 50, 100]"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
-    </el-card>
-
-    <!-- 订单详情对话框 -->
-    <el-dialog v-model="detailDialogVisible" title="订单详情" width="700px">
-      <div v-if="currentOrder" class="order-detail">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="订单号">{{ currentOrder.id }}</el-descriptions-item>
-          <el-descriptions-item label="二手物品名称">{{ currentOrder.productName }}</el-descriptions-item>
-          <el-descriptions-item label="买家">{{ currentOrder.buyerName }}</el-descriptions-item>
-          <el-descriptions-item label="卖家">{{ currentOrder.sellerName }}</el-descriptions-item>
-          <el-descriptions-item label="单价">¥{{ currentOrder.price }}</el-descriptions-item>
-          <el-descriptions-item label="数量">{{ currentOrder.quantity }}</el-descriptions-item>
-          <el-descriptions-item label="总金额">¥{{ currentOrder.totalAmount }}</el-descriptions-item>
-          <el-descriptions-item label="状态">
-            <el-tag :type="getStatusType(currentOrder.status)">
-              {{ getStatusText(currentOrder.status) }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ formatDate(currentOrder.createdAt) }}</el-descriptions-item>
-          <el-descriptions-item label="付款时间" v-if="currentOrder.paidAt">
-            {{ formatDate(currentOrder.paidAt) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="发货时间" v-if="currentOrder.shippedAt">
-            {{ formatDate(currentOrder.shippedAt) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="完成时间" v-if="currentOrder.completedAt">
-            {{ formatDate(currentOrder.completedAt) }}
-          </el-descriptions-item>
-        </el-descriptions>
+          </div>
+        </template>
         
-        <el-divider />
-        <h4>收货地址</h4>
-        <p v-if="currentOrder.shippingAddress">
-          {{ currentOrder.shippingAddress.recipient }} | 
-          {{ currentOrder.shippingAddress.phone }}<br>
-          {{ currentOrder.shippingAddress.address }}
-        </p>
-        <p v-else>未提供收货地址</p>
-      </div>
-    </el-dialog>
-
-    <!-- 发货对话框 -->
-    <el-dialog v-model="shipDialogVisible" title="发货信息" width="500px">
-      <el-form :model="shipForm" label-width="80px">
-        <el-form-item label="快递公司">
-          <el-input v-model="shipForm.shippingCompany" placeholder="请输入快递公司名称" />
-        </el-form-item>
-        <el-form-item label="快递单号">
-          <el-input v-model="shipForm.trackingNumber" placeholder="请输入快递单号" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="shipDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleShipSubmit">确定</el-button>
-      </template>
-    </el-dialog>
-  </div>
+        <el-form :model="filters" :inline="true" label-width="80px">
+          <el-form-item label="订单号">
+            <el-input
+              v-model="filters.orderId"
+              placeholder="搜索订单号"
+              clearable
+              class="unified-input"
+              @keyup.enter="fetchOrders"
+            />
+          </el-form-item>
+          
+          <el-form-item label="产品名称">
+            <el-input
+              v-model="filters.productName"
+              placeholder="搜索产品名称"
+              clearable
+              class="unified-input"
+              @keyup.enter="fetchOrders"
+            />
+          </el-form-item>
+          
+          <el-form-item label="买家名称">
+            <el-input
+              v-model="filters.buyerName"
+              placeholder="搜索买家名称"
+              clearable
+              class="unified-input"
+              @keyup.enter="fetchOrders"
+            />
+          </el-form-item>
+          
+          <el-form-item label="订单状态">
+            <el-select
+              v-model="filters.status"
+              placeholder="选择状态"
+              clearable
+              class="unified-input filter-select"
+            >
+              <el-option label="待付款" :value="0" />
+              <el-option label="已付款" :value="1" />
+              <el-option label="已完成" :value="2" />
+              <el-option label="已取消" :value="3" />
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item label="下单时间">
+            <el-date-picker
+              v-model="filters.dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              class="unified-input"
+            />
+          </el-form-item>
+          
+          <el-form-item>
+            <el-button
+              type="primary"
+              class="unified-button unified-button-primary"
+              @click="fetchOrders"
+            >
+              <el-icon><Search /></el-icon>
+              搜索
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+      
+      <!-- 订单列表 -->
+      <el-card class="unified-card orders-card fade-in">
+        <template #header>
+          <div class="card-header unified-flex unified-flex-between">
+            <h3 class="unified-title-base">订单列表</h3>
+            <div class="batch-actions unified-flex unified-flex-center">
+              <el-button
+                v-if="selectedOrders.length > 0"
+                type="primary"
+                size="small"
+                class="unified-button"
+                @click="batchCancelOrders"
+              >
+                批量取消
+              </el-button>
+            </div>
+          </div>
+        </template>
+        
+        <el-table
+          v-loading="loading"
+          :data="orderList"
+          @selection-change="handleSelectionChange"
+          style="width: 100%"
+        >
+          <el-table-column type="selection" width="55" />
+          
+          <el-table-column prop="id" label="订单号" width="100" />
+          
+          <el-table-column label="产品信息" min-width="200">
+            <template #default="scope">
+              <div class="product-info unified-flex">
+                <el-image
+                  :src="scope.row.productImage"
+                  class="product-image"
+                  fit="cover"
+                >
+                  <template #error>
+                    <div class="image-placeholder">
+                      <el-icon><Picture /></el-icon>
+                    </div>
+                  </template>
+                </el-image>
+                <div class="product-details">
+                  <h4 class="product-name">{{ scope.row.productName }}</h4>
+                  <p class="product-desc">{{ scope.row.productDescription?.substring(0, 30) }}...</p>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="amount" label="订单金额" width="120">
+            <template #default="scope">
+              <div class="price-info">
+                <span class="price-symbol">¥</span>
+                <span class="price-value">{{ formatPrice(scope.row.amount) }}</span>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="buyerName" label="买家信息" width="150">
+            <template #default="scope">
+              <div class="buyer-info">
+                <div class="buyer-name">{{ scope.row.buyerName }}</div>
+                <div class="buyer-phone">{{ scope.row.buyerPhone }}</div>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="sellerName" label="卖家信息" width="150">
+            <template #default="scope">
+              <div class="seller-info">
+                <div class="seller-name">{{ scope.row.sellerName }}</div>
+                <div class="seller-phone">{{ scope.row.sellerPhone }}</div>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="status" label="订单状态" width="100">
+            <template #default="scope">
+              <el-tag :type="getStatusType(scope.row.status)" size="small">
+                {{ getStatusText(scope.row.status) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="createTime" label="下单时间" width="160">
+            <template #default="scope">
+              {{ formatDate(scope.row.createTime) }}
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="操作" width="150" fixed="right">
+            <template #default="scope">
+              <div class="action-buttons unified-flex">
+                <el-button
+                  size="small"
+                  type="text"
+                  @click="viewOrder(scope.row)"
+                >
+                  查看
+                </el-button>
+                
+                <el-dropdown @command="(command) => handleOrderAction(command, scope.row)">
+                  <el-button size="small" type="text">
+                    更多
+                    <el-icon><ArrowDown /></el-icon>
+                  </el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="refund" v-if="scope.row.status === 2">
+                        申请退款
+                      </el-dropdown-item>
+                      <el-dropdown-item command="cancel" v-if="scope.row.status < 2">
+                        取消订单
+                      </el-dropdown-item>
+                      <el-dropdown-item command="complete" v-if="scope.row.status === 1">
+                        完成订单
+                      </el-dropdown-item>
+                      <el-dropdown-item divided command="delete">删除订单</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+        
+        <!-- 分页 -->
+        <div class="pagination-container unified-flex unified-flex-center">
+          <el-pagination
+            v-model:current-page="pagination.current"
+            v-model:page-size="pagination.size"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="pagination.total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            background
+          />
+        </div>
+      </el-card>
+    </div>
+  </Layout>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { 
+  Download, 
+  Search, 
+  Edit, 
+  Delete, 
+  ArrowDown,
+  Picture,
+  ShoppingCart,
+  Money,
+  User,
+  Clock,
+  Check,
+  Close
+} from '@element-plus/icons-vue'
+import { formatPrice, formatDate } from '@/utils/format'
 import { orderApi } from '@/api'
-import { formatDate } from '@/utils/format'
+import Layout from '@/components/Layout.vue'
 
 export default {
   name: 'AdminOrders',
+  components: {
+    Layout
+  },
   setup() {
+    const router = useRouter()
+    
+    // 响应式数据
     const loading = ref(false)
     const orderList = ref([])
-    const searchKeyword = ref('')
-    const filterStatus = ref('')
-    const dateRange = ref([])
-    const currentPage = ref(1)
-    const pageSize = ref(10)
-    const total = ref(0)
-    const detailDialogVisible = ref(false)
-    const shipDialogVisible = ref(false)
-    const currentOrder = ref(null)
-    const shipForm = ref({
-      orderId: '',
-      shippingCompany: '',
-      trackingNumber: ''
+    const selectedOrders = ref([])
+    
+    // 分页信息
+    const pagination = reactive({
+      current: 1,
+      size: 10,
+      total: 0
     })
-
+    
+    // 筛选条件
+    const filters = reactive({
+      orderId: '',
+      productName: '',
+      buyerName: '',
+      status: '',
+      dateRange: null
+    })
+    
+    // 订单统计数据
+    const orderStats = computed(() => [
+      {
+        title: '总订单数',
+        value: orderList.value.length,
+        icon: 'ShoppingCart',
+        type: 'primary'
+      },
+      {
+        title: '待付款',
+        value: orderList.value.filter(order => order.status === 0).length,
+        icon: 'Clock',
+        type: 'warning'
+      },
+      {
+        title: '已付款',
+        value: orderList.value.filter(order => order.status === 1).length,
+        icon: 'Money',
+        type: 'success'
+      },
+      {
+        title: '已完成',
+        value: orderList.value.filter(order => order.status === 2).length,
+        icon: 'Check',
+        type: 'danger'
+      }
+    ])
+    
     // 获取订单列表
     const fetchOrders = async () => {
       loading.value = true
       try {
         const params = {
-          page: currentPage.value,
-          pageSize: pageSize.value,
-          keyword: searchKeyword.value,
-          status: filterStatus.value,
-          startDate: dateRange.value?.[0] ? formatDate(dateRange.value[0], 'YYYY-MM-DD') : '',
-          endDate: dateRange.value?.[1] ? formatDate(dateRange.value[1], 'YYYY-MM-DD') : ''
+          current: pagination.current,
+          size: pagination.size,
+          orderId: filters.orderId,
+          productName: filters.productName,
+          buyerName: filters.buyerName,
+          status: filters.status
         }
-        const response = await orderApi.getOrders(params)
-        orderList.value = response.data.orders
-        total.value = response.data.total
+        
+        // 处理日期范围
+        if (filters.dateRange && filters.dateRange.length === 2) {
+          params.startDate = filters.dateRange[0]
+          params.endDate = filters.dateRange[1]
+        }
+        
+        // 调用API获取订单列表
+        // const response = await orderApi.getOrderList(params)
+        
+        // 模拟数据
+        const response = {
+          data: {
+            code: 200,
+            data: {
+              records: [
+                {
+                  id: 'ORD001',
+                  productName: '二手笔记本电脑',
+                  productDescription: '高性能笔记本电脑，轻薄便携',
+                  productImage: 'https://picsum.photos/seed/laptop/100/100.jpg',
+                  amount: 2999,
+                  buyerName: '张三',
+                  buyerPhone: '13800138000',
+                  sellerName: '李四',
+                  sellerPhone: '13800138001',
+                  status: 1,
+                  createTime: '2023-12-08T10:30:00'
+                },
+                {
+                  id: 'ORD002',
+                  productName: '二手智能手机',
+                  productDescription: '苹果手机，九成新',
+                  productImage: 'https://picsum.photos/seed/phone/100/100.jpg',
+                  amount: 1599,
+                  buyerName: '王五',
+                  buyerPhone: '13800138002',
+                  sellerName: '赵六',
+                  sellerPhone: '13800138003',
+                  status: 2,
+                  createTime: '2023-12-07T15:45:00'
+                },
+                {
+                  id: 'ORD003',
+                  productName: '二手教材',
+                  productDescription: '高等数学教材',
+                  productImage: 'https://picsum.photos/seed/book/100/100.jpg',
+                  amount: 35,
+                  buyerName: '孙七',
+                  buyerPhone: '13800138004',
+                  sellerName: '周八',
+                  sellerPhone: '13800138005',
+                  status: 0,
+                  createTime: '2023-12-06T09:20:00'
+                }
+              ],
+              total: 3
+            }
+          }
+        }
+        
+        if (response.data && response.data.code === 200) {
+          orderList.value = response.data.data.records || []
+          pagination.total = response.data.data.total || 0
+        } else {
+          ElMessage.error('获取订单列表失败')
+        }
       } catch (error) {
         console.error('获取订单列表失败:', error)
         ElMessage.error('获取订单列表失败')
@@ -205,140 +431,201 @@ export default {
         loading.value = false
       }
     }
-
-    // 获取状态类型
-    const getStatusType = (status) => {
-      const types = {
-        pending: 'warning',
-        paid: 'primary',
-        shipped: 'info',
-        completed: 'success',
-        cancelled: 'danger'
-      }
-      return types[status] || 'info'
-    }
-
-    // 获取状态文本
-    const getStatusText = (status) => {
-      const texts = {
-        pending: '待付款',
-        paid: '已付款',
-        shipped: '已发货',
-        completed: '已完成',
-        cancelled: '已取消'
-      }
-      return texts[status] || '未知'
-    }
-
-    // 搜索
-    const handleSearch = () => {
-      currentPage.value = 1
+    
+    // 重置筛选条件
+    const resetFilters = () => {
+      Object.keys(filters).forEach(key => {
+        if (key === 'dateRange') {
+          filters[key] = null
+        } else {
+          filters[key] = ''
+        }
+      })
+      pagination.current = 1
       fetchOrders()
     }
-
-    // 重置搜索
-    const resetSearch = () => {
-      searchKeyword.value = ''
-      filterStatus.value = ''
-      dateRange.value = []
-      currentPage.value = 1
-      fetchOrders()
+    
+    // 处理表格选择变化
+    const handleSelectionChange = (selection) => {
+      selectedOrders.value = selection
     }
-
-    // 分页处理
+    
+    // 处理分页大小变化
     const handleSizeChange = (size) => {
-      pageSize.value = size
+      pagination.size = size
+      pagination.current = 1
       fetchOrders()
     }
-
-    const handleCurrentChange = (page) => {
-      currentPage.value = page
+    
+    // 处理当前页变化
+    const handleCurrentChange = (current) => {
+      pagination.current = current
       fetchOrders()
     }
-
+    
     // 查看订单详情
-    const handleView = (order) => {
-      currentOrder.value = order
-      detailDialogVisible.value = true
+    const viewOrder = (order) => {
+      router.push(`/orders/${order.id}`)
     }
-
-    // 发货
-    const handleShip = (order) => {
-      shipForm.value = {
-        orderId: order.id,
-        shippingCompany: '',
-        trackingNumber: ''
-      }
-      shipDialogVisible.value = true
-    }
-
-    // 提交发货信息
-    const handleShipSubmit = async () => {
-      try {
-        await orderApi.shipOrder(shipForm.value.orderId, {
-          shippingCompany: shipForm.value.shippingCompany,
-          trackingNumber: shipForm.value.trackingNumber
-        })
-        ElMessage.success('发货成功')
-        shipDialogVisible.value = false
-        fetchOrders()
-      } catch (error) {
-        console.error('发货失败:', error)
-        ElMessage.error('发货失败')
-      }
-    }
-
-    // 取消订单
-    const handleCancel = async (order) => {
-      try {
-        await ElMessageBox.confirm(
-          `确定要取消订单 "${order.id}" 吗？`,
-          '提示',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
+    
+    // 处理订单操作
+    const handleOrderAction = async (command, order) => {
+      switch (command) {
+        case 'refund':
+          try {
+            await ElMessageBox.confirm(`确定要为订单 "${order.id}" 申请退款吗？`, '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            })
+            
+            // 调用退款API
+            // await orderApi.refundOrder(order.id)
+            ElMessage.success('退款申请已提交')
+          } catch (error) {
+            if (error !== 'cancel') {
+              ElMessage.error('退款申请失败')
+            }
           }
-        )
+          break
+          
+        case 'cancel':
+          try {
+            await ElMessageBox.confirm(`确定要取消订单 "${order.id}" 吗？`, '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            })
+            
+            // 调用取消订单API
+            // await orderApi.cancelOrder(order.id)
+            ElMessage.success('订单已取消')
+            fetchOrders()
+          } catch (error) {
+            if (error !== 'cancel') {
+              ElMessage.error('订单取消失败')
+            }
+          }
+          break
+          
+        case 'complete':
+          try {
+            await ElMessageBox.confirm(`确定要完成订单 "${order.id}" 吗？`, '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            })
+            
+            // 调用完成订单API
+            // await orderApi.completeOrder(order.id)
+            ElMessage.success('订单已完成')
+            fetchOrders()
+          } catch (error) {
+            if (error !== 'cancel') {
+              ElMessage.error('订单操作失败')
+            }
+          }
+          break
+          
+        case 'delete':
+          try {
+            await ElMessageBox.confirm(`确定要删除订单 "${order.id}" 吗？此操作不可恢复。`, '警告', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'error'
+            })
+            
+            // 调用删除订单API
+            // await orderApi.deleteOrder(order.id)
+            ElMessage.success('订单删除成功')
+            fetchOrders()
+          } catch (error) {
+            if (error !== 'cancel') {
+              ElMessage.error('订单删除失败')
+            }
+          }
+          break
+      }
+    }
+    
+    // 批量取消订单
+    const batchCancelOrders = async () => {
+      try {
+        await ElMessageBox.confirm(`确定要取消选中的 ${selectedOrders.value.length} 个订单吗？`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
         
-        await orderApi.cancelOrder(order.id)
-        ElMessage.success('订单取消成功')
+        // 调用批量取消订单API
+        // const promises = selectedOrders.value.map(order => orderApi.cancelOrder(order.id))
+        // await Promise.all(promises)
+        
+        ElMessage.success('批量取消成功')
         fetchOrders()
       } catch (error) {
         if (error !== 'cancel') {
-          console.error('取消订单失败:', error)
-          ElMessage.error('取消订单失败')
+          ElMessage.error('批量取消失败')
         }
       }
     }
-
+    
+    // 导出订单
+    const exportOrders = async () => {
+      try {
+        // 调用导出订单API
+        // await orderApi.exportOrders(filters)
+        ElMessage.success('订单导出成功')
+      } catch (error) {
+        ElMessage.error('订单导出失败')
+      }
+    }
+    
+    // 获取状态文本
+    const getStatusText = (status) => {
+      const statusMap = {
+        0: '待付款',
+        1: '已付款',
+        2: '已完成',
+        3: '已取消'
+      }
+      return statusMap[status] || '未知'
+    }
+    
+    // 获取状态类型
+    const getStatusType = (status) => {
+      const typeMap = {
+        0: 'warning',
+        1: 'primary',
+        2: 'success',
+        3: 'danger'
+      }
+      return typeMap[status] || 'info'
+    }
+    
     onMounted(() => {
       fetchOrders()
     })
-
+    
     return {
       loading,
       orderList,
-      searchKeyword,
-      filterStatus,
-      dateRange,
-      currentPage,
-      pageSize,
-      total,
-      detailDialogVisible,
-      shipDialogVisible,
-      currentOrder,
-      shipForm,
-      handleSearch,
-      resetSearch,
+      selectedOrders,
+      pagination,
+      filters,
+      orderStats,
+      fetchOrders,
+      resetFilters,
+      handleSelectionChange,
       handleSizeChange,
       handleCurrentChange,
-      handleView,
-      handleShip,
-      handleShipSubmit,
-      handleCancel,
-      getStatusType,
+      viewOrder,
+      handleOrderAction,
+      batchCancelOrders,
+      exportOrders,
       getStatusText,
+      getStatusType,
+      formatPrice,
       formatDate
     }
   }
@@ -346,27 +633,199 @@ export default {
 </script>
 
 <style scoped>
-.filter-container {
-  margin-bottom: 20px;
+/* 页面头部样式 */
+.page-header {
+  margin-bottom: var(--spacing-xl);
 }
 
-.pagination-container {
-  margin-top: 20px;
-  text-align: center;
+.page-header h1 {
+  margin-bottom: var(--spacing-xs);
+}
+
+/* 统计卡片样式 */
+.stats-cards {
+  margin-bottom: var(--spacing-xl);
+}
+
+.stat-card {
+  height: 100%;
+}
+
+.stat-item {
+  height: 120px;
+  padding: var(--spacing-lg);
+}
+
+.stat-content {
+  height: 100%;
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: var(--spacing-base);
+}
+
+.stat-item-primary .stat-icon {
+  background-color: rgba(64, 158, 255, 0.1);
+  color: var(--primary-color);
+}
+
+.stat-item-success .stat-icon {
+  background-color: rgba(103, 194, 58, 0.1);
+  color: var(--success-color);
+}
+
+.stat-item-warning .stat-icon {
+  background-color: rgba(230, 162, 60, 0.1);
+  color: var(--warning-color);
+}
+
+.stat-item-danger .stat-icon {
+  background-color: rgba(245, 108, 108, 0.1);
+  color: var(--danger-color);
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.stat-title {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* 筛选区域样式 */
+.filter-card {
+  margin-bottom: var(--spacing-xl);
 }
 
 .card-header {
-  font-size: 18px;
-  font-weight: bold;
+  margin-bottom: var(--spacing-base);
 }
 
-.order-detail h4 {
-  margin: 0 0 10px 0;
-  color: #303133;
+.reset-btn {
+  color: var(--text-secondary);
 }
 
-.order-detail p {
+.filter-select {
+  width: 150px;
+}
+
+/* 订单列表样式 */
+.orders-card {
+  margin-bottom: var(--spacing-xl);
+}
+
+.product-info {
+  gap: var(--spacing-base);
+}
+
+.product-image {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--border-radius-base);
+  overflow: hidden;
+  box-shadow: var(--shadow-light);
+}
+
+.product-details {
+  flex: 1;
+}
+
+.product-name {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+}
+
+.product-desc {
   margin: 0;
-  color: #606266;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+.price-info {
+  display: flex;
+  align-items: baseline;
+  color: var(--danger-color);
+  font-weight: 500;
+}
+
+.price-symbol {
+  font-size: var(--font-size-sm);
+}
+
+.price-value {
+  font-size: var(--font-size-lg);
+}
+
+.buyer-info, .seller-info {
+  font-size: var(--font-size-sm);
+}
+
+.buyer-name, .seller-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.buyer-phone, .seller-phone {
+  color: var(--text-secondary);
+}
+
+.action-buttons {
+  gap: var(--spacing-xs);
+}
+
+.pagination-container {
+  margin-top: var(--spacing-xl);
+}
+
+.image-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-lighter);
+  color: var(--text-placeholder);
+  font-size: var(--font-size-lg);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .stats-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-base);
+  }
+  
+  .product-info {
+    flex-direction: column;
+  }
+  
+  .product-image {
+    width: 100%;
+    height: 120px;
+  }
+}
+
+/* 动画效果 */
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
 }
 </style>

@@ -140,5 +140,14 @@ export default {
       method: 'post',
       data
     })
+  },
+
+  // 获取用户审核状态列表（根据API文档新增）
+  getUserVoListWithAudit(params) {
+    return request({
+      url: '/user/list/page/vo',
+      method: 'get',
+      params
+    })
   }
 }

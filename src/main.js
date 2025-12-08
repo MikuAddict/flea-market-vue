@@ -5,6 +5,8 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+// 导入统一样式
+import '@/assets/css/unified-styles.css'
 
 // 应用初始化时尝试获取当前用户信息
 // 检查是否有token（包括localStorage中的）

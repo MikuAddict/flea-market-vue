@@ -1,31 +1,43 @@
 <template>
-  <el-card class="product-card" shadow="hover" @click="goToDetail">
-    <div class="product-image">
-      <img v-if="product.imageUrl" :src="product.imageUrl" :alt="product.productName" />
-      <el-image v-else>
-        <template #error>
-          <div class="image-placeholder">
-            <el-icon><Picture /></el-icon>
-          </div>
-        </template>
-      </el-image>
+  <el-card class="unified-card product-card" @click="goToDetail">
+    <div class="product-image-container">
+      <div class="product-image">
+        <img v-if="product.imageUrl" :src="product.imageUrl" :alt="product.productName" />
+        <div v-else class="image-placeholder">
+          <el-icon><Picture /></el-icon>
+        </div>
+      </div>
+      <div class="product-overlay">
+        <el-button type="primary" class="view-detail-btn" size="small">查看详情</el-button>
+      </div>
     </div>
-    <div class="product-info">
-      <h3 class="product-name">{{ product.productName }}</h3>
-      <p class="product-price">¥{{ formatPrice(product.price) }}</p>
-      <div class="product-meta">
-        <el-tag :type="getProductStatusType(product.status)" size="small">
+    
+    <div class="product-content">
+      <div class="product-header">
+        <h3 class="product-name">{{ product.productName }}</h3>
+        <div class="product-price">
+          <span class="price-symbol">¥</span>
+          <span class="price-value">{{ formatPrice(product.price) }}</span>
+        </div>
+      </div>
+      
+      <div class="product-meta unified-flex unified-flex-wrap">
+        <div class="unified-tag unified-tag-primary">
           {{ formatProductStatus(product.status) }}
-        </el-tag>
-        <el-tag type="info" size="small">
+        </div>
+        <div class="unified-tag unified-tag-success">
           {{ formatPaymentMethod(product.paymentMethod) }}
-        </el-tag>
+        </div>
+        <div v-if="product.category" class="unified-tag unified-tag-warning">
+          {{ product.category.name }}
+        </div>
       </div>
-      <div class="product-category" v-if="product.category">
-        <el-tag type="success" size="small">{{ product.category.name }}</el-tag>
-      </div>
-      <div class="product-user" v-if="showUser && product.user">
-        <span class="user-name">{{ product.user.userName }}</span>
+      
+      <div class="product-footer" v-if="showUser && product.user">
+        <div class="unified-flex unified-flex-center">
+          <el-avatar :size="24" :src="product.user.userAvatar">{{ product.user.userName?.charAt(0) }}</el-avatar>
+          <span class="user-name">{{ product.user.userName }}</span>
+        </div>
       </div>
     </div>
   </el-card>
@@ -71,27 +83,45 @@ export default {
 </script>
 
 <style scoped>
+/* 产品卡片整体样式 */
 .product-card {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-base);
+  border-radius: var(--border-radius-base);
+  overflow: hidden;
   cursor: pointer;
-  transition: transform 0.3s;
+  transition: all var(--transition-base);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .product-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* 产品图片容器 */
+.product-image-container {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  border-radius: var(--border-radius-base) var(--border-radius-base) 0 0;
 }
 
 .product-image {
-  height: 180px;
-  overflow: hidden;
-  border-radius: 4px;
-  margin-bottom: 10px;
+  width: 100%;
+  height: 100%;
 }
 
 .product-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform var(--transition-base);
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.05);
 }
 
 .image-placeholder {
@@ -100,52 +130,118 @@ export default {
   align-items: center;
   width: 100%;
   height: 100%;
-  background-color: #f5f7fa;
-  color: #c0c4cc;
-  font-size: 30px;
+  background-color: var(--bg-light);
+  color: var(--text-secondary);
+  font-size: 40px;
 }
 
-.product-info {
-  padding: 0 5px;
+.product-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.product-card:hover .product-overlay {
+  opacity: 1;
+}
+
+.view-detail-btn {
+  border-radius: var(--border-radius-round);
+  font-weight: 500;
+  transform: translateY(20px);
+  transition: transform var(--transition-base);
+}
+
+.product-card:hover .view-detail-btn {
+  transform: translateY(0);
+}
+
+/* 产品内容区域 */
+.product-content {
+  padding: var(--spacing-base);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.product-header {
+  margin-bottom: var(--spacing-base);
 }
 
 .product-name {
-  margin: 0 0 8px 0;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  min-height: 44px;
 }
 
 .product-price {
-  margin: 0 0 8px 0;
-  color: #f56c6c;
-  font-size: 18px;
-  font-weight: bold;
+  display: flex;
+  align-items: baseline;
+  margin: 0;
+  color: var(--danger-color);
+}
+
+.price-symbol {
+  font-size: var(--font-size-sm);
+  margin-right: 2px;
+}
+
+.price-value {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
 }
 
 .product-meta {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 8px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-base);
 }
 
-.product-category {
-  margin-bottom: 8px;
-}
-
-.product-user {
-  display: flex;
-  align-items: center;
-  color: #909399;
-  font-size: 12px;
+.product-footer {
+  margin-top: auto;
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-light);
 }
 
 .user-name {
-  margin-left: 5px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin-left: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .product-image-container {
+    height: 180px;
+  }
+  
+  .product-name {
+    font-size: var(--font-size-sm);
+    -webkit-line-clamp: 1;
+  }
+  
+  .price-value {
+    font-size: var(--font-size-lg);
+  }
+  
+  .product-content {
+    padding: var(--spacing-sm);
+  }
 }
 </style>

@@ -56,28 +56,38 @@
           <el-col :xs="24" :lg="16">
             <el-card class="unified-card chart-card fade-in">
               <template #header>
-                <div class="card-header unified-flex unified-flex-between">
-                  <h3 class="unified-title-base">交易趋势</h3>
-                  <div class="date-range-selector">
-                    <el-select v-model="trendPeriod" @change="updateTrendChart" size="small">
-                      <el-option label="最近7天" value="7" />
-                      <el-option label="最近30天" value="30" />
-                      <el-option label="最近90天" value="90" />
-                    </el-select>
-                  </div>
-                </div>
+                <h3 class="unified-title-base">近一个月的交易趋势</h3>
               </template>
               <div class="chart-container" ref="trendChart"></div>
             </el-card>
           </el-col>
           
-          <!-- 分类占比图表 -->
+          <!-- 交易额和交易量统计 -->
           <el-col :xs="24" :lg="8">
             <el-card class="unified-card chart-card fade-in">
               <template #header>
-                <h3 class="unified-title-base">分类商品量占比</h3>
+                <h3 class="unified-title-base">交易统计</h3>
               </template>
-              <div class="chart-container" ref="categoryChart"></div>
+              <div class="trade-stats-container">
+                <div class="trade-stat-item">
+                  <div class="trade-stat-icon unified-flex unified-flex-center">
+                    <el-icon :size="32"><ShoppingCartFull /></el-icon>
+                  </div>
+                  <div class="trade-stat-info">
+                    <h3 class="trade-stat-value">{{ monthlyTradeCount }}</h3>
+                    <p class="trade-stat-title">本月交易量</p>
+                  </div>
+                </div>
+                <div class="trade-stat-item">
+                  <div class="trade-stat-icon unified-flex unified-flex-center">
+                    <el-icon :size="32"><CreditCard /></el-icon>
+                  </div>
+                  <div class="trade-stat-info">
+                    <h3 class="trade-stat-value">¥{{ formatPrice(monthlyTradeAmount) }}</h3>
+                    <p class="trade-stat-title">本月交易额</p>
+                  </div>
+                </div>
+              </div>
             </el-card>
           </el-col>
         </el-row>
@@ -175,8 +185,10 @@ export default {
     
     // 图表引用
     const trendChart = ref(null)
-    const categoryChart = ref(null)
-    const trendPeriod = ref('30')
+    
+    // 交易统计数据
+    const monthlyTradeAmount = ref(0)
+    const monthlyTradeCount = ref(0)
     
     // 统计数据
     const statsData = ref([
@@ -321,6 +333,10 @@ export default {
           const currentTradeCount = currentStats?.totalTradeCount || 0
           const currentTradeAmount = currentStats?.totalTradeAmount || 0
           
+          // 更新交易统计数据
+          monthlyTradeAmount.value = currentTradeAmount
+          monthlyTradeCount.value = currentTradeCount
+          
           // 获取订单统计数据
           const totalOrders = orderStats.totalOrders || 0
           
@@ -377,6 +393,10 @@ export default {
           } catch (error) {
             console.error('获取用户和商品总数失败:', error)
           }
+        } else {
+          // 如果API不可用，设置默认值
+          monthlyTradeAmount.value = 0
+          monthlyTradeCount.value = 0
         }
       } catch (error) {
         console.error('获取综合统计数据失败:', error)
@@ -477,101 +497,79 @@ export default {
         const currentDate = new Date()
         const month = currentDate.getMonth() + 1
         const year = currentDate.getFullYear()
-        const monthResponse = await statisticsApi.getMonthlyStatistics(month, year)
+        
+        // 获取近一个月的交易趋势数据
+        const monthResponse = await statisticsApi.getMonthlyTopSellingCategories(month, year, 10)
         
         // 初始化趋势图表
         if (trendChart.value) {
           const trendChartInstance = echarts.init(trendChart.value)
+          
+          // 准备近一个月的交易趋势数据
+          const categoryNames = (monthResponse.data?.data || []).map(item => item.categoryName)
+          const tradeCounts = (monthResponse.data?.data || []).map(item => item.tradeCount || 0)
+          const tradeAmounts = (monthResponse.data?.data || []).map(item => item.tradeAmount || 0)
+          
           const trendOption = {
             tooltip: {
-              trigger: 'axis'
+              trigger: 'axis',
+              axisPointer: {
+                type: 'shadow'
+              },
+              formatter: function(params) {
+                let result = params[0].name + '<br/>'
+                params.forEach(param => {
+                  if (param.seriesName === '交易量') {
+                    result += `${param.marker} ${param.seriesName}: ${param.value || 0} 笔<br/>`
+                  } else {
+                    result += `${param.marker} ${param.seriesName}: ¥${(param.value || 0).toFixed(2)}<br/>`
+                  }
+                })
+                return result
+              }
             },
             legend: {
               data: ['交易量', '交易额']
             },
             xAxis: {
               type: 'category',
-              data: ['1日', '5日', '10日', '15日', '20日', '25日', '30日']
+              data: categoryNames.length > 0 ? categoryNames : ['暂无数据']
             },
-            yAxis: [
-              {
-                type: 'value',
-                name: '交易量',
-                position: 'left'
-              },
-              {
-                type: 'value',
-                name: '交易额(元)',
-                position: 'right'
+            yAxis: {
+              type: 'value',
+              name: '交易统计',
+              axisLabel: {
+                formatter: function(value) {
+                  return value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value
+                }
               }
-            ],
+            },
             series: [
               {
                 name: '交易量',
                 type: 'bar',
-                data: monthResponse.data?.data?.dailyTradeCount || [20, 30, 40, 35, 50, 45, 60],
+                data: tradeCounts.length > 0 ? tradeCounts : [0],
                 itemStyle: {
                   color: '#409EFF'
-                }
+                },
+                barWidth: '40%'
               },
               {
                 name: '交易额',
-                type: 'line',
-                data: monthResponse.data?.data?.dailyTradeAmount || [2000, 3000, 4000, 3500, 5000, 4500, 6000],
+                type: 'bar',
+                data: tradeAmounts.length > 0 ? tradeAmounts : [0],
                 itemStyle: {
                   color: '#67C23A'
-                }
+                },
+                barWidth: '40%'
               }
             ]
           }
           trendChartInstance.setOption(trendOption)
         }
-        
-        // 初始化分类图表
-        if (categoryChart.value) {
-          const categoryChartInstance = echarts.init(categoryChart.value)
-          const categoryOption = {
-            tooltip: {
-              trigger: 'item',
-              formatter: '{a} <br/>{b}: {c} ({d}%)'
-            },
-            legend: {
-              orient: 'vertical',
-              left: 'left'
-            },
-            series: [
-              {
-                name: '分类占比',
-                type: 'pie',
-                radius: '50%',
-                data: monthResponse.data?.data?.categoryDistribution || [
-                  { value: 35, name: '电子产品' },
-                  { value: 25, name: '图书教材' },
-                  { value: 20, name: '服饰鞋包' },
-                  { value: 15, name: '生活用品' },
-                  { value: 5, name: '其他' }
-                ],
-                emphasis: {
-                  itemStyle: {
-                    shadowBlur: 10,
-                    shadowOffsetX: 0,
-                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                  }
-                }
-              }
-            ]
-          }
-          categoryChartInstance.setOption(categoryOption)
-        }
       } catch (error) {
         console.error('初始化图表失败:', error)
       }
-    }
-    
-    // 更新趋势图表
-    const updateTrendChart = () => {
-      // 这里可以根据选择的周期更新图表数据
-      ElMessage.success(`已切换到最近${trendPeriod.value}天的数据`)
     }
     
     // 查看产品详情
@@ -583,8 +581,6 @@ export default {
     const auditUser = (user) => {
       router.push(`/admin/users?action=audit&id=${user.id}`)
     }
-    
-
     
     // 跳转到产品页面
     const goToProducts = () => {
@@ -614,10 +610,9 @@ export default {
       highInventoryProducts,
       highInventoryLoading,
       quickActions,
-      trendPeriod,
       trendChart,
-      categoryChart,
-      updateTrendChart,
+      monthlyTradeAmount,
+      monthlyTradeCount,
       viewProduct,
       goToProducts,
       goToHighInventoryProducts,
@@ -756,6 +751,55 @@ export default {
 
 .chart-container {
   height: 320px;
+}
+
+/* 交易统计样式 */
+.trade-stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  height: 320px;
+  justify-content: center;
+}
+
+.trade-stat-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background-color: var(--bg-lighter);
+  border-radius: var(--border-radius-base);
+  transition: all var(--transition-base);
+}
+
+.trade-stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-base);
+}
+
+.trade-stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: rgba(64, 158, 255, 0.1);
+  color: var(--primary-color);
+  margin-right: var(--spacing-base);
+}
+
+.trade-stat-info {
+  flex: 1;
+}
+
+.trade-stat-value {
+  font-size: var(--font-size-xxl);
+  font-weight: 600;
+  margin: 0 0 var(--spacing-xs) 0;
+  color: var(--text-primary);
+}
+
+.trade-stat-title {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin: 0;
 }
 
 /* 数据表格样式 */

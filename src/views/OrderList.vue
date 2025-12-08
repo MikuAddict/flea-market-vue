@@ -50,7 +50,7 @@
                 <div class="product-image">
                   <img
                     v-if="order.product && order.product.imageUrl"
-                    :src="order.product.imageUrl"
+                    :src="processImageUrl(order.product.imageUrl)"
                     :alt="order.product.productName"
                   />
                   <div v-else class="no-image">
@@ -169,6 +169,29 @@ export default {
       current: 1,
       size: 10
     })
+    
+    // 处理图片URL，将完整后端地址转换为相对路径
+    const processImageUrl = (url) => {
+      if (!url) return null
+      
+      // 如果URL包含localhost:7023，转换为相对路径
+      if (url.includes('localhost:7023')) {
+        return url.replace('http://localhost:7023', '/api')
+      }
+      
+      // 如果是相对路径且以images开头，添加/api前缀
+      if (url.startsWith('images/') || url.includes('/images/')) {
+        return `/api/${url.replace(/^\/?/, '')}`
+      }
+      
+      // 如果已经是相对路径（以/api开头），直接返回
+      if (url.startsWith('/api/')) {
+        return url
+      }
+      
+      // 其他情况返回原URL
+      return url
+    }
     
     // 获取订单列表
     const fetchOrders = async () => {

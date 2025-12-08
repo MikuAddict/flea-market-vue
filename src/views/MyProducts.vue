@@ -16,19 +16,10 @@
           <el-form :model="filters" inline>
             <el-form-item label="状态">
               <el-select v-model="filters.status" placeholder="全部状态" clearable @change="fetchProducts">
-                <el-option label="上架" :value="1" />
-                <el-option label="下架" :value="0" />
-                <el-option label="已售出" :value="2" />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="分类">
-              <el-select v-model="filters.categoryId" placeholder="全部分类" clearable @change="fetchProducts">
-                <el-option
-                  v-for="category in categories"
-                  :key="category.id"
-                  :label="category.name"
-                  :value="category.id"
-                />
+                <el-option label="待审核" :value="0" />
+                <el-option label="已通过" :value="1" />
+                <el-option label="已拒绝" :value="2" />
+                <el-option label="已售出" :value="3" />
               </el-select>
             </el-form-item>
           </el-form>
@@ -51,7 +42,7 @@
           <el-table-column label="二手物品图片" width="100">
             <template #default="scope">
               <div class="product-image">
-                <img v-if="scope.row.imageUrl" :src="scope.row.imageUrl" :alt="scope.row.productName" />
+                <img v-if="getProductImage(scope.row)" :src="getProductImage(scope.row)" :alt="scope.row.productName" />
                 <div v-else class="no-image">
                   <el-icon><Picture /></el-icon>
                 </div>
@@ -67,7 +58,11 @@
             </template>
           </el-table-column>
           
-          <el-table-column prop="category.name" label="分类" width="120" />
+          <el-table-column label="分类" width="120">
+            <template #default="scope">
+              {{ getCategoryName(scope.row.categoryId) }}
+            </template>
+          </el-table-column>
           
           <el-table-column prop="status" label="状态" width="100">
             <template #default="scope">
@@ -112,14 +107,6 @@
                 @click="changeStatus(scope.row.id, 0)"
               >
                 下架
-              </el-button>
-              <el-button
-                v-else-if="scope.row.status === 0"
-                size="small"
-                type="success"
-                @click="changeStatus(scope.row.id, 1)"
-              >
-                上架
               </el-button>
               <el-button
                 size="small"
@@ -197,6 +184,54 @@ export default {
     // 计算属性
     const categories = computed(() => store.state.categories)
     
+    // 获取商品图片
+    const getProductImage = (product) => {
+      // 处理图片URL，将完整后端地址转换为相对路径
+      const processImageUrl = (url) => {
+        if (!url) return null
+        
+        // 如果URL包含localhost:7023，转换为相对路径
+        if (url.includes('localhost:7023')) {
+          return url.replace('http://localhost:7023', '/api')
+        }
+        
+        // 如果是相对路径且以images开头，添加/api前缀
+        if (url.startsWith('images/') || url.includes('/images/')) {
+          return `/api/${url.replace(/^\/?/, '')}`
+        }
+        
+        // 如果已经是相对路径（以/api开头），直接返回
+        if (url.startsWith('/api/')) {
+          return url
+        }
+        
+        // 其他情况返回原URL
+        return url
+      }
+      
+      // 优先使用主图
+      if (product.mainImageUrl) {
+        return processImageUrl(product.mainImageUrl)
+      }
+      // 如果没有主图，使用imageUrls数组的第一张图片
+      if (product.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
+        return processImageUrl(product.imageUrls[0])
+      }
+      // 如果imageUrls是字符串（逗号分隔），解析并取第一个
+      if (product.imageUrls && typeof product.imageUrls === 'string') {
+        const urls = product.imageUrls.split(',').filter(url => url.trim())
+        return urls.length > 0 ? processImageUrl(urls[0]) : null
+      }
+      // 最后尝试imageUrl字段
+      return processImageUrl(product.imageUrl) || null
+    }
+
+    // 获取分类名称
+    const getCategoryName = (categoryId) => {
+      const category = categories.value.find(c => c.id === categoryId)
+      return category ? category.name : '未知分类'
+    }
+
     // 获取二手物品列表
     const fetchProducts = async () => {
       loading.value = true
@@ -297,6 +332,8 @@ export default {
       pagination,
       filters,
       categories,
+      getProductImage,
+      getCategoryName,
       formatPrice,
       formatPaymentMethod,
       formatProductStatus,

@@ -54,14 +54,15 @@ export function formatOrderStatus(status) {
 
 /**
  * 格式化二手物品状态
- * @param {number} status 二手物品状态 (0-下架, 1-上架, 2-已售出)
+ * @param {number} status 二手物品状态 (0-待审核, 1-已通过, 2-已拒绝, 3-已售出)
  * @returns {string} 二手物品状态名称
  */
 export function formatProductStatus(status) {
   const statuses = {
-    0: '下架',
-    1: '上架',
-    2: '已售出'
+    0: '待审核',
+    1: '已通过',
+    2: '已拒绝',
+    3: '已售出'
   }
   return statuses[status] || '未知'
 }
@@ -115,9 +116,10 @@ export function getOrderStatusType(status) {
  */
 export function getProductStatusType(status) {
   const types = {
-    0: 'info',
+    0: 'warning',
     1: 'success',
-    2: 'danger'
+    2: 'danger',
+    3: 'info'
   }
   return types[status] || 'info'
 }

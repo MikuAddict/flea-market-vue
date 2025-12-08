@@ -314,8 +314,8 @@ export default {
         // 准备提交数据
         const submitData = {
           ...productForm,
-          // 将图片数组转换为逗号分隔的字符串
-          imageUrls: imageUrls.join(','),
+          // 保持图片数组格式，后端期望JSON数组
+          imageUrls: imageUrls,
           // 设置主图为第一张图片
           mainImageUrl: imageUrls[0]
         }

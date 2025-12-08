@@ -9,8 +9,8 @@
             <!-- 主图 -->
             <div class="main-image">
               <img
-                v-if="product.mainImageUrl || product.imageUrl"
-                :src="product.mainImageUrl || product.imageUrl"
+                v-if="currentImage"
+                :src="currentImage"
                 :alt="product.productName"
                 @error="handleImageError"
               />
@@ -233,18 +233,49 @@ export default {
     const sellerStats = ref({ published: 0, completed: 0 })
     const currentImageIndex = ref(0)
     
+    // 处理图片URL，将完整后端地址转换为相对路径
+    const processImageUrl = (url) => {
+      if (!url) return null
+      
+      // 如果URL包含localhost:7023，转换为相对路径
+      if (url.includes('localhost:7023')) {
+        return url.replace('http://localhost:7023', '/api')
+      }
+      
+      // 如果是相对路径且以images开头，添加/api前缀
+      if (url.startsWith('images/') || url.includes('/images/')) {
+        return `/api/${url.replace(/^\/?/, '')}`
+      }
+      
+      // 如果已经是相对路径（以/api开头），直接返回
+      if (url.startsWith('/api/')) {
+        return url
+      }
+      
+      // 其他情况返回原URL
+      return url
+    }
+    
     // 计算属性：处理图片数组
     const productImages = computed(() => {
       if (product.value.imageUrls && typeof product.value.imageUrls === 'string') {
         // 将逗号分隔的字符串转换为数组
-        return product.value.imageUrls.split(',').filter(url => url.trim())
+        return product.value.imageUrls.split(',').filter(url => url.trim()).map(processImageUrl)
       } else if (Array.isArray(product.value.imageUrls)) {
-        return product.value.imageUrls
+        return product.value.imageUrls.map(processImageUrl)
       } else {
         // 如果没有多图，使用单图
         const mainImage = product.value.mainImageUrl || product.value.imageUrl
-        return mainImage ? [mainImage] : []
+        return mainImage ? [processImageUrl(mainImage)] : []
       }
+    })
+    
+    // 当前显示的图片
+    const currentImage = computed(() => {
+      if (productImages.value.length > 0) {
+        return productImages.value[currentImageIndex.value]
+      }
+      return null
     })
     
     // 计算属性
@@ -405,6 +436,7 @@ export default {
       relatedProducts,
       sellerStats,
       productImages,
+      currentImage,
       currentImageIndex,
       isLoggedIn,
       userId,

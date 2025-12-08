@@ -11,6 +11,9 @@ import store from './store/store'
 const token = store.state.token || localStorage.getItem('token');
 if (token) {
   store.dispatch('getCurrentUser')
+} else {
+  // 确保用户状态被清除
+  store.commit('CLEAR_USER')
 }
 
 const app = createApp(App)

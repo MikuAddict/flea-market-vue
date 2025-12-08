@@ -17,7 +17,7 @@ export default createStore({
   },
   
   getters: {
-    isLoggedIn: state => !!state.token,
+    isLoggedIn: state => !!state.token && !!state.user,
     isAdmin: state => state.user && state.user.userRole === 'admin',
     user: state => state.user,
     categories: state => state.categories,

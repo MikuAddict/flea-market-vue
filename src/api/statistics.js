@@ -35,21 +35,38 @@ export default {
     })
   },
 
-  // 获取闲置量大二手物品排行
-  getHighInventoryProducts(limit) {
+  // 获取闲置量大二手物品分类排行
+  getHighInventoryCategories(limit) {
     return request({
-      url: '/statistics/high-inventory-products',
+      url: '/statistics/high-inventory-categories',
       method: 'get',
       params: { limit }
     })
   },
 
-  // 获取需求量大二手物品排行
-  getHighDemandProducts(limit) {
+  // 获取需求量大二手物品分类排行
+  getHighDemandCategories(limit) {
     return request({
-      url: '/statistics/high-demand-products',
+      url: '/statistics/high-demand-categories',
       method: 'get',
       params: { limit }
+    })
+  },
+
+  // 获取月度交易二手物品分类排行
+  getMonthlyTopSellingCategories(month, year, limit) {
+    return request({
+      url: '/statistics/monthly-categories',
+      method: 'get',
+      params: { month, year, limit }
+    })
+  },
+
+  // 获取二手物品分类交易统计
+  getCategoryTradeStatistics(categoryId) {
+    return request({
+      url: `/statistics/category/${categoryId}`,
+      method: 'get'
     })
   },
 
@@ -68,6 +85,14 @@ export default {
       url: '/statistics/active-users',
       method: 'get',
       params: { limit, startDate, endDate }
+    })
+  },
+
+  // 获取订单统计信息
+  getOrderStatistics() {
+    return request({
+      url: '/order/statistics',
+      method: 'get'
     })
   }
 }

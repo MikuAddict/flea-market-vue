@@ -16,9 +16,11 @@ const NewsList = () => import('@/views/NewsList.vue')
 const NewsDetail = () => import('@/views/NewsDetail.vue')
 const AdminDashboard = () => import('@/views/admin/Dashboard.vue')
 const AdminUsers = () => import('@/views/admin/Users.vue')
+const AdminCategories = () => import('@/views/admin/Categories.vue')
 const AdminProducts = () => import('@/views/admin/Products.vue')
 const AdminOrders = () => import('@/views/admin/Orders.vue')
 const AdminNews = () => import('@/views/admin/News.vue')
+const AdminStatistics = () => import('@/views/admin/Statistics.vue')
 const NotFound = () => import('@/views/NotFound.vue')
 
 const routes = [
@@ -113,6 +115,12 @@ const routes = [
     meta: { title: '用户管理', requiresAuth: true, requiresAdmin: true }
   },
   {
+    path: '/admin/categories',
+    name: 'AdminCategories',
+    component: AdminCategories,
+    meta: { title: '分类管理', requiresAuth: true, requiresAdmin: true }
+  },
+  {
     path: '/admin/products',
     name: 'AdminProducts',
     component: AdminProducts,
@@ -131,6 +139,12 @@ const routes = [
     meta: { title: '新闻管理', requiresAuth: true, requiresAdmin: true }
   },
   {
+    path: '/admin/statistics',
+    name: 'AdminStatistics',
+    component: AdminStatistics,
+    meta: { title: '统计分析', requiresAuth: true, requiresAdmin: true }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound,
@@ -144,7 +158,7 @@ const router = createRouter({
 })
 
 // 导航守卫
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _, next) => {
   // 设置页面标题
   document.title = to.meta.title ? `${to.meta.title} - 跳蚤市场` : '跳蚤市场'
   

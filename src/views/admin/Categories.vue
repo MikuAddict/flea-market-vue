@@ -217,14 +217,12 @@
 
 <script>
 import { ref, reactive, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   Plus, 
   Edit, 
   Delete, 
-  ArrowDown,
-  Goods
+  ArrowDown
 } from '@element-plus/icons-vue'
 import { adminApi } from '@/api'
 import Layout from '@/components/Layout.vue'
@@ -235,8 +233,6 @@ export default {
     Layout
   },
   setup() {
-    const router = useRouter()
-    
     // 表单引用
     const categoryFormRef = ref(null)
     
@@ -296,43 +292,21 @@ export default {
       }
     ])
     
-    // 分类树形数据
+    // 分类树形数据（根据OpenAPI规范，当前不包含父子级关系，所以简化处理）
     const categoryTree = computed(() => {
-      // 构建树形结构
-      const buildTree = (items, parentId = null) => {
-        return items
-          .filter(item => item.parentId === parentId)
-          .map(item => ({
-            ...item,
-            children: buildTree(items, item.id)
-          }))
-      }
-      
-      return buildTree(categoryList.value)
+      // 当前API不返回父子级关系，所以直接返回一级列表
+      return categoryList.value.map(category => ({
+        ...category,
+        children: [] // 空子节点
+      }))
     })
     
     // 分类选项（用于父级分类选择）
     const categoryOptions = computed(() => {
-      // 递归获取所有分类，包括子分类
-      const getAllCategories = (categories, level = 0) => {
-        return categories.reduce((acc, category) => {
-          acc.push({
-            id: category.id,
-            name: '  '.repeat(level) + category.name,
-            level
-          })
-          
-          if (category.children && category.children.length > 0) {
-            acc.push(...getAllCategories(category.children, level + 1))
-          }
-          
-          return acc
-        }, [])
-      }
-      
+      // 当前API不返回父子级关系，所以简化处理
       return [
         { id: null, name: '顶级分类' },
-        ...getAllCategories(categoryTree.value)
+        ...categoryList.value
       ]
     })
     
@@ -348,29 +322,9 @@ export default {
       try {
         const response = await adminApi.category.getCategoryList()
         if (response.data && response.data.code === 200) {
-          // 为每个分类添加父级分类名称
+          // 根据OpenAPI规范，返回的是分类数组，没有父子级关系
           const categories = response.data.data || []
-          const addParentNames = (categories) => {
-            return categories.map(category => {
-              if (category.parentId) {
-                const parent = categories.find(c => c.id === category.parentId)
-                category.parentName = parent ? parent.name : ''
-                category.level = parent ? (parent.level || 0) + 1 : 1
-              } else {
-                category.parentName = ''
-                category.level = 0
-              }
-              
-              // 处理子分类
-              if (category.children) {
-                addParentNames(category.children)
-              }
-              
-              return category
-            })
-          }
-          
-          categoryList.value = addParentNames(categories)
+          categoryList.value = categories
         } else {
           ElMessage.error('获取分类列表失败')
         }
@@ -430,20 +384,17 @@ export default {
         await categoryFormRef.value.validate()
         categoryFormSubmitting.value = true
         
-        let result
         if (dialogMode.value === 'add') {
-          result = await adminApi.category.addCategory({
-            name: categoryForm.name,
-            parentId: categoryForm.parentId || null,
-            sort: categoryForm.sort
+          // 根据OpenAPI规范，CategoryAddRequest只包含name字段
+          await adminApi.category.addCategory({
+            name: categoryForm.name
           })
           ElMessage.success('分类添加成功')
         } else {
-          result = await adminApi.category.updateCategory({
+          // 根据OpenAPI规范，更新分类直接传递Category对象
+          await adminApi.category.updateCategory({
             id: categoryForm.id,
-            name: categoryForm.name,
-            parentId: categoryForm.parentId || null,
-            sort: categoryForm.sort
+            name: categoryForm.name
           })
           ElMessage.success('分类更新成功')
         }

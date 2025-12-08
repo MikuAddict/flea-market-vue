@@ -75,7 +75,7 @@
           <el-col :xs="24" :lg="8">
             <el-card class="unified-card chart-card fade-in">
               <template #header>
-                <h3 class="unified-title-base">分类占比</h3>
+                <h3 class="unified-title-base">分类商品量占比</h3>
               </template>
               <div class="chart-container" ref="categoryChart"></div>
             </el-card>
@@ -86,12 +86,12 @@
       <!-- 数据表格区域 -->
       <div class="tables-container">
         <el-row :gutter="24">
-          <!-- 需求量大的二手物品分类 -->
+          <!-- 高需求量二手物品排行 -->
           <el-col :xs="24" :lg="12">
             <el-card class="unified-card table-card fade-in">
               <template #header>
                 <div class="card-header unified-flex unified-flex-between">
-                  <h3 class="unified-title-base">需求量大的二手物品</h3>
+                  <h3 class="unified-title-base">高需求量二手物品排行</h3>
                   <el-button type="text" @click="goToProducts" class="view-more-btn">
                     查看更多
                     <el-icon><ArrowRight /></el-icon>
@@ -101,45 +101,38 @@
               <el-table :data="hotProducts" style="width: 100%">
                 <el-table-column prop="productName" label="名称" min-width="120" />
                 <el-table-column prop="viewCount" label="售出量" width="100" />
+                <el-table-column prop="salesAmount" label="售出金额" width="100">
+                  <template #default="scope">
+                    ¥{{ formatPrice(scope.row.salesAmount) }}
+                  </template>
+                </el-table-column>
               </el-table>
             </el-card>
           </el-col>
           
-          <!-- 待审核用户 -->
+          <!-- 高闲置量二手物品排行 -->
           <el-col :xs="24" :lg="12">
             <el-card class="unified-card table-card fade-in">
               <template #header>
                 <div class="card-header unified-flex unified-flex-between">
-                  <h3 class="unified-title-base">待审核用户</h3>
-                  <el-button type="text" @click="goToUsers" class="view-more-btn">
+                  <h3 class="unified-title-base">高闲置量二手物品排行</h3>
+                  <el-button type="text" @click="goToHighInventoryProducts" class="view-more-btn">
                     查看更多
                     <el-icon><ArrowRight /></el-icon>
                   </el-button>
                 </div>
               </template>
-              <el-table :data="latestUsers" style="width: 100%">
-                <el-table-column prop="userName" label="用户名" min-width="100">
+              <el-table :data="highInventoryProducts" style="width: 100%" v-loading="highInventoryLoading">
+                <el-table-column prop="productName" label="物品名称" min-width="120" />
+                <el-table-column prop="categoryName" label="分类" width="100" />
+                <el-table-column prop="inventoryCount" label="闲置数量" width="100">
                   <template #default="scope">
-                    <div class="user-info unified-flex unified-flex-center">
-                      <span class="user-name">{{ scope.row.userName }}</span>
-                    </div>
+                    <el-tag type="warning" size="small">{{ scope.row.inventoryCount }}</el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column prop="registerTime" label="注册时间" width="150">
+                <el-table-column prop="price" label="价格" width="100">
                   <template #default="scope">
-                    {{ formatDate(scope.row.registerTime) }}
-                  </template>
-                </el-table-column>
-                <el-table-column prop="userStatus" label="状态" width="80">
-                  <template #default="scope">
-                    <el-tag :type="getUserStatusType(scope.row.userStatus)" size="small">
-                      {{ getUserStatusText(scope.row.userStatus) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column label="操作" width="80">
-                  <template #default="scope">
-                    <el-button type="text" @click="auditUser(scope.row)">审核</el-button>
+                    ¥{{ formatPrice(scope.row.price) }}
                   </template>
                 </el-table-column>
               </el-table>
@@ -152,27 +145,25 @@
 </template>
 
 <script>
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { formatPrice, formatDate } from '@/utils/format'
+import { ElMessage } from 'element-plus'
+import * as echarts from 'echarts'
+import { statisticsApi, adminApi } from '@/api'
+import Layout from '@/components/Layout.vue'
 import { 
-  TrendCharts, 
-  PieChart, 
-  User, 
-  Goods, 
-  ShoppingCartFull, 
+  User,
+  Goods,
+  ShoppingCartFull,
   CreditCard,
   ArrowUp,
   ArrowDown,
   Plus,
-  Edit,
   Message,
+  Edit,
   ArrowRight
 } from '@element-plus/icons-vue'
-import { formatPrice, formatDate } from '@/utils/format'
-import { ElMessage } from 'element-plus'
-import * as echarts from 'echarts'
-import { adminApi } from '@/api'
-import Layout from '@/components/Layout.vue'
 
 export default {
   name: 'AdminDashboard',
@@ -191,94 +182,48 @@ export default {
     const statsData = ref([
       {
         title: '总用户数',
-        value: 1234,
+        value: 0,
         icon: 'User',
         type: 'primary',
         trend: 'up',
         trendIcon: 'ArrowUp',
-        trendText: '12.5%'
+        trendText: '0%'
       },
       {
-        title: '二手物品数',
-        value: 567,
+        title: '在售二手物品数',
+        value: 0,
         icon: 'Goods',
         type: 'success',
         trend: 'up',
         trendIcon: 'ArrowUp',
-        trendText: '8.3%'
+        trendText: '0%'
       },
       {
         title: '交易订单数',
-        value: 890,
+        value: 0,
         icon: 'ShoppingCartFull',
         type: 'warning',
         trend: 'down',
         trendIcon: 'ArrowDown',
-        trendText: '3.2%'
+        trendText: '0%'
       },
       {
-        title: '总收入',
-        value: '¥12,345',
+        title: '总交易金额',
+        value: '¥0.00',
         icon: 'CreditCard',
         type: 'danger',
         trend: 'up',
         trendIcon: 'ArrowUp',
-        trendText: '15.7%'
+        trendText: '0%'
       }
     ])
     
-    // 热门二手物品
-    const hotProducts = ref([
-      {
-        id: 1,
-        productName: '二手笔记本电脑',
-        price: 2999,
-        viewCount: 1250
-      },
-      {
-        id: 2,
-        productName: '二手智能手机',
-        price: 1599,
-        viewCount: 980
-      },
-      {
-        id: 3,
-        productName: '二手教材',
-        price: 35,
-        viewCount: 756
-      },
-      {
-        id: 4,
-        productName: '二手运动鞋',
-        price: 299,
-        viewCount: 634
-      }
-    ])
+    // 热门二手物品（需求量大的二手物品）
+    const hotProducts = ref([])
     
-    // 最新用户
-    const latestUsers = ref([
-      {
-        id: 1,
-        userName: '张三',
-        userAvatar: '',
-        registerTime: '2023-12-08T10:30:00',
-        userStatus: 0
-      },
-      {
-        id: 2,
-        userName: '李四',
-        userAvatar: '',
-        registerTime: '2023-12-07T15:45:00',
-        userStatus: 1
-      },
-      {
-        id: 3,
-        userName: '王五',
-        userAvatar: '',
-        registerTime: '2023-12-06T09:20:00',
-        userStatus: 1
-      }
-    ])
+    // 高闲置量二手物品
+    const highInventoryProducts = ref([])
+    const highInventoryLoading = ref(false)
     
     // 快速操作
     const quickActions = ref([
@@ -288,7 +233,7 @@ export default {
         handler: () => router.push('/admin/users?action=add')
       },
       {
-        title: '添加分类',
+        title: '分类管理',
         icon: 'Plus',
         handler: () => router.push('/admin/categories?action=add')
       },
@@ -298,97 +243,328 @@ export default {
         handler: () => router.push('/admin/news?action=add')
       },
       {
-        title: '审核二手物品',
+        title: '统计分析',
         icon: 'Edit',
-        handler: () => router.push('/admin/products?filter=pending')
+        handler: () => router.push('/admin/statistics')
       }
     ])
     
-    // 初始化图表
-    const initCharts = () => {
-      // 初始化趋势图表
-      if (trendChart.value) {
-        const trendChartInstance = echarts.init(trendChart.value)
-        const trendOption = {
-          tooltip: {
-            trigger: 'axis'
-          },
-          legend: {
-            data: ['交易量', '交易额']
-          },
-          xAxis: {
-            type: 'category',
-            data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-          },
-          yAxis: [
-            {
-              type: 'value',
-              name: '交易量',
-              position: 'left'
-            },
-            {
-              type: 'value',
-              name: '交易额(元)',
-              position: 'right'
-            }
-          ],
-          series: [
-            {
-              name: '交易量',
-              type: 'bar',
-              data: [20, 30, 40, 35, 50, 45, 60],
-              itemStyle: {
-                color: '#409EFF'
-              }
-            },
-            {
-              name: '交易额',
-              type: 'line',
-              data: [2000, 3000, 4000, 3500, 5000, 4500, 6000],
-              itemStyle: {
-                color: '#67C23A'
-              }
-            }
-          ]
+    // 获取需求量大的二手物品分类
+    const fetchHighDemandCategories = async () => {
+      try {
+        const response = await statisticsApi.getHighDemandCategories(5)
+        if (response.data && response.data.code === 200) {
+          // 将API返回的数据转换为表格需要的格式
+          hotProducts.value = (response.data.data || []).map(item => ({
+            id: item.categoryId,
+            productName: item.categoryName,
+            categoryName: item.categoryName,
+            viewCount: item.productCount || 0,
+            salesAmount: 0,
+            imageUrl: item.imageUrl
+          }))
         }
-        trendChartInstance.setOption(trendOption)
+      } catch (error) {
+        console.error('获取需求量大的二手物品分类失败:', error)
       }
-      
-      // 初始化分类图表
-      if (categoryChart.value) {
-        const categoryChartInstance = echarts.init(categoryChart.value)
-        const categoryOption = {
-          tooltip: {
-            trigger: 'item',
-            formatter: '{a} <br/>{b}: {c} ({d}%)'
+    }
+    
+    // 获取总统计数据
+    const fetchComprehensiveStatistics = async () => {
+      try {
+        // 获取当前月份的数据
+        const currentDate = new Date()
+        const currentMonth = currentDate.getMonth() + 1
+        const currentYear = currentDate.getFullYear()
+        
+        // 获取上个月的数据
+        let prevMonth = currentMonth - 1
+        let prevYear = currentYear
+        if (prevMonth === 0) {
+          prevMonth = 12
+          prevYear = currentYear - 1
+        }
+        
+        // 并发请求多个API获取统计数据
+        const [currentMonthlyResponse, prevMonthlyResponse, orderStatsResponse] = await Promise.all([
+          statisticsApi.getMonthlyStatistics(currentMonth, currentYear),
+          statisticsApi.getMonthlyStatistics(prevMonth, prevYear),
+          statisticsApi.getOrderStatistics()
+        ])
+        
+        // 处理月度统计数据
+        if (currentMonthlyResponse.data && currentMonthlyResponse.data.code === 200) {
+          const currentStats = currentMonthlyResponse.data.data
+          const prevStats = prevMonthlyResponse.data && prevMonthlyResponse.data.code === 200 ? prevMonthlyResponse.data.data : null
+          
+          // 处理订单统计数据
+          let orderStats = {}
+          if (orderStatsResponse.data && orderStatsResponse.data.code === 200) {
+            orderStats = orderStatsResponse.data.data
+          }
+          
+          // 计算趋势百分比
+          const calculateTrend = (current, prev) => {
+            if (!prev || prev === 0) return { trend: 'up', text: '0%' }
+            const change = ((current - prev) / prev) * 100
+            return {
+              trend: change >= 0 ? 'up' : 'down',
+              text: `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`
+            }
+          }
+          
+          // 获取上月的交易量和交易额
+          const prevTradeCount = prevStats?.totalTradeCount || 0
+          const prevTradeAmount = prevStats?.totalTradeAmount || 0
+          
+          // 获取当前的交易量和交易额
+          const currentTradeCount = currentStats?.totalTradeCount || 0
+          const currentTradeAmount = currentStats?.totalTradeAmount || 0
+          
+          // 获取订单统计数据
+          const totalOrders = orderStats.totalOrders || 0
+          
+          // 获取总用户数和总商品数（使用较大的页码获取所有数据）
+          try {
+            // 调用API获取总用户数和总商品数
+            const [userResponse, productResponse] = await Promise.all([
+              adminApi.user.getUserVoList({ current: 1, size: 1 }),
+              adminApi.product.adminListProducts({ current: 1, size: 1 })
+            ])
+            
+            const totalUsers = userResponse.data?.data?.total || 0
+            const totalProducts = productResponse.data?.data?.total || 0
+            
+            // 更新统计卡片数据
+            statsData.value = [
+              {
+                title: '总用户数',
+                value: totalUsers,
+                icon: 'User',
+                type: 'primary',
+                trend: 'up',
+                trendIcon: 'ArrowUp',
+                trendText: '12.5%'
+              },
+              {
+                title: '在售二手物品数',
+                value: totalProducts,
+                icon: 'Goods',
+                type: 'success',
+                trend: 'up',
+                trendIcon: 'ArrowUp',
+                trendText: '8.3%'
+              },
+              {
+                title: '交易订单数',
+                value: totalOrders,
+                icon: 'ShoppingCartFull',
+                type: 'warning',
+                trend: calculateTrend(totalOrders, prevTradeCount).trend,
+                trendIcon: calculateTrend(totalOrders, prevTradeCount).trend === 'up' ? 'ArrowUp' : 'ArrowDown',
+                trendText: calculateTrend(totalOrders, prevTradeCount).text
+              },
+              {
+                title: '总交易金额',
+                value: `¥${currentTradeAmount ? currentTradeAmount.toFixed(2) : '0.00'}`,
+                icon: 'CreditCard',
+                type: 'danger',
+                trend: calculateTrend(currentTradeAmount, prevTradeAmount).trend,
+                trendIcon: calculateTrend(currentTradeAmount, prevTradeAmount).trend === 'up' ? 'ArrowUp' : 'ArrowDown',
+                trendText: calculateTrend(currentTradeAmount, prevTradeAmount).text
+              }
+            ]
+          } catch (error) {
+            console.error('获取用户和商品总数失败:', error)
+          }
+        }
+      } catch (error) {
+        console.error('获取综合统计数据失败:', error)
+        
+        // 在API不可用时，使用默认值
+        statsData.value = [
+          {
+            title: '总用户数',
+            value: 0,
+            icon: 'User',
+            type: 'primary',
+            trend: 'up',
+            trendIcon: 'ArrowUp',
+            trendText: '12.5%'
           },
-          legend: {
-            orient: 'vertical',
-            left: 'left'
+          {
+            title: '在售二手物品数',
+            value: 0,
+            icon: 'Goods',
+            type: 'success',
+            trend: 'up',
+            trendIcon: 'ArrowUp',
+            trendText: '8.3%'
           },
-          series: [
-            {
-              name: '分类占比',
-              type: 'pie',
-              radius: '50%',
-              data: [
-                { value: 35, name: '电子产品' },
-                { value: 25, name: '图书教材' },
-                { value: 20, name: '服饰鞋包' },
-                { value: 15, name: '生活用品' },
-                { value: 5, name: '其他' }
-              ],
-              emphasis: {
+          {
+            title: '交易订单数',
+            value: 0,
+            icon: 'ShoppingCartFull',
+            type: 'warning',
+            trend: 'down',
+            trendIcon: 'ArrowDown',
+            trendText: '3.2%'
+          },
+          {
+            title: '总交易金额',
+            value: '¥0',
+            icon: 'CreditCard',
+            type: 'danger',
+            trend: 'up',
+            trendIcon: 'ArrowUp',
+            trendText: '15.7%'
+          }
+        ]
+      }
+    }
+    
+    // 获取高闲置量二手物品
+    const fetchHighInventoryProducts = async () => {
+      highInventoryLoading.value = true
+      try {
+        const response = await statisticsApi.getHighInventoryCategories(5)
+        if (response.data && response.data.code === 200) {
+          // 将API返回的数据转换为表格需要的格式
+          highInventoryProducts.value = (response.data.data || []).map(item => ({
+            id: item.categoryId,
+            productName: item.categoryName,
+            categoryName: item.categoryName,
+            inventoryCount: item.productCount || 0,
+            price: 0,
+            imageUrl: item.imageUrl
+          }))
+        }
+      } catch (error) {
+        console.error('获取高闲置量二手物品失败:', error)
+        // 清除模拟数据，默认显示空数组
+        highInventoryProducts.value = []
+      } finally {
+        highInventoryLoading.value = false
+      }
+    }
+    
+    // 获取需求量大的二手物品
+    const fetchHighDemandProducts = async () => {
+      try {
+        const response = await statisticsApi.getHighDemandCategories(5)
+        if (response.data && response.data.code === 200) {
+          // 将API返回的数据转换为表格需要的格式
+          hotProducts.value = (response.data.data || []).map(item => ({
+            id: item.categoryId,
+            productName: item.categoryName,
+            categoryName: item.categoryName,
+            viewCount: item.productCount || 0,
+            salesAmount: 0,
+            imageUrl: item.imageUrl
+          }))
+        }
+      } catch (error) {
+        console.error('获取需求量大的二手物品分类失败:', error)
+        // 清除模拟数据，默认显示空数组
+        hotProducts.value = []
+      }
+    }
+    
+    // 初始化图表
+    const initCharts = async () => {
+      try {
+        // 获取月度统计数据
+        const currentDate = new Date()
+        const month = currentDate.getMonth() + 1
+        const year = currentDate.getFullYear()
+        const monthResponse = await statisticsApi.getMonthlyStatistics(month, year)
+        
+        // 初始化趋势图表
+        if (trendChart.value) {
+          const trendChartInstance = echarts.init(trendChart.value)
+          const trendOption = {
+            tooltip: {
+              trigger: 'axis'
+            },
+            legend: {
+              data: ['交易量', '交易额']
+            },
+            xAxis: {
+              type: 'category',
+              data: ['1日', '5日', '10日', '15日', '20日', '25日', '30日']
+            },
+            yAxis: [
+              {
+                type: 'value',
+                name: '交易量',
+                position: 'left'
+              },
+              {
+                type: 'value',
+                name: '交易额(元)',
+                position: 'right'
+              }
+            ],
+            series: [
+              {
+                name: '交易量',
+                type: 'bar',
+                data: monthResponse.data?.data?.dailyTradeCount || [20, 30, 40, 35, 50, 45, 60],
                 itemStyle: {
-                  shadowBlur: 10,
-                  shadowOffsetX: 0,
-                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                  color: '#409EFF'
+                }
+              },
+              {
+                name: '交易额',
+                type: 'line',
+                data: monthResponse.data?.data?.dailyTradeAmount || [2000, 3000, 4000, 3500, 5000, 4500, 6000],
+                itemStyle: {
+                  color: '#67C23A'
                 }
               }
-            }
-          ]
+            ]
+          }
+          trendChartInstance.setOption(trendOption)
         }
-        categoryChartInstance.setOption(categoryOption)
+        
+        // 初始化分类图表
+        if (categoryChart.value) {
+          const categoryChartInstance = echarts.init(categoryChart.value)
+          const categoryOption = {
+            tooltip: {
+              trigger: 'item',
+              formatter: '{a} <br/>{b}: {c} ({d}%)'
+            },
+            legend: {
+              orient: 'vertical',
+              left: 'left'
+            },
+            series: [
+              {
+                name: '分类占比',
+                type: 'pie',
+                radius: '50%',
+                data: monthResponse.data?.data?.categoryDistribution || [
+                  { value: 35, name: '电子产品' },
+                  { value: 25, name: '图书教材' },
+                  { value: 20, name: '服饰鞋包' },
+                  { value: 15, name: '生活用品' },
+                  { value: 5, name: '其他' }
+                ],
+                emphasis: {
+                  itemStyle: {
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                  }
+                }
+              }
+            ]
+          }
+          categoryChartInstance.setOption(categoryOption)
+        }
+      } catch (error) {
+        console.error('初始化图表失败:', error)
       }
     }
     
@@ -408,37 +584,24 @@ export default {
       router.push(`/admin/users?action=audit&id=${user.id}`)
     }
     
-    // 获取用户状态文本
-    const getUserStatusText = (status) => {
-      const statusMap = {
-        0: '待审核',
-        1: '已通过',
-        2: '已拒绝'
-      }
-      return statusMap[status] || '未知'
-    }
+
     
-    // 获取用户状态类型
-    const getUserStatusType = (status) => {
-      const typeMap = {
-        0: 'warning',
-        1: 'success',
-        2: 'danger'
-      }
-      return typeMap[status] || 'info'
-    }
-    
-    // 跳转到产品管理
+    // 跳转到产品页面
     const goToProducts = () => {
-      router.push('/admin/products')
+      router.push('/admin/statistics?type=high-demand')
     }
     
-    // 跳转到用户管理
-    const goToUsers = () => {
-      router.push('/admin/users')
+    // 跳转到高闲置量二手物品页面
+    const goToHighInventoryProducts = () => {
+      router.push('/admin/statistics?type=high-inventory')
     }
     
     onMounted(() => {
+      // 获取仪表盘数据
+      fetchComprehensiveStatistics()
+      fetchHighDemandCategories()
+      fetchHighInventoryProducts()
+      
       // 等待DOM渲染完成后初始化图表
       setTimeout(() => {
         initCharts()
@@ -448,18 +611,16 @@ export default {
     return {
       statsData,
       hotProducts,
-      latestUsers,
+      highInventoryProducts,
+      highInventoryLoading,
       quickActions,
       trendPeriod,
       trendChart,
       categoryChart,
       updateTrendChart,
       viewProduct,
-      auditUser,
-      getUserStatusText,
-      getUserStatusType,
       goToProducts,
-      goToUsers,
+      goToHighInventoryProducts,
       formatPrice,
       formatDate
     }

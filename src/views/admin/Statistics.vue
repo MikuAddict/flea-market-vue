@@ -575,6 +575,7 @@ export default {
   width: 100%;
   height: 500px;
   margin-top: var(--spacing-base);
+  overflow: hidden;
 }
 
 /* 响应式设计 */
@@ -587,6 +588,7 @@ export default {
   
   .chart-container {
     height: 350px;
+    overflow: hidden;
   }
 }
 

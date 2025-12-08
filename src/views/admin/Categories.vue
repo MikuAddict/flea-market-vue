@@ -17,34 +17,11 @@
         </el-button>
       </div>
       
-      <!-- 分类统计卡片 -->
-      <div class="stats-cards unified-grid unified-grid-4">
-        <div class="stat-card fade-in" v-for="(stat, index) in categoryStats" :key="stat.title" :style="{ animationDelay: `${index * 0.1}s` }">
-          <el-card class="unified-card stat-item" :class="`stat-item-${stat.type}`">
-            <div class="stat-content unified-flex unified-flex-center">
-              <div class="stat-icon unified-flex unified-flex-center">
-                <el-icon :size="24"><component :is="stat.icon" /></el-icon>
-              </div>
-              <div class="stat-info">
-                <h3 class="stat-value">{{ stat.value }}</h3>
-                <p class="stat-title">{{ stat.title }}</p>
-              </div>
-            </div>
-          </el-card>
-        </div>
-      </div>
-      
       <!-- 分类列表 -->
       <el-card class="unified-card categories-card fade-in">
         <template #header>
           <div class="card-header unified-flex unified-flex-between">
             <h3 class="unified-title-base">分类列表</h3>
-            <div class="view-options">
-              <el-radio-group v-model="viewMode" size="small">
-                <el-radio-button label="list">列表视图</el-radio-button>
-                <el-radio-button label="tree">树形视图</el-radio-button>
-              </el-radio-group>
-            </div>
           </div>
         </template>
         
@@ -56,55 +33,40 @@
             style="width: 100%"
             row-key="id"
           >
-            <el-table-column prop="id" label="ID" width="80" />
+            <el-table-column prop="id" label="ID" width="300" />
             
-            <el-table-column prop="name" label="分类名称" min-width="150" />
+            <el-table-column prop="name" label="分类名称" min-width="200" />
             
-            <el-table-column prop="productCount" label="产品数量" width="120">
+            <el-table-column prop="productCount" label="产品数量" width="300">
               <template #default="scope">
                 {{ scope.row.productCount || 0 }}
               </template>
             </el-table-column>
             
-            <el-table-column prop="parentName" label="父分类" width="150">
+            <el-table-column label="操作" width="180" align="center">
               <template #default="scope">
-                {{ scope.row.parentName || '顶级分类' }}
-              </template>
-            </el-table-column>
-            
-            <el-table-column prop="sort" label="排序" width="80" />
-            
-            <el-table-column label="操作" width="200">
-              <template #default="scope">
-                <div class="action-buttons unified-flex">
+                <div class="action-buttons unified-flex unified-flex-center">
                   <el-button
                     size="small"
-                    type="text"
+                    type="primary"
+                    plain
                     @click="showEditCategoryDialog(scope.row)"
+                    class="action-btn-edit"
                   >
+                    <el-icon><Edit /></el-icon>
                     编辑
                   </el-button>
                   
                   <el-button
                     size="small"
-                    type="text"
-                    @click="showAddSubCategoryDialog(scope.row)"
+                    type="danger"
+                    plain
+                    @click="handleDeleteCategory(scope.row)"
+                    class="action-btn-delete"
                   >
-                    添加子分类
+                    <el-icon><Delete /></el-icon>
+                    删除
                   </el-button>
-                  
-                  <el-dropdown @command="(command) => handleCategoryAction(command, scope.row)">
-                    <el-button size="small" type="text">
-                      更多
-                      <el-icon><ArrowDown /></el-icon>
-                    </el-button>
-                    <template #dropdown>
-                      <el-dropdown-menu>
-                        <el-dropdown-item command="move">移动</el-dropdown-item>
-                        <el-dropdown-item divided command="delete">删除</el-dropdown-item>
-                      </el-dropdown-menu>
-                    </template>
-                  </el-dropdown>
                 </div>
               </template>
             </el-table-column>
@@ -169,32 +131,6 @@
         <el-form :model="categoryForm" :rules="categoryFormRules" ref="categoryFormRef" label-width="100px">
           <el-form-item label="分类名称" prop="name">
             <el-input v-model="categoryForm.name" placeholder="请输入分类名称" />
-          </el-form-item>
-          
-          <el-form-item label="父分类" prop="parentId">
-            <el-select
-              v-model="categoryForm.parentId"
-              placeholder="选择父分类"
-              clearable
-              class="unified-input"
-            >
-              <el-option
-                v-for="category in categoryOptions"
-                :key="category.id"
-                :label="category.name"
-                :value="category.id"
-                :disabled="category.id === categoryForm.id"
-              />
-            </el-select>
-          </el-form-item>
-          
-          <el-form-item label="排序" prop="sort">
-            <el-input-number
-              v-model="categoryForm.sort"
-              :min="0"
-              placeholder="请输入排序值，数值越小排序越靠前"
-              style="width: 100%"
-            />
           </el-form-item>
         </el-form>
         

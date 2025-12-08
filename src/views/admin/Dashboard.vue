@@ -742,7 +742,8 @@ export default {
 }
 
 .chart-card {
-  height: 400px;
+  height: 450px;
+  overflow: hidden;
 }
 
 .card-header {
@@ -751,6 +752,8 @@ export default {
 
 .chart-container {
   height: 320px;
+  overflow: hidden;
+  position: relative;
 }
 
 /* 交易统计样式 */
@@ -760,6 +763,8 @@ export default {
   gap: var(--spacing-lg);
   height: 320px;
   justify-content: center;
+  overflow: hidden;
+  position: relative;
 }
 
 .trade-stat-item {

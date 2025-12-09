@@ -15,7 +15,6 @@
         <el-input
           v-model="loginForm.userAccount"
           placeholder="请输入您的账号"
-          class="unified-input"
           prefix-icon="User"
           size="large"
         />
@@ -26,7 +25,6 @@
           v-model="loginForm.userPassword"
           type="password"
           placeholder="请输入您的密码"
-          class="unified-input"
           prefix-icon="Lock"
           size="large"
           show-password

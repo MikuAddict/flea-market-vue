@@ -16,7 +16,6 @@
         <el-input
           v-model="registerForm.userAccount"
           placeholder="请输入您的账号"
-          class="unified-input"
           prefix-icon="User"
           size="large"
         />
@@ -27,7 +26,6 @@
           v-model="registerForm.userPassword"
           type="password"
           placeholder="请输入您的密码"
-          class="unified-input"
           prefix-icon="Lock"
           size="large"
           show-password
@@ -39,7 +37,6 @@
           v-model="registerForm.confirmPassword"
           type="password"
           placeholder="请再次输入您的密码"
-          class="unified-input"
           prefix-icon="Lock"
           size="large"
           show-password
@@ -50,7 +47,6 @@
         <el-input
           v-model="registerForm.userName"
           placeholder="请输入您的昵称"
-          class="unified-input"
           prefix-icon="UserFilled"
           size="large"
         />
@@ -60,7 +56,6 @@
         <el-input
           v-model="registerForm.userPhone"
           placeholder="请输入您的手机号"
-          class="unified-input"
           prefix-icon="Phone"
           size="large"
         />

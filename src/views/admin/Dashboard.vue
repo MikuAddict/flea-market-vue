@@ -12,7 +12,7 @@
           <template #header>
             <h3 class="unified-title-base">快速操作</h3>
           </template>
-          <div class="actions-grid unified-grid unified-grid-4">
+          <div class="actions-grid unified-grid unified-grid-5">
             <div 
               class="action-item fade-in" 
               v-for="(action, index) in quickActions" 
@@ -211,7 +211,7 @@ export default {
         trendText: '0%'
       },
       {
-        title: '交易订单数',
+        title: '交易量',
         value: 0,
         icon: 'ShoppingCartFull',
         type: 'warning',
@@ -248,6 +248,11 @@ export default {
         title: '分类管理',
         icon: 'Plus',
         handler: () => router.push('/admin/categories?action=add')
+      },
+      {
+        title: '商品审核',
+        icon: 'Document',
+        handler: () => router.push('/admin/product-review')
       },
       {
         title: '发布公告',
@@ -340,12 +345,12 @@ export default {
           // 获取订单统计数据
           const totalOrders = orderStats.totalOrders || 0
           
-          // 获取总用户数和总商品数（使用较大的页码获取所有数据）
+          // 获取总用户数和总商品数（只包括审核后的数据）
           try {
-            // 调用API获取总用户数和总商品数
+            // 调用API获取审核后的用户数和在售物品数
             const [userResponse, productResponse] = await Promise.all([
-              adminApi.user.getUserVoList({ current: 1, size: 1 }),
-              adminApi.product.adminListProducts({ current: 1, size: 1 })
+              adminApi.user.getUserVoList({ current: 1, size: 1, userStatus: 1 }), // 只获取已审核用户（状态为1）
+              adminApi.product.adminListProducts({ current: 1, size: 1, status: 1 }) // 只获取已通过审核的在售物品（状态为1）
             ])
             
             const totalUsers = userResponse.data?.data?.total || 0
@@ -372,7 +377,7 @@ export default {
                 trendText: '8.3%'
               },
               {
-                title: '交易订单数',
+                title: '交易量',
                 value: totalOrders,
                 icon: 'ShoppingCartFull',
                 type: 'warning',
@@ -834,11 +839,13 @@ export default {
 }
 
 .action-item {
-  padding: var(--spacing-lg);
+  padding: var(--spacing-base);
   text-align: center;
   cursor: pointer;
   border-radius: var(--border-radius-base);
   transition: all var(--transition-base);
+  min-width: 0;
+  flex: 1;
 }
 
 .action-item:hover {
@@ -848,9 +855,9 @@ export default {
 }
 
 .action-icon {
-  width: 60px;
-  height: 60px;
-  margin: 0 auto var(--spacing-base);
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--spacing-sm);
   border-radius: 50%;
   background-color: var(--primary-color);
   color: white;
@@ -858,19 +865,39 @@ export default {
 
 .action-title {
   margin: 0;
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--text-primary);
+  line-height: 1.3;
 }
 
 /* 响应式设计 */
+@media (max-width: 1200px) {
+  .action-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .action-title {
+    font-size: var(--font-size-xs);
+  }
+}
+
 @media (max-width: 992px) {
+  .unified-grid-5 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
   .unified-grid-4 {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
+  .unified-grid-5 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
   .unified-grid-4 {
     grid-template-columns: 1fr;
   }
@@ -885,6 +912,16 @@ export default {
   
   .chart-container {
     height: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .unified-grid-5 {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-item {
+    padding: var(--spacing-sm);
   }
 }
 

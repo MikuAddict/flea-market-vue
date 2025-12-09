@@ -262,6 +262,10 @@ body {
   grid-template-columns: repeat(4, 1fr);
 }
 
+.unified-grid-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+
 /* 统一的弹性布局 */
 .unified-flex {
   display: flex;

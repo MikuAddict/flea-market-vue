@@ -137,30 +137,36 @@ export default {
         route: '/admin/categories'
       },
       {
+        title: '商品审核',
+        description: '审核待审核的二手物品',
+        icon: 'Document',
+        route: '/admin/product-review'
+      },
+      {
+        title: '发布公告',
+        description: '管理系统中的所有新闻公告',
+        icon: 'Operation',
+        route: '/admin/news'
+      },
+      {
         title: '订单管理',
         description: '管理系统中的所有订单',
         icon: 'Document',
         route: '/admin/orders'
-      },
-      {
-        title: '新闻管理',
-        description: '管理系统中的所有新闻公告',
-        icon: 'Operation',
-        route: '/admin/news'
       }
     ])
     
     // 获取系统统计信息
     const fetchSystemStats = async () => {
       try {
-        // 获取用户总数
-        const userResponse = await adminApi.user.getUserVoList({ current: 1, size: 1 })
+        // 获取已审核用户总数（状态为1）
+        const userResponse = await adminApi.user.getUserVoList({ current: 1, size: 1, userStatus: 1 })
         if (userResponse.data && userResponse.data.code === 200) {
           totalUsers.value = userResponse.data.data.total || 0
         }
         
-        // 获取产品总数
-        const productResponse = await adminApi.product.listProductByPage({ current: 1, size: 1 })
+        // 获取已通过审核的在售物品总数（状态为1）
+        const productResponse = await adminApi.product.listProductByPage({ current: 1, size: 1, status: 1 })
         if (productResponse.data && productResponse.data.code === 200) {
           totalProducts.value = productResponse.data.data.total || 0
         }

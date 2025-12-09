@@ -21,6 +21,7 @@ const AdminProducts = () => import('@/views/admin/Products.vue')
 const AdminOrders = () => import('@/views/admin/Orders.vue')
 const AdminNews = () => import('@/views/admin/News.vue')
 const AdminStatistics = () => import('@/views/admin/Statistics.vue')
+const AdminProductReview = () => import('@/views/admin/ProductReview.vue')
 const NotFound = () => import('@/views/NotFound.vue')
 
 const routes = [
@@ -143,6 +144,12 @@ const routes = [
     name: 'AdminStatistics',
     component: AdminStatistics,
     meta: { title: '统计分析', requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/product-review',
+    name: 'AdminProductReview',
+    component: AdminProductReview,
+    meta: { title: '商品审核', requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/:pathMatch(.*)*',

@@ -8,12 +8,13 @@ const bigIntJsonParser = (data) => {
     return data
   }
   
-  // 正则表达式匹配JSON中的大数字值
+  // 正则表达式匹配JSON中的大数字值，包括id和可能的大数字
   const bigIntRegex = /"([^"]+)":\s*([0-9]{15,})([,}\s])/g
   const processedData = data.replace(bigIntRegex, (match, key, numberStr, suffix) => {
-    // 如果数字大于最大安全整数，转换为字符串
+    // 处理所有可能的大数字字段，不限于id字段
     try {
       const num = BigInt(numberStr)
+      // 如果数字大于最大安全整数，转换为字符串
       if (num > BigInt(Number.MAX_SAFE_INTEGER)) {
         return `"${key}":"${numberStr}"${suffix}`
       }
@@ -23,7 +24,21 @@ const bigIntJsonParser = (data) => {
     return match
   })
   
-  return JSON.parse(processedData)
+  // 特别处理可能包含大数字的数组
+  const arrayRegex = /"([^"]+)":\s*\[([^\]]*)\]/g
+  const finalData = processedData.replace(arrayRegex, (match, key, arrayContent) => {
+    if (arrayContent && arrayContent.includes('"id":')) {
+      // 处理数组中的对象ID字段
+      const processedArrayContent = arrayContent.replace(
+        /"id":\s*([0-9]{15,})([,}\s])/g, 
+        '"id":"$1"$2'
+      )
+      return `"${key}": [${processedArrayContent}]`
+    }
+    return match
+  })
+  
+  return JSON.parse(finalData)
 }
 
 // 创建axios实例

@@ -22,5 +22,13 @@ export default defineConfig({
     alias: {
       '@': '/src'
     }
+  },
+  // 配置静态资源服务
+  build: {
+    assetsDir: 'assets'
+  },
+  // 开发服务器静态资源服务配置
+  preview: {
+    port: 3000
   }
 })

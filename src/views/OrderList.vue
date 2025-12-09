@@ -205,7 +205,7 @@ export default {
             size: pagination.size
           })
         } else {
-          response = await api.order.getBuyerOrderListByStatus(parseInt(activeTab.value), {
+          response = await api.order.getBuyerOrderListByStatus(activeTab.value, {
             current: pagination.current,
             size: pagination.size
           })

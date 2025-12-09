@@ -27,14 +27,12 @@
                 <div class="news-header">
                   <h3>{{ news.title }}</h3>
                 </div>
-                <div class="news-image" v-if="news.imageUrl">
-                  <img :src="news.imageUrl" :alt="news.title" />
-                </div>
+
                 <div class="news-content">
                   <p>{{ news.content.substring(0, 200) }}...</p>
                 </div>
                 <div class="news-footer">
-                  <span class="news-author">作者: {{ news.author }}</span>
+                  <span class="news-author">作者: {{ news.authorName }}</span>
                   <el-button type="text" @click.stop="goToDetail(news.id)">
                     阅读全文
                   </el-button>
@@ -65,8 +63,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Layout from '@/components/Layout.vue'
-import api from '@/api'
+import newsApi from '@/api/news'
 import { formatDate } from '@/utils/format'
+import { processIdsInArray } from '@/utils/numberPrecision'
 
 export default {
   name: 'NewsList',
@@ -91,12 +90,13 @@ export default {
     const fetchNewsList = async () => {
       loading.value = true
       try {
-        const response = await api.news.getNewsList({
+        const response = await newsApi.getNewsList({
           current: pagination.current,
           size: pagination.size
         })
         
-        newsList.value = response.data.data || []
+        // 处理列表中的ID精度问题
+        newsList.value = processIdsInArray(response.data.data || [])
         total.value = Array.isArray(response.data.data) 
           ? response.data.data.length 
           : response.data.total || 0
@@ -111,7 +111,9 @@ export default {
     
     // 跳转到新闻详情
     const goToDetail = (newsId) => {
-      router.push(`/news/${newsId}`)
+      // 使用formatIdForApi确保精度
+      const formattedId = typeof newsId === 'string' ? newsId : String(newsId)
+      router.push(`/news/${formattedId}`)
     }
     
     // 处理每页显示数量变化
@@ -174,18 +176,6 @@ export default {
   margin: 0 0 10px 0;
   font-size: 18px;
   color: #303133;
-}
-
-.news-image {
-  margin-bottom: 15px;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.news-image img {
-  width: 100%;
-  max-height: 300px;
-  object-fit: cover;
 }
 
 .news-content {

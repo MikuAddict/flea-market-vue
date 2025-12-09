@@ -39,6 +39,14 @@ export default {
       })
     },
 
+    // 管理员重置用户密码
+    resetUserPassword(id) {
+      return request({
+        url: `/user/${id}/reset-password`,
+        method: 'post'
+      })
+    },
+
     // 根据ID获取用户
     getUserById(id) {
       return request({
@@ -175,6 +183,47 @@ export default {
       return request({
         url: '/news/latest',
         method: 'get'
+      })
+    }
+  },
+
+  // 图片管理
+  image: {
+    // 通用图片上传
+    uploadImage(file, type) {
+      const formData = new FormData()
+      formData.append('file', file)
+      return request({
+        url: '/image',
+        method: 'post',
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        params: { type }
+      })
+    },
+
+    // 上传新闻配图
+    uploadNewsImage(file) {
+      const formData = new FormData()
+      formData.append('file', file)
+      return request({
+        url: '/image/news',
+        method: 'post',
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+    },
+
+    // 删除图片
+    deleteImage(imageUrl) {
+      return request({
+        url: '/image',
+        method: 'delete',
+        params: { imageUrl }
       })
     }
   },

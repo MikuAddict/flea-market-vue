@@ -2,7 +2,7 @@
   <el-card class="unified-card product-card" @click="goToDetail">
     <div class="product-image-container">
       <div class="product-image">
-        <img v-if="product.mainImageUrl || product.imageUrl" :src="product.mainImageUrl || product.imageUrl" :alt="product.productName" />
+        <img v-if="getProductImage(product)" :src="getProductImage(product)" :alt="product.productName" />
         <div v-else class="image-placeholder">
           <el-icon><Picture /></el-icon>
         </div>
@@ -22,9 +22,6 @@
       </div>
       
       <div class="product-meta unified-flex unified-flex-wrap">
-        <div class="unified-tag unified-tag-primary">
-          {{ formatProductStatus(product.status) }}
-        </div>
         <div class="unified-tag unified-tag-success">
           {{ formatPaymentMethod(product.paymentMethod) }}
         </div>
@@ -71,12 +68,38 @@ export default {
       router.push(`/products/${props.product.id}`)
     }
     
+    // 获取产品图片，处理相对路径
+    const getProductImage = (product) => {
+      // 优先使用主图
+      if (product.mainImageUrl) {
+        // 处理相对路径，通过API代理访问
+        if (product.mainImageUrl.startsWith('/')) {
+          // 确保路径以/api开头，这样会被代理到后端服务
+          return product.mainImageUrl.startsWith('/api') ? product.mainImageUrl : '/api' + product.mainImageUrl
+        }
+        return product.mainImageUrl
+      }
+      
+      // 其次使用imageUrl
+      if (product.imageUrl) {
+        // 处理相对路径，通过API代理访问
+        if (product.imageUrl.startsWith('/')) {
+          // 确保路径以/api开头，这样会被代理到后端服务
+          return product.imageUrl.startsWith('/api') ? product.imageUrl : '/api' + product.imageUrl
+        }
+        return product.imageUrl
+      }
+      
+      return null
+    }
+    
     return {
       goToDetail,
       formatPrice,
       formatPaymentMethod,
       formatProductStatus,
-      getProductStatusType
+      getProductStatusType,
+      getProductImage
     }
   }
 }

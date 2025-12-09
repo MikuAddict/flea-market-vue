@@ -71,16 +71,17 @@
             </el-select>
           </el-form-item>
           
-          <el-form-item label="审核状态">
+          <el-form-item label="用户状态">
             <el-select
               v-model="filters.userStatus"
               placeholder="选择状态"
               clearable
               class="unified-input filter-select"
             >
-              <el-option label="待审核" value="0" />
-              <el-option label="已通过" value="1" />
-              <el-option label="已拒绝" value="2" />
+              <el-option label="待审核" :value="0" />
+              <el-option label="已通过" :value="1" />
+              <el-option label="已拒绝" :value="2" />
+              <el-option label="已封禁" :value="3" />
             </el-select>
           </el-form-item>
           
@@ -145,7 +146,7 @@
                 </el-avatar>
                 <div class="user-details">
                   <div class="user-name">{{ scope.row.userName }}</div>
-                  <div class="user-account">{{ scope.row.userAccount }}</div>
+                  <div class="user-account">{{ scope.row.userAccount || scope.row.userName }}</div>
                 </div>
               </div>
             </template>
@@ -161,7 +162,7 @@
             </template>
           </el-table-column>
           
-          <el-table-column prop="userStatus" label="审核状态" width="120">
+          <el-table-column prop="userStatus" label="用户状态" width="120">
             <template #default="scope">
               <el-tag :type="getStatusType(scope.row.userStatus)" size="small">
                 {{ getStatusText(scope.row.userStatus) }}
@@ -177,7 +178,7 @@
             </template>
           </el-table-column>
           
-          <el-table-column label="操作" width="200" fixed="right">
+          <el-table-column label="操作" width="250" fixed="right">
             <template #default="scope">
               <div class="action-buttons unified-flex">
                 <el-button
@@ -187,25 +188,13 @@
                 >
                   编辑
                 </el-button>
-                
-                <el-dropdown @command="(command) => handleUserAction(command, scope.row)">
-                  <el-button size="small" type="text">
-                    更多
-                    <el-icon><ArrowDown /></el-icon>
-                  </el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item command="reset-password">重置密码</el-dropdown-item>
-                      <el-dropdown-item command="toggle-status">
-                        {{ scope.row.userStatus === 1 ? '禁用' : '启用' }}
-                      </el-dropdown-item>
-                      <el-dropdown-item command="audit" v-if="scope.row.userStatus === 0">
-                        审核
-                      </el-dropdown-item>
-                      <el-dropdown-item divided command="delete">删除</el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
+                <el-button
+                  size="small"
+                  type="text"
+                  @click="handleResetPassword(scope.row)"
+                >
+                  重置密码
+                </el-button>
               </div>
             </template>
           </el-table-column>
@@ -230,68 +219,136 @@
       <el-dialog
         v-model="userDialogVisible"
         :title="dialogMode === 'add' ? '添加用户' : '编辑用户'"
-        width="600px"
+        width="520px"
+        :close-on-click-modal="false"
+        append-to-body
+        class="user-form-dialog"
         @close="resetUserForm"
       >
-        <el-form :model="userForm" :rules="userFormRules" ref="userFormRef" label-width="100px">
-          <el-form-item label="用户名" prop="userName">
-            <el-input v-model="userForm.userName" placeholder="请输入用户名" />
-          </el-form-item>
+        <div class="dialog-content">
+          <div class="form-section">
+            <h4 class="section-title">基本信息</h4>
+            <el-form :model="userForm" :rules="userFormRules" ref="userFormRef" label-width="90px" label-position="left">
+              <el-row :gutter="16">
+                <el-col :span="12">
+                  <el-form-item label="用户名" prop="userName">
+                    <el-input 
+                      v-model="userForm.userName" 
+                      placeholder="请输入用户名" 
+                      size="large"
+                      class="modern-input"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              
+              <el-row :gutter="16">
+                <el-col :span="24">
+                  <el-form-item label="角色" prop="userRole">
+                    <el-select 
+                      v-model="userForm.userRole" 
+                      placeholder="请选择角色" 
+                      size="large"
+                      class="modern-select"
+                    >
+                      <el-option label="普通用户" value="user" />
+                      <el-option label="管理员" value="admin" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-form>
+          </div>
           
-          <el-form-item label="账号" prop="userAccount">
-            <el-input 
-              v-model="userForm.userAccount" 
-              placeholder="请输入账号" 
-              :disabled="dialogMode === 'edit'"
-            />
-          </el-form-item>
+          <div class="form-section">
+            <h4 class="section-title">账户设置</h4>
+            <div class="account-settings">
+              <div v-if="dialogMode === 'add'" class="password-field">
+                <el-form-item label="密码" prop="userPassword" label-width="90px">
+                  <el-input 
+                    v-model="userForm.userPassword" 
+                    type="password" 
+                    placeholder="请输入密码" 
+                    show-password
+                    size="large"
+                    class="modern-input"
+                  />
+                </el-form-item>
+              </div>
+              
+              <div v-else class="password-reset-section">
+                <div class="reset-password-card">
+                  <div class="reset-info">
+                    <el-icon class="reset-icon"><Lock /></el-icon>
+                    <div class="reset-text">
+                      <p class="reset-title">密码管理</p>
+                      <p class="reset-desc">重置用户密码为默认值</p>
+                    </div>
+                  </div>
+                  <el-button 
+                    type="primary" 
+                    size="small" 
+                    @click="handleResetPassword({id: userForm.id, userName: userForm.userName})"
+                    class="reset-btn"
+                  >
+                    重置密码
+                  </el-button>
+                </div>
+              </div>
+            </div>
+          </div>
           
-          <el-form-item label="密码" prop="userPassword" v-if="dialogMode === 'add'">
-            <el-input 
-              v-model="userForm.userPassword" 
-              type="password" 
-              placeholder="请输入密码" 
-              show-password
-            />
-          </el-form-item>
-          
-          <el-form-item label="手机号" prop="userPhone">
-            <el-input v-model="userForm.userPhone" placeholder="请输入手机号" />
-          </el-form-item>
-          
-          <el-form-item label="头像" prop="userAvatar">
-            <el-input v-model="userForm.userAvatar" placeholder="请输入头像URL" />
-          </el-form-item>
-          
-          <el-form-item label="用户角色" prop="userRole">
-            <el-select v-model="userForm.userRole" placeholder="请选择角色">
-              <el-option label="普通用户" value="user" />
-              <el-option label="管理员" value="admin" />
-            </el-select>
-          </el-form-item>
-          
-          <el-form-item label="积分" prop="point">
-            <el-input-number v-model="userForm.point" :min="0" />
-          </el-form-item>
-          
-          <el-form-item label="审核状态" prop="userStatus" v-if="dialogMode === 'edit'">
-            <el-radio-group v-model="userForm.userStatus">
-              <el-radio :label="0">待审核</el-radio>
-              <el-radio :label="1">已通过</el-radio>
-              <el-radio :label="2">已拒绝</el-radio>
-            </el-radio-group>
-          </el-form-item>
-        </el-form>
+          <div class="form-section">
+            <h4 class="section-title">其他信息</h4>
+            <el-row :gutter="16">
+              <el-col :span="24">
+                <el-form-item label="头像" prop="userAvatar" label-width="90px">
+                  <el-input 
+                    v-model="userForm.userAvatar" 
+                    placeholder="头像URL" 
+                    size="large"
+                    class="modern-input"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            
+            <div v-if="dialogMode === 'edit'" class="status-section">
+              <el-form-item label="用户状态" prop="userStatus" label-width="90px">
+                <el-radio-group v-model="userForm.userStatus" class="status-radio-group">
+                  <el-radio :label="0" class="status-radio">
+                    <span class="status-label">待审核</span>
+                  </el-radio>
+                  <el-radio :label="1" class="status-radio">
+                    <span class="status-label">已通过</span>
+                  </el-radio>
+                  <el-radio :label="2" class="status-radio">
+                    <span class="status-label">已拒绝</span>
+                  </el-radio>
+                  <el-radio :label="3" class="status-radio">
+                    <span class="status-label">已封禁</span>
+                  </el-radio>
+                </el-radio-group>
+              </el-form-item>
+            </div>
+          </div>
+        </div>
         
         <template #footer>
           <div class="dialog-footer unified-flex unified-flex-end">
-            <el-button @click="userDialogVisible = false">取消</el-button>
+            <el-button 
+              @click="userDialogVisible = false"
+              class="cancel-btn"
+            >
+              取消
+            </el-button>
             <el-button 
               type="primary" 
               :loading="userFormSubmitting"
               @click="submitUserForm"
+              class="submit-btn"
             >
-              确定
+              {{ dialogMode === 'add' ? '添加用户' : '保存修改' }}
             </el-button>
           </div>
         </template>
@@ -302,6 +359,7 @@
         v-model="auditDialogVisible"
         title="用户审核"
         width="500px"
+        append-to-body
       >
         <el-form :model="auditForm" label-width="100px">
           <el-form-item label="用户信息">
@@ -363,8 +421,7 @@ import {
   ArrowDown,
   User,
   UserFilled,
-  UserPending,
-  UserCheck
+  Lock
 } from '@element-plus/icons-vue'
 import { formatDate } from '@/utils/format'
 import { adminApi } from '@/api'
@@ -407,28 +464,28 @@ export default {
     })
     
     // 用户统计数据
-    const userStats = computed(() => [
+    const userStats = ref([
       {
         title: '总用户数',
-        value: userList.value.length,
+        value: 0,
         icon: 'User',
         type: 'primary'
       },
       {
         title: '待审核',
-        value: userList.value.filter(user => user.userStatus === 0).length,
-        icon: 'UserPending',
+        value: 0,
+        icon: 'UserFilled',
         type: 'warning'
       },
       {
         title: '已通过',
-        value: userList.value.filter(user => user.userStatus === 1).length,
-        icon: 'UserCheck',
+        value: 0,
+        icon: 'User',
         type: 'success'
       },
       {
         title: '管理员',
-        value: userList.value.filter(user => user.userRole === 'admin').length,
+        value: 0,
         icon: 'UserFilled',
         type: 'danger'
       }
@@ -502,6 +559,34 @@ export default {
         if (response.data && response.data.code === 200) {
           userList.value = response.data.data.records || []
           pagination.total = response.data.data.total || 0
+          
+          // 更新统计数据
+          try {
+            // 总用户数只统计已通过审核的用户
+            const totalUsersResponse = await adminApi.user.getUserVoList({ current: 1, size: 1, userStatus: 1 })
+            if (totalUsersResponse.data && totalUsersResponse.data.code === 200) {
+              userStats.value[0].value = totalUsersResponse.data.data.total || 0
+            }
+            
+            // 其他状态统计
+            const pendingResponse = await adminApi.user.getUserVoList({ current: 1, size: 1, userStatus: 0 })
+            if (pendingResponse.data && pendingResponse.data.code === 200) {
+              userStats.value[1].value = pendingResponse.data.data.total || 0
+            }
+            
+            const approvedResponse = await adminApi.user.getUserVoList({ current: 1, size: 1, userStatus: 1 })
+            if (approvedResponse.data && approvedResponse.data.code === 200) {
+              userStats.value[2].value = approvedResponse.data.data.total || 0
+            }
+            
+            // 管理员数量
+            const adminResponse = await adminApi.user.getUserVoList({ current: 1, size: 1, userRole: 'admin' })
+            if (adminResponse.data && adminResponse.data.code === 200) {
+              userStats.value[3].value = adminResponse.data.data.total || 0
+            }
+          } catch (error) {
+            console.error('获取统计数据失败:', error)
+          }
         } else {
           ElMessage.error('获取用户列表失败')
         }
@@ -586,6 +671,25 @@ export default {
       }
     }
     
+    // 重置用户密码
+    const handleResetPassword = async (user) => {
+      try {
+        await ElMessageBox.confirm(`确定要重置用户 "${user.userName}" 的密码为123456吗？`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        
+        await adminApi.user.resetUserPassword(user.id)
+        ElMessage.success('密码重置成功，新密码为123456')
+      } catch (error) {
+        if (error !== 'cancel') {
+          console.error('密码重置失败:', error)
+          ElMessage.error('密码重置失败')
+        }
+      }
+    }
+    
     // 提交用户表单
     const submitUserForm = async () => {
       if (!userFormRef.value) return
@@ -599,10 +703,21 @@ export default {
           result = await adminApi.user.addUser(userForm)
           ElMessage.success('用户添加成功')
         } else {
-          // 编辑用户功能在API中未定义，需要实现
-          ElMessage.warning('编辑用户功能暂未实现')
-          userDialogVisible.value = false
-          return
+          // 编辑用户时只发送API支持的字段
+          const editData = {
+            id: userForm.id,
+            userName: userForm.userName,
+            userAvatar: userForm.userAvatar,
+            userRole: userForm.userRole
+          }
+          result = await adminApi.user.updateUser(editData)
+          
+          // 单独更新用户状态
+          if (userForm.userStatus !== undefined) {
+            await adminApi.user.updateUserStatus(userForm.id, userForm.userStatus)
+          }
+          
+          ElMessage.success('用户信息更新成功')
         }
         
         userDialogVisible.value = false
@@ -738,7 +853,8 @@ export default {
       const statusMap = {
         0: '待审核',
         1: '已通过',
-        2: '已拒绝'
+        2: '已拒绝',
+        3: '已封禁'
       }
       return statusMap[status] || '未知'
     }
@@ -748,7 +864,8 @@ export default {
       const typeMap = {
         0: 'warning',
         1: 'success',
-        2: 'danger'
+        2: 'danger',
+        3: 'info'
       }
       return typeMap[status] || 'info'
     }
@@ -932,6 +1049,224 @@ export default {
   margin: 0 0 var(--spacing-xs) 0;
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
+}
+
+/* 现代化用户表单对话框样式 */
+.user-form-dialog {
+  --dialog-padding: 24px;
+}
+
+.user-form-dialog .el-dialog__header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border-color-light);
+  margin: 0;
+}
+
+.user-form-dialog .el-dialog__body {
+  padding: 0;
+}
+
+.user-form-dialog .el-dialog__footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border-color-light);
+}
+
+.dialog-content {
+  padding: var(--dialog-padding);
+}
+
+.form-section {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.form-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+}
+
+.section-title::before {
+  content: '';
+  width: 3px;
+  height: 16px;
+  background: var(--primary-color);
+  border-radius: 1.5px;
+  margin-right: 8px;
+}
+
+.modern-input .el-input__wrapper {
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.modern-input .el-input__wrapper:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.modern-input .el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+.modern-select .el-select__wrapper {
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.modern-select .el-select__wrapper:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.modern-select .el-select__wrapper.is-focus {
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+.modern-input-number .el-input-number__increase,
+.modern-input-number .el-input-number__decrease {
+  border-radius: 8px;
+}
+
+.password-reset-section {
+  margin-top: 8px;
+}
+
+.reset-password-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-color-light);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border-color-light);
+  transition: all 0.2s ease;
+}
+
+.reset-password-card:hover {
+  border-color: var(--primary-color-light);
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+}
+
+.reset-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reset-icon {
+  color: var(--primary-color);
+  font-size: 20px;
+  background: rgba(64, 158, 255, 0.1);
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.reset-text {
+  flex: 1;
+}
+
+.reset-title {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  font-size: 14px;
+}
+
+.reset-desc {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 12px;
+}
+
+.reset-btn {
+  background: var(--primary-color);
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.reset-btn:hover {
+  background: var(--primary-color-dark);
+  transform: translateY(-1px);
+}
+
+.status-section {
+  margin-top: 8px;
+}
+
+.status-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.status-radio {
+  margin-right: 0;
+}
+
+.status-radio .el-radio__label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.cancel-btn {
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+}
+
+.submit-btn {
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 500;
+  background: var(--primary-color);
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.submit-btn:hover {
+  background: var(--primary-color-dark);
+  transform: translateY(-1px);
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .user-form-dialog {
+    width: 90% !important;
+    max-width: 400px;
+  }
+  
+  .dialog-content {
+    padding: 16px;
+  }
+  
+  .form-section {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+  }
+  
+  .reset-password-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .status-radio-group {
+    gap: 8px;
+  }
 }
 
 /* 响应式设计 */

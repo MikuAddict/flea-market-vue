@@ -10,9 +10,7 @@
           </div>
         </div>
         
-        <div class="news-image" v-if="news.imageUrl">
-          <img :src="news.imageUrl" :alt="news.title" />
-        </div>
+
         
         <div class="news-content">
           <div v-html="formatContent(news.content)"></div>
@@ -36,8 +34,9 @@ import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Layout from '@/components/Layout.vue'
-import api from '@/api'
+import newsApi from '@/api/news'
 import { formatDate } from '@/utils/format'
+import { formatIdForApi } from '@/utils/numberPrecision'
 
 export default {
   name: 'NewsDetail',
@@ -56,7 +55,9 @@ export default {
     const fetchNewsDetail = async (newsId) => {
       try {
         loading.value = true
-        const response = await api.news.getNewsById(newsId)
+        // 使用精度处理函数，确保大数字ID的准确性
+        const formattedId = formatIdForApi(newsId)
+        const response = await newsApi.getNewsDetail(formattedId)
         news.value = response.data.data
       } catch (error) {
         console.error('获取新闻详情失败:', error)
@@ -76,7 +77,8 @@ export default {
     // 监听路由参数变化
     watch(() => route.params.id, (newId) => {
       if (newId) {
-        fetchNewsDetail(parseInt(newId))
+        // 不使用parseInt，直接传递字符串，保持精度
+        fetchNewsDetail(newId)
       }
     }, { immediate: true })
     
@@ -120,18 +122,6 @@ export default {
   gap: 20px;
   color: #909399;
   font-size: 14px;
-}
-
-.news-image {
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.news-image img {
-  max-width: 100%;
-  max-height: 500px;
-  border-radius: 4px;
-  object-fit: contain;
 }
 
 .news-content {

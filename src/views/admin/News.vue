@@ -72,18 +72,7 @@
           
           <el-table-column label="新闻信息" min-width="200">
             <template #default="scope">
-              <div class="news-info unified-flex">
-                <el-image
-                  :src="scope.row.imageUrl"
-                  class="news-image"
-                  fit="cover"
-                >
-                  <template #error>
-                    <div class="image-placeholder">
-                      <el-icon><Picture /></el-icon>
-                    </div>
-                  </template>
-                </el-image>
+              <div class="news-info">
                 <div class="news-details">
                   <h4 class="news-title">{{ scope.row.title }}</h4>
                   <p class="news-summary">{{ scope.row.content?.substring(0, 50) }}...</p>
@@ -91,17 +80,7 @@
               </div>
             </template>
           </el-table-column>
-          
           <el-table-column prop="authorName" label="作者" width="120" />
-          
-          <el-table-column prop="status" label="状态" width="100">
-            <template #default="scope">
-              <el-tag :type="getStatusType(scope.row.status)" size="small">
-                {{ getStatusText(scope.row.status) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          
           <el-table-column prop="createTime" label="发布时间" width="160">
             <template #default="scope">
               {{ formatDate(scope.row.createTime) }}
@@ -169,14 +148,12 @@
         v-model="newsDialogVisible"
         :title="dialogMode === 'add' ? '发布新闻' : '编辑新闻'"
         width="800px"
+        append-to-body
+        class="news-form-dialog"
       >
         <el-form :model="newsForm" :rules="newsFormRules" ref="newsFormRef" label-width="100px">
           <el-form-item label="新闻标题" prop="title">
-            <el-input v-model="newsForm.title" placeholder="请输入新闻标题" />
-          </el-form-item>
-          
-          <el-form-item label="新闻图片" prop="imageUrl">
-            <el-input v-model="newsForm.imageUrl" placeholder="请输入图片URL" />
+            <el-input v-model="newsForm.title" placeholder="请输入新闻标题" size="large" />
           </el-form-item>
           
           <el-form-item label="新闻内容" prop="content">
@@ -185,14 +162,8 @@
               type="textarea"
               :rows="10"
               placeholder="请输入新闻内容"
+              resize="none"
             />
-          </el-form-item>
-          
-          <el-form-item label="发布状态" prop="status">
-            <el-radio-group v-model="newsForm.status">
-              <el-radio label="draft">保存草稿</el-radio>
-              <el-radio label="published">立即发布</el-radio>
-            </el-radio-group>
           </el-form-item>
         </el-form>
         
@@ -222,12 +193,12 @@ import {
   Search, 
   Edit, 
   Delete, 
-  ArrowDown,
-  Picture
+  ArrowDown
 } from '@element-plus/icons-vue'
 import { formatDate } from '@/utils/format'
 import { adminApi } from '@/api'
 import Layout from '@/components/Layout.vue'
+import { processIdsInArray, formatIdForApi } from '@/utils/numberPrecision'
 
 export default {
   name: 'AdminNews',
@@ -283,7 +254,6 @@ export default {
       id: '',
       title: '',
       content: '',
-      imageUrl: '',
       status: 'draft'
     })
     
@@ -321,7 +291,8 @@ export default {
         
         const response = await adminApi.news.getNewsList(params)
         if (response.data && response.data.code === 200) {
-          newsList.value = response.data.data || []
+          // 处理新闻列表中的大数字ID，确保精度不丢失
+          newsList.value = processIdsInArray(response.data.data || [])
           pagination.total = response.data.total || 0
         } else {
           ElMessage.error('获取新闻列表失败')
@@ -384,7 +355,6 @@ export default {
         id: news.id,
         title: news.title,
         content: news.content,
-        imageUrl: news.imageUrl,
         status: news.status
       })
       newsDialogVisible.value = true
@@ -396,7 +366,6 @@ export default {
         id: '',
         title: '',
         content: '',
-        imageUrl: '',
         status: 'draft'
       })
       if (newsFormRef.value) {
@@ -417,16 +386,14 @@ export default {
           result = await adminApi.news.addNews({
             title: newsForm.title,
             content: newsForm.content,
-            imageUrl: newsForm.imageUrl,
             status: newsForm.status
           })
           ElMessage.success('新闻添加成功')
         } else {
           result = await adminApi.news.updateNews({
-            id: newsForm.id,
+            id: formatIdForApi(newsForm.id),
             title: newsForm.title,
             content: newsForm.content,
-            imageUrl: newsForm.imageUrl,
             status: newsForm.status
           })
           ElMessage.success('新闻更新成功')
@@ -512,7 +479,7 @@ export default {
         })
         
         const promises = selectedNews.value.map(news => 
-          adminApi.news.deleteNews(news.id)
+          adminApi.news.deleteNews(formatIdForApi(news.id))
         )
         
         await Promise.all(promises)
@@ -674,15 +641,8 @@ export default {
 }
 
 .news-info {
-  gap: var(--spacing-base);
-}
-
-.news-image {
-  width: 120px;
-  height: 80px;
-  border-radius: var(--border-radius-base);
-  overflow: hidden;
-  box-shadow: var(--shadow-light);
+  display: flex;
+  align-items: flex-start;
 }
 
 .news-details {
@@ -711,20 +671,23 @@ export default {
   margin-top: var(--spacing-xl);
 }
 
-.image-placeholder {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  background-color: var(--bg-lighter);
-  color: var(--text-placeholder);
-  font-size: var(--font-size-lg);
-}
-
 /* 对话框样式 */
 .dialog-footer {
   gap: var(--spacing-sm);
+}
+
+/* 新闻表单对话框样式 */
+.news-form-dialog .el-dialog__body {
+  padding: 20px;
+}
+
+.news-form-dialog .el-form-item {
+  margin-bottom: 20px;
+}
+
+.news-form-dialog .el-input__inner,
+.news-form-dialog .el-textarea__inner {
+  border-radius: var(--border-radius-base);
 }
 
 /* 响应式设计 */

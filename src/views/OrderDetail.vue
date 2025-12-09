@@ -247,7 +247,7 @@ export default {
     
     // 计算属性
     const user = computed(() => store.state.user)
-    const orderId = computed(() => parseInt(route.params.id))
+    const orderId = computed(() => route.params.id)
     const isBuyer = computed(() => user.value.id === order.value?.buyer?.id)
     const isSeller = computed(() => user.value.id === order.value?.seller?.id)
     
@@ -255,7 +255,9 @@ export default {
     const fetchOrderDetail = async () => {
       try {
         loading.value = true
-        const response = await api.order.getOrderById(orderId.value)
+        // 确保使用字符串ID保持精度
+        const idStr = typeof orderId.value === 'string' ? orderId.value : String(orderId.value)
+        const response = await api.order.getOrderById(idStr)
         order.value = response.data.data
       } catch (error) {
         console.error('获取订单详情失败:', error)

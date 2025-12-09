@@ -281,13 +281,15 @@ export default {
     // 计算属性
     const isLoggedIn = computed(() => store.getters.isLoggedIn)
     const userId = computed(() => store.state.user?.id)
-    const productId = computed(() => parseInt(route.params.id))
+    const productId = computed(() => route.params.id)
     
     // 获取二手物品详情
     const fetchProductDetail = async () => {
       try {
         loading.value = true
-        const response = await productApi.getProductById(productId.value)
+        // 确保使用字符串ID保持精度
+        const idStr = typeof productId.value === 'string' ? productId.value : String(productId.value)
+        const response = await productApi.getProductById(idStr)
         product.value = response.data.data
         
         // 获取二手物品评价统计

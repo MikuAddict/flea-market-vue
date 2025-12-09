@@ -209,13 +209,12 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
-import api from '@/api'
+import { orderApi } from '@/api'
 import {
   formatPrice,
   formatPaymentMethod,
@@ -225,6 +224,7 @@ import {
   getOrderStatusType,
   getUserStatusType
 } from '@/utils/format'
+import { useSingleDataFetch } from '@/composables/useDataFetch'
 
 export default {
   name: 'OrderDetail',
@@ -251,22 +251,15 @@ export default {
     const isBuyer = computed(() => user.value.id === order.value?.buyer?.id)
     const isSeller = computed(() => user.value.id === order.value?.seller?.id)
     
-    // 获取订单详情
-    const fetchOrderDetail = async () => {
-      try {
-        loading.value = true
-        // 确保使用字符串ID保持精度
-        const idStr = typeof orderId.value === 'string' ? orderId.value : String(orderId.value)
-        const response = await api.order.getOrderById(idStr)
-        order.value = response.data.data
-      } catch (error) {
-        console.error('获取订单详情失败:', error)
-        ElMessage.error('订单不存在或已被删除')
-        router.push('/orders')
-      } finally {
-        loading.value = false
-      }
-    }
+    // 使用单条数据获取组合函数
+    const {
+      loading,
+      data: order,
+      fetchData: fetchOrderDetail
+    } = useSingleDataFetch({
+      apiFunction: orderApi.getOrderById,
+      errorMessage: '订单不存在或已被删除'
+    })
     
     // 支付订单
     const payOrder = async () => {
@@ -437,7 +430,7 @@ export default {
 .order-detail-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: var(--spacing-xl);
 }
 
 .card-header {
@@ -447,22 +440,22 @@ export default {
 }
 
 .order-info, .product-section, .trading-parties, .payment-proof {
-  margin-top: 20px;
+  margin-top: var(--spacing-xl);
 }
 
 .order-info h3, .product-section h3 {
-  margin-bottom: 15px;
+  margin-bottom: var(--spacing-base);
 }
 
 .product-content {
   display: flex;
-  gap: 15px;
+  gap: var(--spacing-base);
 }
 
 .product-image {
   width: 120px;
   height: 120px;
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
   overflow: hidden;
 }
 
@@ -478,9 +471,9 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f5f7fa;
-  color: #c0c4cc;
-  font-size: 24px;
+  background-color: var(--bg-light);
+  color: var(--text-placeholder);
+  font-size: var(--font-size-xl);
 }
 
 .product-info {
@@ -488,36 +481,36 @@ export default {
 }
 
 .product-info h4 {
-  margin: 0 0 10px 0;
-  font-size: 18px;
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-lg);
 }
 
 .product-info p {
-  margin: 0 0 10px 0;
-  color: #606266;
+  margin: 0 0 var(--spacing-sm) 0;
+  color: var(--text-regular);
 }
 
 .product-meta {
   display: flex;
-  gap: 15px;
-  font-size: 14px;
-  color: #909399;
+  gap: var(--spacing-base);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
 }
 
 .party-info {
   display: flex;
-  gap: 15px;
+  gap: var(--spacing-base);
 }
 
 .party-details h4 {
-  margin: 0 0 5px 0;
-  font-size: 16px;
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-base);
 }
 
 .party-details p {
-  margin: 0 0 5px 0;
-  color: #606266;
-  font-size: 14px;
+  margin: 0 0 var(--spacing-xs) 0;
+  color: var(--text-regular);
+  font-size: var(--font-size-sm);
 }
 
 .proof-image {
@@ -532,7 +525,7 @@ export default {
   align-items: center;
   width: 100%;
   height: 100%;
-  color: #909399;
+  color: var(--text-secondary);
 }
 
 .no-proof {

@@ -21,7 +21,7 @@
               :key="news.id"
               :timestamp="formatDate(news.createTime)"
               placement="top"
-              @click="goToDetail(news.id)"
+              @click="navigateToDetail(news.id)"
             >
               <el-card shadow="hover" class="news-item">
                 <div class="news-header">
@@ -33,7 +33,7 @@
                 </div>
                 <div class="news-footer">
                   <span class="news-author">作者: {{ news.authorName }}</span>
-                  <el-button type="text" @click.stop="goToDetail(news.id)">
+                  <el-button type="text" @click.stop="navigateToDetail(news.id)">
                     阅读全文
                   </el-button>
                 </div>
@@ -60,12 +60,13 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Layout from '@/components/Layout.vue'
 import newsApi from '@/api/news'
 import { formatDate } from '@/utils/format'
-import { processIdsInArray } from '@/utils/numberPrecision'
+import { useDataFetchWithIdPrecision } from '@/composables/useDataFetch'
+import { useNavigation } from '@/composables/useEventHandlers'
 
 export default {
   name: 'NewsList',
@@ -73,62 +74,26 @@ export default {
     Layout
   },
   setup() {
-    const router = useRouter()
-    
-    // 响应式数据
-    const loading = ref(false)
-    const newsList = ref([])
-    const total = ref(0)
-    
-    // 分页信息
-    const pagination = reactive({
-      current: 1,
-      size: 10
+    // 使用通用数据获取组合函数
+    const {
+      loading,
+      data: newsList,
+      total,
+      pagination,
+      fetchData: fetchNewsList,
+      handleCurrentChange,
+      handleSizeChange
+    } = useDataFetchWithIdPrecision({
+      apiFunction: newsApi.getNewsList,
+      idFields: ['id']
     })
     
-    // 获取新闻列表
-    const fetchNewsList = async () => {
-      loading.value = true
-      try {
-        const response = await newsApi.getNewsList({
-          current: pagination.current,
-          size: pagination.size
-        })
-        
-        // 处理列表中的ID精度问题
-        newsList.value = processIdsInArray(response.data.data || [])
-        total.value = Array.isArray(response.data.data) 
-          ? response.data.data.length 
-          : response.data.total || 0
-      } catch (error) {
-        console.error('获取新闻列表失败:', error)
-        newsList.value = []
-        total.value = 0
-      } finally {
-        loading.value = false
-      }
-    }
+    // 使用导航组合函数
+    const { navigateToDetail } = useNavigation({
+      basePath: '/news/'
+    })
     
-    // 跳转到新闻详情
-    const goToDetail = (newsId) => {
-      // 使用formatIdForApi确保精度
-      const formattedId = typeof newsId === 'string' ? newsId : String(newsId)
-      router.push(`/news/${formattedId}`)
-    }
-    
-    // 处理每页显示数量变化
-    const handleSizeChange = (size) => {
-      pagination.size = size
-      pagination.current = 1
-      fetchNewsList()
-    }
-    
-    // 处理页码变化
-    const handleCurrentChange = (current) => {
-      pagination.current = current
-      fetchNewsList()
-    }
-    
+    // 重置获取新闻列表，使其在挂载时自动获取
     onMounted(() => {
       fetchNewsList()
     })
@@ -139,9 +104,10 @@ export default {
       total,
       pagination,
       formatDate,
-      goToDetail,
-      handleSizeChange,
-      handleCurrentChange
+      navigateToDetail,
+      fetchNewsList,
+      handleCurrentChange,
+      handleSizeChange
     }
   }
 }
@@ -151,7 +117,7 @@ export default {
 .news-list-container {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 20px;
+  padding: var(--spacing-xl);
 }
 
 .loading-container, .empty-container {

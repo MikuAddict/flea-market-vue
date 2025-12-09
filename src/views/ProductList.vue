@@ -196,6 +196,7 @@ import { Plus, Search, RefreshLeft, Box } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
 import ProductCard from '@/components/ProductCard.vue'
 import { productApi } from '@/api'
+import { useDataFetchWithIdPrecision } from '@/composables/useDataFetch'
 
 export default {
   name: 'ProductList',
@@ -207,17 +208,6 @@ export default {
     const store = useStore()
     const route = useRoute()
     const router = useRouter()
-    
-    // 二手物品列表数据
-    const productList = ref([])
-    const total = ref(0)
-    const loading = ref(false)
-    
-    // 分页信息
-    const pagination = reactive({
-      current: 1,
-      size: 12
-    })
     
     // 筛选条件
     const filters = reactive({
@@ -237,69 +227,53 @@ export default {
     const categories = computed(() => store.state.categories)
     const isLoggedIn = computed(() => store.getters.isLoggedIn)
     
+    // 动态选择API函数
+    const getApiFunction = () => {
+      if (filters.keyword || filters.categoryId !== null || 
+          filters.paymentMethod !== null || filters.minPrice !== null || 
+          filters.maxPrice !== null) {
+        return productApi.advancedSearchProducts
+      }
+      return productApi.getProductList
+    }
+    
+    // 使用数据获取组合函数
+    const {
+      loading,
+      data: productList,
+      total,
+      pagination,
+      fetchData,
+      handleCurrentChange,
+      handleSizeChange
+    } = useDataFetchWithIdPrecision({
+      apiFunction: getApiFunction,
+      defaultFilters: filters,
+      idFields: ['id']
+    })
+    
     // 监听路由查询参数变化
     watch(() => route.query, (newQuery) => {
-      // 从URL查询参数中获取筛选条件
       Object.keys(filters).forEach(key => {
         if (newQuery[key] !== undefined) {
           filters[key] = newQuery[key]
         }
       })
       
-      // 处理分页参数
       if (newQuery.current) pagination.current = Number(newQuery.current)
       if (newQuery.size) pagination.size = Number(newQuery.size)
       
-      // 搜索二手物品
       searchProducts()
     }, { immediate: true })
     
-    // 获取二手物品列表
-    const fetchProducts = async () => {
-      loading.value = true
-      try {
-        let response
-        
-        // 如果有关键词或筛选条件，使用高级搜索
-        if (filters.keyword || filters.categoryId !== null || 
-            filters.paymentMethod !== null || filters.minPrice !== null || 
-            filters.maxPrice !== null) {
-          const searchParams = {
-            ...filters,
-            current: pagination.current,
-            size: pagination.size
-          }
-          response = await productApi.advancedSearchProducts(searchParams)
-        } else {
-          // 否则使用普通分页查询
-          const params = {
-            current: pagination.current,
-            size: pagination.size
-          }
-          response = await productApi.getProductList(params)
-        }
-        
-        productList.value = response.data.data.records || []
-        total.value = response.data.data.total || 0
-      } catch (error) {
-        console.error('获取二手物品列表失败:', error)
-        productList.value = []
-        total.value = 0
-      } finally {
-        loading.value = false
-      }
-    }
-    
     // 搜索二手物品
     const searchProducts = () => {
-      // 更新URL查询参数
       const query = {
         ...filters,
         current: pagination.current,
         size: pagination.size
       }
       
-      // 移除空值参数
       Object.keys(query).forEach(key => {
         if (query[key] === null || query[key] === '' || query[key] === undefined) {
           delete query[key]
@@ -307,14 +281,12 @@ export default {
       })
       
       router.replace({ query })
-      
-      // 获取二手物品列表
-      fetchProducts()
+      fetchData()
     }
     
     // 处理搜索
     const handleSearch = () => {
-      pagination.current = 1 // 重置页码
+      pagination.current = 1
       searchProducts()
     }
     
@@ -333,21 +305,7 @@ export default {
       searchProducts()
     }
     
-    // 处理每页显示数量变化
-    const handleSizeChange = (size) => {
-      pagination.size = size
-      pagination.current = 1
-      searchProducts()
-    }
-    
-    // 处理页码变化
-    const handleCurrentChange = (current) => {
-      pagination.current = current
-      searchProducts()
-    }
-    
     onMounted(async () => {
-      // 获取分类数据
       if (categories.value.length === 0) {
         await store.dispatch('fetchCategories')
       }

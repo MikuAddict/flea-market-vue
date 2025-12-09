@@ -144,11 +144,10 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Plus, Star, Delete } from '@element-plus/icons-vue'
+import { Plus } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
-import { request } from '@/api/api-client'
 import { productApi } from '@/api'
+import { useFormHandler } from '@/composables/useEventHandlers'
 
 export default {
   name: 'PublishProduct',
@@ -455,7 +454,7 @@ export default {
 .publish-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
+  padding: var(--spacing-xl);
 }
 
 .card-header {

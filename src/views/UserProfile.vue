@@ -378,6 +378,7 @@ import {
 import Layout from '@/components/Layout.vue'
 import ProductCard from '@/components/ProductCard.vue'
 import { userApi, productApi, orderApi, reviewApi } from '@/api'
+import { useFormHandler } from '@/composables/useEventHandlers'
 import {
   formatPrice,
   formatOrderStatus,

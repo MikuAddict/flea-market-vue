@@ -190,14 +190,12 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { Picture, ChatDotRound, Phone } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
 import ProductCard from '@/components/ProductCard.vue'
-import api from '@/api'
 import { productApi, orderApi, reviewApi, statisticsApi } from '@/api'
 import {
   formatPrice,
@@ -208,6 +206,7 @@ import {
   getProductStatusType,
   getUserStatusType
 } from '@/utils/format'
+import { useSingleDataFetch } from '@/composables/useDataFetch'
 
 export default {
   name: 'ProductDetail',
@@ -708,14 +707,14 @@ export default {
 }
 
 .related-products-card {
-  margin-top: 20px;
+  margin-top: var(--spacing-xl);
 }
 
 .empty-reviews {
-  padding: 20px 0;
+  padding: var(--spacing-xl) 0;
 }
 
 .loading-container {
-  padding: 20px;
+  padding: var(--spacing-xl);
 }
 </style>

@@ -198,37 +198,37 @@ export default {
 
 .category-nav .el-menu-item,
 .category-nav .el-sub-menu__title {
-  font-size: 16px;
+  font-size: var(--font-size-base);
   font-weight: 500;
-  color: #606266;
-  transition: color 0.3s;
+  color: var(--text-regular);
+  transition: color var(--transition-base);
 }
 
 .category-nav .el-menu-item:hover,
 .category-nav .el-sub-menu__title:hover {
-  color: #409EFF;
+  color: var(--primary-color);
   background: transparent;
 }
 
 .category-nav .el-menu-item.is-active {
-  color: #409EFF;
-  border-bottom: 2px solid #409EFF;
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
 }
 /* 搜索栏样式 */
 .search-bar {
   max-width: 300px;
-  margin-right: 30px;
+  margin-right: var(--spacing-xl);
 }
 
 .search-input {
-  border-radius: 20px;
+  border-radius: var(--border-radius-round);
 }
 
 /* 用户操作区样式 */
 .user-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-sm);
 }
 
 .user-dropdown {
@@ -238,32 +238,32 @@ export default {
 .user-info {
   display: flex;
   align-items: center;
-  padding: 4px 8px;
-  border-radius: 20px;
-  transition: background-color 0.3s;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-round);
+  transition: background-color var(--transition-base);
 }
 
 .user-info:hover {
-  background-color: #f5f7fa;
+  background-color: var(--bg-light);
 }
 
 .username {
-  margin: 0 8px;
+  margin: 0 var(--spacing-sm);
   font-weight: 500;
-  color: #303133;
+  color: var(--text-primary);
 }
 
 .login-btn,
 .register-btn {
-  border-radius: 20px;
-  padding: 8px 16px;
+  border-radius: var(--border-radius-round);
+  padding: var(--spacing-sm) var(--spacing-base);
   font-weight: 500;
 }
 
 /* 主要内容区域 */
 .main-content {
   margin-top: 60px; /* 为固定导航栏留出空间 */
-  background-color: #f5f7fa;
+  background-color: var(--bg-light);
   padding: 0;
   min-height: calc(100vh - 120px);
 }
@@ -271,17 +271,17 @@ export default {
 .page-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: var(--spacing-xl);
 }
 
 /* 页脚样式 */
 .site-footer {
-  background-color: #fff;
-  padding: 20px 0;
+  background-color: var(--bg-white);
+  padding: var(--spacing-xl) 0;
   text-align: center;
-  color: #909399;
-  font-size: 14px;
-  border-top: 1px solid #e4e7ed;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  border-top: 1px solid var(--border-lighter);
 }
 
 .footer-content {

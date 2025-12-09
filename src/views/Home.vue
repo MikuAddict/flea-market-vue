@@ -1,27 +1,7 @@
 <template>
   <Layout>
     <div class="unified-page-container fade-in">
-      <!-- 轮播图 -->
-      <div class="banner-section">
-        <el-carousel height="400px" class="unified-carousel">
-          <el-carousel-item v-for="(item, index) in banners" :key="index">
-            <div class="banner-container">
-              <img :src="item.image" :alt="item.title" class="banner-image" />
-              <div class="banner-overlay"></div>
-              <div class="banner-content unified-flex unified-flex-col unified-flex-center">
-                <h2 class="banner-title unified-title-xl">{{ item.title }}</h2>
-                <p class="banner-desc unified-text-secondary">{{ item.description }}</p>
-                <div class="banner-actions">
-                  <el-button type="primary" class="unified-button primary-btn" @click="goToProducts">
-                    浏览二手物品
-                  </el-button>
-                </div>
-              </div>
-            </div>
-          </el-carousel-item>
-        </el-carousel>
-      </div>
-
+      
       <!-- 主要内容区域 -->
       <div class="content-wrapper">
         <!-- 最新公告 -->

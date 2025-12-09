@@ -141,18 +141,12 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
-import api from '@/api'
 import { productApi } from '@/api'
-import {
-  formatPrice,
-  formatPaymentMethod,
-  formatProductStatus,
-  formatDate,
-  getProductStatusType
-} from '@/utils/format'
+import { formatPrice, formatPaymentMethod, formatProductStatus, formatDate, getProductStatusType } from '@/utils/format'
+import { useDataFetch } from '@/composables/useDataFetch'
+import { useDeleteHandler, useStatusUpdateHandler } from '@/composables/useEventHandlers'
 
 export default {
   name: 'MyProducts',
@@ -164,17 +158,6 @@ export default {
     const store = useStore()
     const router = useRouter()
     
-    // 响应式数据
-    const loading = ref(false)
-    const products = ref([])
-    const total = ref(0)
-    
-    // 分页信息
-    const pagination = reactive({
-      current: 1,
-      size: 10
-    })
-    
     // 筛选条件
     const filters = reactive({
       status: null,
@@ -184,45 +167,59 @@ export default {
     // 计算属性
     const categories = computed(() => store.state.categories)
     
+    // 使用数据获取组合函数
+    const {
+      loading,
+      data: products,
+      total,
+      pagination,
+      fetchData: fetchProducts,
+      handleCurrentChange,
+      handleSizeChange
+    } = useDataFetch({
+      apiFunction: productApi.getMyProductList,
+      defaultFilters: filters
+    })
+    
+    // 使用删除处理组合函数
+    const { handleDelete } = useDeleteHandler(productApi.deleteProduct, {
+      successMessage: '二手物品删除成功',
+      confirmMessage: (product) => `确定要删除二手物品"${product.productName}"吗？删除后不可恢复。`,
+      successCallback: fetchProducts
+    })
+    
+    // 使用状态更新组合函数
+    const { handleStatusUpdate } = useStatusUpdateHandler(productApi.updateProductStatus, {
+      successMessage: '二手物品状态更新成功',
+      successCallback: fetchProducts
+    })
+    
     // 获取商品图片
     const getProductImage = (product) => {
-      // 处理图片URL，将完整后端地址转换为相对路径
       const processImageUrl = (url) => {
         if (!url) return null
-        
-        // 如果URL包含localhost:7023，转换为相对路径
         if (url.includes('localhost:7023')) {
           return url.replace('http://localhost:7023', '/api')
         }
-        
-        // 如果是相对路径且以images开头，添加/api前缀
         if (url.startsWith('images/') || url.includes('/images/')) {
           return `/api/${url.replace(/^\/?/, '')}`
         }
-        
-        // 如果已经是相对路径（以/api开头），直接返回
         if (url.startsWith('/api/')) {
           return url
         }
-        
-        // 其他情况返回原URL
         return url
       }
       
-      // 优先使用主图
       if (product.mainImageUrl) {
         return processImageUrl(product.mainImageUrl)
       }
-      // 如果没有主图，使用imageUrls数组的第一张图片
       if (product.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
         return processImageUrl(product.imageUrls[0])
       }
-      // 如果imageUrls是字符串（逗号分隔），解析并取第一个
       if (product.imageUrls && typeof product.imageUrls === 'string') {
         const urls = product.imageUrls.split(',').filter(url => url.trim())
         return urls.length > 0 ? processImageUrl(urls[0]) : null
       }
-      // 最后尝试imageUrl字段
       return processImageUrl(product.imageUrl) || null
     }
 
@@ -230,27 +227,6 @@ export default {
     const getCategoryName = (categoryId) => {
       const category = categories.value.find(c => c.id === categoryId)
       return category ? category.name : '未知分类'
-    }
-
-    // 获取二手物品列表
-    const fetchProducts = async () => {
-      loading.value = true
-      try {
-        const response = await productApi.getMyProductList({
-          current: pagination.current,
-          size: pagination.size,
-          ...filters
-        })
-        
-        products.value = response.data.data.records || []
-        total.value = response.data.data.total || 0
-      } catch (error) {
-        console.error('获取二手物品列表失败:', error)
-        products.value = []
-        total.value = 0
-      } finally {
-        loading.value = false
-      }
     }
     
     // 查看二手物品详情
@@ -267,61 +243,19 @@ export default {
     }
     
     // 更改二手物品状态
-    const changeStatus = async (productId, status) => {
-      try {
-        await api.product.updateProductStatus(productId, status)
-        ElMessage.success('二手物品状态更新成功')
-        fetchProducts()
-      } catch (error) {
-        console.error('更新二手物品状态失败:', error)
-        ElMessage.error('更新二手物品状态失败')
-      }
+    const changeStatus = (productId, status) => {
+      handleStatusUpdate(productId, status)
     }
     
     // 删除二手物品
-    const deleteProduct = async (product) => {
-      try {
-        await ElMessageBox.confirm(
-          `确定要删除二手物品"${product.productName}"吗？删除后不可恢复。`,
-          '删除确认',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        )
-        
-        await api.product.deleteProduct(product.id)
-        ElMessage.success('二手物品删除成功')
-        fetchProducts()
-      } catch (error) {
-        if (error !== 'cancel') {
-          console.error('删除二手物品失败:', error)
-          ElMessage.error('删除二手物品失败')
-        }
-      }
-    }
-    
-    // 处理每页显示数量变化
-    const handleSizeChange = (size) => {
-      pagination.size = size
-      pagination.current = 1
-      fetchProducts()
-    }
-    
-    // 处理页码变化
-    const handleCurrentChange = (current) => {
-      pagination.current = current
-      fetchProducts()
+    const deleteProduct = (product) => {
+      handleDelete(product.id, { product })
     }
     
     onMounted(async () => {
-      // 获取分类数据
       if (categories.value.length === 0) {
         await store.dispatch('fetchCategories')
       }
-      
-      // 获取二手物品列表
       fetchProducts()
     })
     
@@ -355,7 +289,7 @@ export default {
 .my-products-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: var(--spacing-xl);
 }
 
 .card-header {
@@ -365,16 +299,16 @@ export default {
 }
 
 .filter-section {
-  margin-bottom: 20px;
-  padding: 15px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-base);
+  background-color: var(--bg-light);
+  border-radius: var(--border-radius-base);
 }
 
 .product-image {
   width: 60px;
   height: 60px;
-  border-radius: 4px;
+  border-radius: var(--border-radius-base);
   overflow: hidden;
 }
 
@@ -390,18 +324,45 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f5f7fa;
-  color: #c0c4cc;
+  background-color: var(--bg-light);
+  color: var(--text-placeholder);
   font-size: 24px;
 }
 
 .loading-container, .empty-container {
-  padding: 40px 0;
+  padding: var(--spacing-xl) 0;
 }
 
 .pagination-container {
   display: flex;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: var(--spacing-lg);
+}
+
+/* Element Plus 组件样式优化 */
+.el-table {
+  --el-table-border-color: var(--border-light);
+  --el-table-header-bg-color: var(--bg-lighter);
+}
+
+.el-card {
+  --el-card-border-radius: var(--border-radius-base);
+}
+
+.el-form-item {
+  margin-bottom: var(--spacing-base);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .my-products-container {
+    padding: var(--spacing-base);
+  }
+  
+  .card-header {
+    flex-direction: column;
+    gap: var(--spacing-base);
+    align-items: flex-start;
+  }
 }
 </style>

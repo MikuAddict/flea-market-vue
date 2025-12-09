@@ -10,8 +10,6 @@
           </div>
         </div>
         
-
-        
         <div class="news-content">
           <div v-html="formatContent(news.content)"></div>
         </div>
@@ -30,13 +28,13 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { watch } from 'vue'
+import { useRoute } from 'vue-router'
 import Layout from '@/components/Layout.vue'
 import newsApi from '@/api/news'
 import { formatDate } from '@/utils/format'
-import { formatIdForApi } from '@/utils/numberPrecision'
+import { useSingleDataFetch } from '@/composables/useDataFetch'
+import { useNavigation } from '@/composables/useEventHandlers'
 
 export default {
   name: 'NewsDetail',
@@ -45,28 +43,21 @@ export default {
   },
   setup() {
     const route = useRoute()
-    const router = useRouter()
     
-    // 响应式数据
-    const loading = ref(true)
-    const news = ref(null)
+    // 使用单条数据获取组合函数
+    const {
+      loading,
+      data: news,
+      fetchData: fetchNewsDetail
+    } = useSingleDataFetch({
+      apiFunction: newsApi.getNewsDetail,
+      errorMessage: '新闻不存在或已被删除'
+    })
     
-    // 获取新闻详情
-    const fetchNewsDetail = async (newsId) => {
-      try {
-        loading.value = true
-        // 使用精度处理函数，确保大数字ID的准确性
-        const formattedId = formatIdForApi(newsId)
-        const response = await newsApi.getNewsDetail(formattedId)
-        news.value = response.data.data
-      } catch (error) {
-        console.error('获取新闻详情失败:', error)
-        ElMessage.error('新闻不存在或已被删除')
-        router.push('/news')
-      } finally {
-        loading.value = false
-      }
-    }
+    // 使用导航组合函数
+    const { navigateTo } = useNavigation({
+      basePath: '/'
+    })
     
     // 格式化内容，将换行符转换为HTML换行标签
     const formatContent = (content) => {
@@ -77,8 +68,11 @@ export default {
     // 监听路由参数变化
     watch(() => route.params.id, (newId) => {
       if (newId) {
-        // 不使用parseInt，直接传递字符串，保持精度
-        fetchNewsDetail(newId)
+        // 直接传递字符串，保持精度
+        fetchNewsDetail(newId).catch(() => {
+          // 错误处理已在组合函数中处理
+          navigateTo('/news')
+        })
       }
     }, { immediate: true })
     
@@ -96,11 +90,7 @@ export default {
 .news-detail-container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 20px;
-}
-
-.news-card {
-  padding: 20px;
+  padding: var(--spacing-xl);
 }
 
 .news-header {
@@ -133,11 +123,11 @@ export default {
 
 .news-actions {
   text-align: center;
-  padding-top: 20px;
-  border-top: 1px solid #ebeef5;
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid var(--border-light);
 }
 
 .loading-container {
-  padding: 20px;
+  padding: var(--spacing-xl);
 }
 </style>

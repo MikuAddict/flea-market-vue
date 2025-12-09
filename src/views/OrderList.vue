@@ -135,12 +135,12 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
-import api from '@/api'
+import { orderApi } from '@/api'
 import {
   formatPrice,
   formatPaymentMethod,
@@ -148,6 +148,8 @@ import {
   formatDate,
   getOrderStatusType
 } from '@/utils/format'
+import { useDataFetchWithIdPrecision } from '@/composables/useDataFetch'
+import { useDeleteHandler } from '@/composables/useEventHandlers'
 
 export default {
   name: 'OrderList',
@@ -377,7 +379,7 @@ export default {
 .order-list-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: var(--spacing-xl);
 }
 
 .card-header {
@@ -387,33 +389,33 @@ export default {
 }
 
 .filter-section {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .loading-container, .empty-container {
-  padding: 40px 0;
+  padding: var(--spacing-xxl) 0;
 }
 
 .order-list {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .order-item {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .order-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .order-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--spacing-sm);
 }
 
 .order-id {
@@ -421,26 +423,26 @@ export default {
 }
 
 .order-time {
-  color: #909399;
-  font-size: 14px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .order-content {
   display: flex;
   justify-content: space-between;
-  padding: 15px 0;
+  padding: var(--spacing-base) 0;
 }
 
 .product-info {
   display: flex;
-  gap: 15px;
+  gap: var(--spacing-base);
   flex: 1;
 }
 
 .product-image {
   width: 80px;
   height: 80px;
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
   overflow: hidden;
 }
 
@@ -456,20 +458,20 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f5f7fa;
-  color: #c0c4cc;
-  font-size: 24px;
+  background-color: var(--bg-light);
+  color: var(--text-placeholder);
+  font-size: var(--font-size-xl);
 }
 
 .product-details h4 {
-  margin: 0 0 5px 0;
-  font-size: 16px;
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-base);
 }
 
 .product-details p {
-  margin: 0 0 5px 0;
-  color: #606266;
-  font-size: 14px;
+  margin: 0 0 var(--spacing-xs) 0;
+  color: var(--text-regular);
+  font-size: var(--font-size-sm);
 }
 
 .order-amount {
@@ -481,38 +483,38 @@ export default {
 }
 
 .amount-label {
-  font-size: 14px;
-  color: #606266;
+  font-size: var(--font-size-sm);
+  color: var(--text-regular);
 }
 
 .amount-value {
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   font-weight: bold;
-  color: #f56c6c;
-  margin-top: 5px;
+  color: var(--danger-color);
+  margin-top: var(--spacing-xs);
 }
 
 .order-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 10px;
-  border-top: 1px solid #f0f0f0;
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-light);
 }
 
 .order-seller {
-  color: #606266;
-  font-size: 14px;
+  color: var(--text-regular);
+  font-size: var(--font-size-sm);
 }
 
 .order-actions {
   display: flex;
-  gap: 10px;
+  gap: var(--spacing-sm);
 }
 
 .pagination-container {
   display: flex;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: var(--spacing-xl);
 }
 </style>

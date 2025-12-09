@@ -64,10 +64,6 @@
                 >
                   {{ getActionText() }}
                 </el-button>
-                <el-button size="large" @click="contactSeller">
-                  <el-icon><ChatDotRound /></el-icon>
-                  联系卖家
-                </el-button>
               </div>
               <div class="product-notice" v-else-if="!isLoggedIn">
                 <el-alert title="请先登录" type="info" show-icon :closable="false">
@@ -75,109 +71,94 @@
                   <el-button type="text" @click="$router.push('/register')">注册账号</el-button>
                 </el-alert>
               </div>
+              
+              <!-- 卖家信息显示在购买按钮旁边或单独显示 -->
+              <div class="seller-contact-inline" v-if="product.user">
+                <div class="seller-contact-item">
+                  <el-avatar 
+                    :size="24" 
+                    :src="product.user.userAvatar" 
+                    class="seller-mini-avatar clickable"
+                    @click="goToUserProfile(product.user.id)"
+                  >
+                    {{ product.user.userName?.charAt(0) }}
+                  </el-avatar>
+                  <span class="seller-name clickable" @click="goToUserProfile(product.user.id)">
+                    {{ product.user.userName }}
+                  </span>
+                </div>
+              </div>
             </div>
           </el-card>
         </el-col>
 
-        <!-- 右侧卖家信息 -->
         <el-col :xs="24" :lg="10">
-          <el-card class="seller-info-card" v-if="product.user">
-            <template #header>
-              <div class="card-header">
-                <span>卖家信息</span>
-              </div>
-            </template>
-            <div class="seller-profile">
-              <el-avatar :size="80" :src="product.user.userAvatar">
-                {{ product.user.userName?.charAt(0) }}
-              </el-avatar>
-              <div class="seller-details">
-                <h3>{{ product.user.userName }}</h3>
-                <el-tag :type="getUserStatusType(product.user.userStatus)" size="small">
-                  {{ formatUserStatus(product.user.userStatus) }}
-                </el-tag>
-                <div class="seller-phone" v-if="product.user.userPhone">
-                  <el-icon><Phone /></el-icon>
-                  {{ product.user.userPhone }}
-                </div>
-              </div>
-            </div>
-            <div class="seller-stats">
-              <el-row :gutter="10">
-                <el-col :span="8">
-                  <div class="stat-item">
-                    <div class="stat-value">{{ product.user.point || 0 }}</div>
-                    <div class="stat-label">积分</div>
-                  </div>
-                </el-col>
-                <el-col :span="8">
-                  <div class="stat-item">
-                    <div class="stat-value">{{ sellerStats.published || 0 }}</div>
-                    <div class="stat-label">发布</div>
-                  </div>
-                </el-col>
-                <el-col :span="8">
-                  <div class="stat-item">
-                    <div class="stat-value">{{ sellerStats.completed || 0 }}</div>
-                    <div class="stat-label">成交</div>
-                  </div>
-                </el-col>
-              </el-row>
-            </div>
-            <div class="seller-actions">
-              <el-button plain style="width: 100%" @click="viewSellerProducts">
-                查看Ta的二手物品
-              </el-button>
-            </div>
-          </el-card>
-
-          <!-- 二手物品评价 -->
+          <!-- 二手物品留言 -->
           <el-card class="review-card" v-if="product.id">
             <template #header>
               <div class="card-header">
-                <span>二手物品评价</span>
-                <el-link type="primary" @click="showAllReviews" v-if="reviewCount > 0">
-                  查看全部({{ reviewCount }})
-                </el-link>
+                <span>二手物品留言</span>
               </div>
             </template>
-            <div v-if="reviews.length === 0" class="empty-reviews">
-              <el-empty description="暂无评价" />
+            <div v-if="comments.length === 0" class="empty-reviews">
+              <el-empty description="暂无留言" />
             </div>
             <div v-else>
-              <div class="review-summary">
-                <el-rate v-model="averageRating" disabled text-color="#ff9900" />
-                <span class="rating-text">{{ averageRating }}分 ({{ reviewCount }}人评价)</span>
-              </div>
-              <div class="review-list">
-                <div v-for="review in reviews" :key="review.id" class="review-item">
-                  <div class="review-header">
-                    <el-avatar :size="30">{{ review.userId }}</el-avatar>
-                    <div class="review-info">
-                      <div class="review-user">用户{{ review.userId }}</div>
-                      <el-rate v-model="review.rating" disabled size="small" />
+              <div class="review-list-container">
+                <div class="review-list">
+                  <div v-for="comment in comments" :key="comment.id" class="review-item">
+                    <div class="review-header">
+                      <el-avatar :size="30" :src="comment.userAvatar">{{ comment.userName?.charAt(0) }}</el-avatar>
+                      <div class="review-info">
+                        <div class="review-user">{{ comment.userName }}</div>
+                      </div>
+                      <div class="review-time">{{ formatDate(comment.createTime, 'YYYY-MM-DD') }}</div>
                     </div>
-                    <div class="review-time">{{ formatDate(review.createTime, 'YYYY-MM-DD') }}</div>
+                    <div class="review-content">{{ comment.content }}</div>
                   </div>
-                  <div class="review-content">{{ review.content }}</div>
                 </div>
               </div>
+            </div>
+            
+            <!-- 添加留言表单 -->
+            <div class="add-comment-form" v-if="isLoggedIn">
+              <el-form :model="commentForm" ref="commentFormRef" @submit.prevent="submitComment">
+                <el-form-item prop="content" :rules="[{ required: true, message: '请输入留言内容', trigger: 'blur' }]">
+                  <el-input
+                    type="textarea"
+                    v-model="commentForm.content"
+                    placeholder="请输入您的留言..."
+                    :rows="3"
+                    maxlength="500"
+                    show-word-limit
+                  ></el-input>
+                </el-form-item>
+                <el-form-item>
+                  <el-button 
+                    type="primary" 
+                    @click="submitComment" 
+                    :loading="commentSubmitting"
+                    size="small"
+                  >
+                    发表留言
+                  </el-button>
+                </el-form-item>
+              </el-form>
+            </div>
+            <div class="login-prompt" v-else>
+              <el-alert
+                title="请登录后发表留言"
+                type="info"
+                show-icon
+                :closable="false"
+              >
+                <el-button type="text" @click="$router.push('/login')">立即登录</el-button>
+                <el-button type="text" @click="$router.push('/register')">注册账号</el-button>
+              </el-alert>
             </div>
           </el-card>
         </el-col>
       </el-row>
-
-      <!-- 相关二手物品推荐 -->
-      <el-card class="related-products-card" v-if="relatedProducts.length > 0">
-        <template #header>
-          <span>相关推荐</span>
-        </template>
-        <el-row :gutter="20">
-          <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="item in relatedProducts" :key="item.id">
-            <ProductCard :product="item" />
-          </el-col>
-        </el-row>
-      </el-card>
     </div>
 
     <div v-else class="loading-container">
@@ -191,9 +172,10 @@ import { ref, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router'
 import { Picture, ChatDotRound, Phone } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import Layout from '@/components/Layout.vue'
 import ProductCard from '@/components/ProductCard.vue'
-import { productApi, orderApi, reviewApi, statisticsApi } from '@/api'
+import { productApi, orderApi, reviewApi, statisticsApi, commentApi, userApi } from '@/api'
 import {
   formatPrice,
   formatPaymentMethod,
@@ -228,6 +210,10 @@ export default {
     const relatedProducts = ref([])
     const sellerStats = ref({ published: 0, completed: 0 })
     const currentImageIndex = ref(0)
+    const comments = ref([]) // 添加留言数据
+    const commentForm = ref({ content: '' }) // 留言表单
+    const commentFormRef = ref(null) // 留言表单引用
+    const commentSubmitting = ref(false) // 留言提交状态
     
     // 处理图片URL，将完整后端地址转换为相对路径
     const processImageUrl = (url) => {
@@ -288,20 +274,21 @@ export default {
         const response = await productApi.getProductById(idStr)
         product.value = response.data.data
         
-        // 获取二手物品评价统计
-        const statsResponse = await reviewApi.getReviewStatistics(productId.value)
-        const stats = statsResponse.data.data
-        averageRating.value = stats.averageRating || 0
-        reviewCount.value = stats.totalReviews || 0
-        
-        // 获取评价列表（最多显示3条）
-        if (reviewCount.value > 0) {
-          const reviewsResponse = await reviewApi.getReviewListByProduct(productId.value, {
-            current: 1,
-            size: 3
-          })
-          reviews.value = reviewsResponse.data.data.records || []
+        // 如果商品信息中没有完整的用户信息，则根据用户ID获取用户视图
+        if (product.value.userId && !product.value.user) {
+          try {
+            const userResponse = await userApi.getUserVOById(product.value.userId)
+            if (userResponse.data.code === 200) {
+              product.value.user = userResponse.data.data
+            }
+          } catch (userError) {
+            console.error('获取卖家信息失败:', userError)
+          }
         }
+        
+        // 获取二手物品留言
+        const commentsResponse = await commentApi.getCommentTree(productId.value)
+        comments.value = commentsResponse.data.data || []
         
         // 获取卖家统计信息
         if (product.value.user) {
@@ -345,7 +332,8 @@ export default {
     // 获取相关二手物品
     const fetchRelatedProducts = async (categoryId) => {
       try {
-        const response = await productApi.getProductListByCategory(categoryId, {
+        const response = await productApi.advancedSearchProducts({
+          categoryId: categoryId,
           current: 1,
           size: 4
         })
@@ -387,10 +375,15 @@ export default {
       })
     }
     
+    // 跳转到用户个人资料页面
+    const goToUserProfile = (userId) => {
+      router.push(`/user/${userId}`)
+    }
+    
     // 查看所有评价
     const showAllReviews = () => {
       // 这里可以跳转到评价页面或打开对话框
-      ElMessage.info('查看所有评价功能正在开发中')
+      ElMessage.info('查看所有留言功能正在开发中')
     }
     
     // 获取操作按钮文本
@@ -418,6 +411,43 @@ export default {
       console.log('图片加载失败')
     }
     
+    // 提交留言
+    const submitComment = async () => {
+      if (!commentFormRef.value) return
+      
+      try {
+        await commentFormRef.value.validate()
+        commentSubmitting.value = true
+        
+        const commentData = {
+          productId: productId.value,
+          content: commentForm.value.content,
+          // parentId 为 null 表示一级留言，非 null 表示回复的留言
+          parentId: null,
+          // replyUserId 为 null 表示不是回复具体用户
+          replyUserId: null
+        }
+        
+        const response = await commentApi.addComment(commentData)
+        
+        if (response.data.code === 200) {
+          ElMessage.success('留言发表成功')
+          commentForm.value.content = '' // 清空表单
+          
+          // 重新获取留言列表
+          const commentsResponse = await commentApi.getCommentTree(productId.value)
+          comments.value = commentsResponse.data.data || []
+        } else {
+          ElMessage.error(response.data.message || '留言发表失败')
+        }
+      } catch (error) {
+        console.error('留言发表失败:', error)
+        ElMessage.error('留言发表失败')
+      } finally {
+        commentSubmitting.value = false
+      }
+    }
+    
     // 监听路由参数变化
     watch(() => route.params.id, () => {
       if (route.params.id) {
@@ -431,6 +461,10 @@ export default {
       averageRating,
       reviewCount,
       reviews,
+      comments, // 添加comments
+      commentForm, // 添加commentForm
+      commentFormRef, // 添加commentFormRef
+      commentSubmitting, // 添加commentSubmitting
       relatedProducts,
       sellerStats,
       productImages,
@@ -448,7 +482,9 @@ export default {
       createOrder,
       contactSeller,
       viewSellerProducts,
+      goToUserProfile, // 添加 goToUserProfile
       showAllReviews,
+      submitComment, // 添加submitComment
       getActionText,
       handleImageError
     }
@@ -462,8 +498,32 @@ export default {
   margin: 0 auto;
 }
 
-.product-info-card {
+.product-info-card,
+.review-card {
+  height: auto;
+  display: block;
+}
+
+.seller-info-card, .review-card {
   margin-bottom: 20px;
+  flex: none;
+  display: block;
+}
+
+.seller-info-card :deep(.el-card__body),
+.review-card :deep(.el-card__body) {
+  flex: none;
+  display: block;
+}
+
+.review-card :deep(.el-card__body) > div {
+  flex: none;
+  display: block;
+}
+
+.review-card :deep(.el-card__body) > div > div {
+  flex: none;
+  display: block;
 }
 
 .product-gallery {
@@ -582,14 +642,55 @@ export default {
   display: flex;
   gap: 15px;
   margin-bottom: 20px;
+  align-items: center;
 }
 
-.product-notice {
-  margin-bottom: 20px;
+/* 卖家联系方式样式（内联版） */
+.seller-contact-inline {
+  display: flex;
+  align-items: center;
+}
+
+.seller-contact-item {
+  display: flex;
+  align-items: center;
+}
+
+.seller-mini-avatar {
+  margin-right: 8px;
+}
+
+.seller-name {
+  font-size: 14px;
+  color: #606266;
+  margin-right: 8px;
+}
+
+.seller-phone-inline {
+  font-size: 14px;
+  color: #909399;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  color: #409eff;
 }
 
 .seller-info-card, .review-card {
   margin-bottom: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.seller-info-card :deep(.el-card__body),
+.review-card :deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-header {
@@ -660,8 +761,14 @@ export default {
   color: #606266;
 }
 
+.review-list-container {
+  flex: none;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
 .review-list {
-  margin-top: 15px;
+  max-height: none;
 }
 
 .review-item {
@@ -713,5 +820,18 @@ export default {
 
 .loading-container {
   padding: var(--spacing-xl);
+}
+
+/* 留言表单样式 */
+.add-comment-form {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.login-prompt {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
 }
 </style>

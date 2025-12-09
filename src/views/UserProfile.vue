@@ -9,93 +9,46 @@
       <el-row :gutter="24">
         <!-- 左侧个人信息卡片 -->
         <el-col :xs="24" :md="8" :lg="7">
-          <el-card class="unified-card profile-card fade-in">
-            <template #header>
-              <div class="unified-flex unified-flex-between">
-                <h3 class="unified-title-base">个人信息</h3>
-                <el-button 
-                  type="text" 
-                  @click="toggleEditMode"
-                  class="edit-btn"
+          <UserBasicInfoCard 
+            :user="user" 
+            :edit-mode="editMode"
+            :avatar-file="avatarFile"
+            :products-count="myProducts.length"
+            :orders-count="orders.length"
+            :show-uploaded-tip="true"
+          >
+            <template #actions>
+              <el-button 
+                type="text" 
+                @click="toggleEditMode"
+                class="edit-btn"
+              >
+                <el-icon v-if="!editMode"><Edit /></el-icon>
+                <el-icon v-else><Close /></el-icon>
+                {{ editMode ? '取消' : '编辑' }}
+              </el-button>
+            </template>
+            
+            <template #avatar-overlay v-if="editMode">
+              <div class="avatar-overlay">
+                <el-upload
+                  class="avatar-uploader"
+                  :auto-upload="false"
+                  :show-file-list="false"
+                  :on-change="handleAvatarChange"
+                  :before-upload="beforeAvatarUpload"
+                  accept="image/jpeg, image/png"
                 >
-                  <el-icon v-if="!editMode"><Edit /></el-icon>
-                  <el-icon v-else><Close /></el-icon>
-                  {{ editMode ? '取消' : '编辑' }}
-                </el-button>
+                  <div class="upload-icon">
+                    <el-icon><Camera /></el-icon>
+                    <p>更换头像</p>
+                  </div>
+                </el-upload>
               </div>
             </template>
             
-            <div class="profile-content">
-              <div class="avatar-section unified-flex unified-flex-center">
-                <div class="avatar-container">
-                  <el-avatar :size="100" :src="user.userAvatar" class="user-avatar">
-                    <span class="avatar-text">{{ user.userName?.charAt(0) }}</span>
-                  </el-avatar>
-                  <div class="avatar-overlay" v-if="editMode">
-                    <el-upload
-                      class="avatar-uploader"
-                      :action="uploadUrl"
-                      :headers="uploadHeaders"
-                      :show-file-list="false"
-                      :on-success="handleAvatarSuccess"
-                      :before-upload="beforeAvatarUpload"
-                    >
-                      <div class="upload-icon">
-                        <el-icon><Camera /></el-icon>
-                        <p>更换头像</p>
-                      </div>
-                    </el-upload>
-                  </div>
-                </div>
-              </div>
-              
-              <div v-if="!editMode" class="profile-info unified-flex unified-flex-col">
-                <div class="user-details unified-flex unified-flex-center">
-                  <div class="user-info unified-flex unified-flex-col">
-                    <h2 class="user-name unified-title-base">{{ user.userName }}</h2>
-                    <div class="unified-tag unified-tag-primary user-role">
-                      {{ formatUserRole(user.userRole) }}
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="info-stats unified-flex unified-flex-between">
-                  <div class="stat-item unified-flex unified-flex-col unified-flex-center">
-                    <span class="stat-value">{{ user.point || 0 }}</span>
-                    <span class="stat-label">积分</span>
-                  </div>
-                  <div class="stat-divider"></div>
-                  <div class="stat-item unified-flex unified-flex-col unified-flex-center">
-                    <span class="stat-value">{{ myProducts.length }}</span>
-                    <span class="stat-label">物品</span>
-                  </div>
-                  <div class="stat-divider"></div>
-                  <div class="stat-item unified-flex unified-flex-col unified-flex-center">
-                    <span class="stat-value">{{ orders.length }}</span>
-                    <span class="stat-label">订单</span>
-                  </div>
-                </div>
-                
-                <el-divider class="unified-divider" />
-                
-                <div class="info-details">
-                  <div class="detail-item">
-                    <span class="detail-label unified-text-secondary">账号</span>
-                    <span class="detail-value">{{ user.userAccount }}</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label unified-text-secondary">手机号</span>
-                    <span class="detail-value">{{ user.userPhone || '未设置' }}</span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label unified-text-secondary">注册时间</span>
-                    <span class="detail-value">{{ formatDate(user.createTime) }}</span>
-                  </div>
-                </div>
-              </div>
-              
+            <template #edit-form="{ user }" v-if="editMode">
               <el-form 
-                v-else 
                 :model="profileForm" 
                 :rules="profileRules" 
                 ref="profileFormRef" 
@@ -127,8 +80,8 @@
                   </el-button>
                 </el-form-item>
               </el-form>
-            </div>
-          </el-card>
+            </template>
+          </UserBasicInfoCard>
         </el-col>
         
         <!-- 右侧内容区域 -->
@@ -144,9 +97,14 @@
                   </div>
                 </template>
                 
-                <div class="tab-content">
-                  <div class="content-header unified-flex unified-flex-between">
-                    <h3 class="unified-title-base">我的二手物品</h3>
+                <UserProductsTab 
+                  :products="myProducts" 
+                  title="我的二手物品"
+                  empty-text="暂无发布的二手物品"
+                  :show-view-more="true"
+                  @view-more="$router.push('/my-products')"
+                >
+                  <template #header-actions>
                     <el-button 
                       type="primary" 
                       class="unified-button unified-button-primary"
@@ -155,11 +113,9 @@
                       <el-icon><Plus /></el-icon>
                       发布二手物品
                     </el-button>
-                  </div>
+                  </template>
                   
-                  <div v-if="myProducts.length === 0" class="empty-content unified-flex unified-flex-col unified-flex-center">
-                    <el-icon size="60" color="var(--text-placeholder)"><Box /></el-icon>
-                    <p class="empty-text">暂无发布的二手物品</p>
+                  <template #empty-actions>
                     <el-button 
                       type="primary" 
                       class="unified-button unified-button-primary"
@@ -167,29 +123,8 @@
                     >
                       发布第一个二手物品
                     </el-button>
-                  </div>
-                  
-                  <div v-else class="products-grid unified-grid unified-grid-3">
-                    <div 
-                      class="product-item fade-in"
-                      v-for="(product, index) in myProducts" 
-                      :key="product.id"
-                      :style="{ animationDelay: `${index * 0.05}s` }"
-                    >
-                      <ProductCard :product="product" />
-                    </div>
-                  </div>
-                  
-                  <div class="view-more-container unified-flex unified-flex-center" v-if="myProducts.length > 0">
-                    <el-button 
-                      type="primary" 
-                      class="unified-button unified-button-outline"
-                      @click="$router.push('/my-products')"
-                    >
-                      查看全部
-                    </el-button>
-                  </div>
-                </div>
+                  </template>
+                </UserProductsTab>
               </el-tab-pane>
               
               <!-- 我的订单 -->
@@ -300,58 +235,13 @@
                   </div>
                 </template>
                 
-                <div class="tab-content">
-                  <div class="content-header">
-                    <h3 class="unified-title-base">我的评价</h3>
-                  </div>
-                  
-                  <div v-if="myReviews.length === 0" class="empty-content unified-flex unified-flex-col unified-flex-center">
-                    <el-icon size="60" color="var(--text-placeholder)"><Star /></el-icon>
-                    <p class="empty-text">暂无评价</p>
-                  </div>
-                  
-                  <div v-else class="reviews-list">
-                    <div 
-                      class="review-item fade-in"
-                      v-for="(review, index) in myReviews" 
-                      :key="review.id"
-                      :style="{ animationDelay: `${index * 0.05}s` }"
-                    >
-                      <el-card class="unified-card review-card">
-                        <div class="review-header unified-flex unified-flex-between">
-                          <div class="rating">
-                            <el-rate v-model="review.rating" disabled show-score />
-                          </div>
-                          <span class="review-time unified-text-secondary">{{ formatDate(review.createTime) }}</span>
-                        </div>
-                        
-                        <div class="review-content">
-                          <p class="review-text">{{ review.content }}</p>
-                        </div>
-                        
-                        <div class="review-product unified-flex unified-flex-center">
-                          <span class="unified-text-secondary">二手物品：</span>
-                          <el-link 
-                            type="primary" 
-                            @click="goToProduct(review.productId)"
-                            class="product-link"
-                          >
-                            {{ review.productName || '查看二手物品' }}
-                          </el-link>
-                        </div>
-                      </el-card>
-                    </div>
-                  </div>
-                  
-                  <div class="view-more-container unified-flex unified-flex-center" v-if="myReviews.length > 0">
-                    <el-button 
-                      type="primary" 
-                      class="unified-button unified-button-outline"
-                    >
-                      查看全部评价
-                    </el-button>
-                  </div>
-                </div>
+                <UserReviewsTab
+                  :reviews="myReviews"
+                  title="我的评价"
+                  empty-text="暂无评价"
+                  :show-view-more="true"
+                  @go-to-product="goToProduct"
+                />
               </el-tab-pane>
             </el-tabs>
           </el-card>
@@ -376,7 +266,9 @@ import {
   Star 
 } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
-import ProductCard from '@/components/ProductCard.vue'
+import UserBasicInfoCard from '@/components/UserBasicInfoCard.vue'
+import UserProductsTab from '@/components/UserProductsTab.vue'
+import UserReviewsTab from '@/components/UserReviewsTab.vue'
 import { userApi, productApi, orderApi, reviewApi } from '@/api'
 import { useFormHandler } from '@/composables/useEventHandlers'
 import {
@@ -394,7 +286,9 @@ export default {
   name: 'UserProfile',
   components: {
     Layout,
-    ProductCard
+    UserBasicInfoCard,
+    UserProductsTab,
+    UserReviewsTab
   },
   setup() {
     const store = useStore()
@@ -408,6 +302,8 @@ export default {
     const updating = ref(false)
     const activeTab = ref('products')
     const orderStatus = ref(null)
+    const avatarUrl = ref('') // 用于暂存新上传的头像URL
+    const avatarFile = ref(null) // 用于暂存新上传的头像文件对象
     
     // 用户数据
     const user = computed(() => store.state.user || {})
@@ -433,7 +329,7 @@ export default {
     }
     
     // 头像上传相关
-    const uploadUrl = '/api/image/upload/avatar'
+    const uploadUrl = '/api/image/avatar'
     const uploadHeaders = computed(() => {
       const token = store.state.token || localStorage.getItem('token')
       return token ? {
@@ -505,6 +401,13 @@ export default {
       editMode.value = !editMode.value
       if (editMode.value) {
         initProfileForm()
+        // 进入编辑模式时清空暂存的头像URL和文件
+        avatarUrl.value = ''
+        avatarFile.value = null
+      } else {
+        // 退出编辑模式时也清空暂存的头像URL和文件
+        avatarUrl.value = ''
+        avatarFile.value = null
       }
     }
 
@@ -516,16 +419,57 @@ export default {
         await profileFormRef.value.validate()
         updating.value = true
         
-        const result = await store.dispatch('updateProfile', profileForm)
+        let avatarUrlToUpdate = null
+        
+        // 如果有新选择的头像文件，则先上传头像
+        if (avatarFile.value) {
+          const formData = new FormData()
+          formData.append('file', avatarFile.value)
+          
+          try {
+            const uploadResponse = await fetch('/api/image/avatar', {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'Authorization': `Bearer ${store.state.token}`
+              }
+            })
+            
+            const uploadResult = await uploadResponse.json()
+            
+            if (uploadResult.code === 200) {
+              avatarUrlToUpdate = uploadResult.data.originalUrl
+            } else {
+              throw new Error(uploadResult.message || '头像上传失败')
+            }
+          } catch (uploadError) {
+            ElMessage.error('头像上传失败: ' + uploadError.message)
+            return
+          }
+        }
+        
+        // 准备要提交的用户数据
+        const profileData = { ...profileForm }
+        
+        // 如果有新上传的头像URL，则添加到提交数据中
+        if (avatarUrlToUpdate) {
+          profileData.userAvatar = avatarUrlToUpdate
+        }
+        
+        const result = await store.dispatch('updateProfile', profileData)
         
         if (result.success) {
           ElMessage.success('个人信息更新成功')
+          // 清空暂存的头像URL和文件
+          avatarUrl.value = ''
+          avatarFile.value = null
           editMode.value = false
         } else {
           ElMessage.error(result.message)
         }
       } catch (error) {
         console.error('更新个人信息失败:', error)
+        ElMessage.error('更新个人信息失败: ' + error.message)
       } finally {
         updating.value = false
       }
@@ -551,12 +495,25 @@ export default {
       return classMap[status] || 'info'
     }
     
+    // 处理头像文件选择
+    const handleAvatarChange = (file) => {
+      // 暂存文件对象
+      avatarFile.value = file.raw
+      
+      // 生成本地预览URL
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        avatarUrl.value = e.target.result
+      }
+      reader.readAsDataURL(avatarFile.value)
+    }
+    
     // 头像上传成功
     const handleAvatarSuccess = (res) => {
       if (res.code === 200) {
         ElMessage.success('头像上传成功')
-        // 更新本地用户头像
-        store.state.user.userAvatar = res.data.originalUrl
+        // 暂存头像URL，不立即更新用户信息
+        avatarUrl.value = res.data.originalUrl
       } else {
         ElMessage.error(res.message || '头像上传失败')
       }
@@ -574,7 +531,8 @@ export default {
         ElMessage.error('上传头像图片大小不能超过 2MB!')
       }
       
-      return isJPG && isLt2M
+      // 阻止自动上传
+      return false
     }
     
     // 查看订单详情
@@ -641,8 +599,8 @@ export default {
       profileForm,
       profileRules,
       profileFormRef,
-      uploadUrl,
-      uploadHeaders,
+      avatarUrl,
+      avatarFile,
       formatPrice,
       formatOrderStatus,
       formatUserRole,
@@ -653,9 +611,9 @@ export default {
       formatPaymentMethod,
       toggleEditMode,
       updateProfile,
+      handleAvatarChange,
       handleTabClick,
       getOrderTagClass,
-      handleAvatarSuccess,
       beforeAvatarUpload,
       viewOrder,
       cancelOrder,
@@ -743,6 +701,12 @@ export default {
 .upload-icon p {
   margin-top: var(--spacing-xs);
   font-size: var(--font-size-xs);
+}
+
+/* 新增的已上传头像提示样式 */
+.avatar-uploaded-tip {
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-xs);
 }
 
 /* 个人信息详情样式 */

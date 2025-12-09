@@ -189,6 +189,7 @@ import imageApi from './image'
 import adminApi from './admin'
 import cartApi from './cart'
 import tradeApi from './trade'
+import commentApi from './comment'
 
 // 导出所有API模块
 export {
@@ -202,7 +203,8 @@ export {
   imageApi,
   adminApi,
   cartApi,
-  tradeApi
+  tradeApi,
+  commentApi
 }
 
 export default {
@@ -216,5 +218,6 @@ export default {
   imageApi,
   adminApi,
   cartApi,
-  tradeApi
+  tradeApi,
+  commentApi
 }

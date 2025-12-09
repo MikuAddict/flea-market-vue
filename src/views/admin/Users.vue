@@ -18,7 +18,7 @@
       </div>
       
       <!-- 用户统计卡片 -->
-      <div class="stats-cards unified-grid unified-grid-4">
+      <div class="stats-cards unified-grid unified-grid-3">
         <div class="stat-card fade-in" v-for="(stat, index) in userStats" :key="stat.title" :style="{ animationDelay: `${index * 0.1}s` }">
           <el-card class="unified-card stat-item" :class="`stat-item-${stat.type}`">
             <div class="stat-content unified-flex unified-flex-center">
@@ -478,12 +478,6 @@ export default {
         type: 'warning'
       },
       {
-        title: '已通过',
-        value: 0,
-        icon: 'User',
-        type: 'success'
-      },
-      {
         title: '管理员',
         value: 0,
         icon: 'UserFilled',
@@ -574,15 +568,10 @@ export default {
               userStats.value[1].value = pendingResponse.data.data.total || 0
             }
             
-            const approvedResponse = await adminApi.user.getUserVoList({ current: 1, size: 1, userStatus: 1 })
-            if (approvedResponse.data && approvedResponse.data.code === 200) {
-              userStats.value[2].value = approvedResponse.data.data.total || 0
-            }
-            
             // 管理员数量
             const adminResponse = await adminApi.user.getUserVoList({ current: 1, size: 1, userRole: 'admin' })
             if (adminResponse.data && adminResponse.data.code === 200) {
-              userStats.value[3].value = adminResponse.data.data.total || 0
+              userStats.value[2].value = adminResponse.data.data.total || 0
             }
           } catch (error) {
             console.error('获取统计数据失败:', error)

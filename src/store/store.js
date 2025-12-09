@@ -201,7 +201,7 @@ export default createStore({
     async updateProfile({ commit }, userData) {
       commit('SET_LOADING', true)
       try {
-        const response = await userApi.updateProfile(userData)
+        const response = await userApi.updateMyUser(userData)
         const { data } = response.data
         
         if (data) {

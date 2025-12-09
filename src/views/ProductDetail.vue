@@ -44,9 +44,6 @@
                 <span class="price-value">¥{{ formatPrice(product.price) }}</span>
               </div>
               <div class="product-meta">
-                <el-tag :type="getProductStatusType(product.status)" size="large">
-                  {{ formatProductStatus(product.status) }}
-                </el-tag>
                 <el-tag type="info" size="large">
                   {{ formatPaymentMethod(product.paymentMethod) }}
                 </el-tag>

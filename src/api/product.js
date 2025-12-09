@@ -37,11 +37,15 @@ export default {
 
   // 高级搜索二手物品
   advancedSearchProducts(params) {
-    return request({
+    console.log('[ProductAPI] 调用 advancedSearchProducts，参数:', params);
+    console.log('[ProductAPI] request 函数:', request);
+    const result = request({
       url: '/product/advanced-search',
       method: 'get',
       params
-    })
+    });
+    console.log('[ProductAPI] request 结果:', result);
+    return result;
   },
 
   // 获取用户发布的二手物品列表

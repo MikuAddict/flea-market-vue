@@ -12,7 +12,10 @@ import '@/assets/css/unified-styles.css'
 // 检查是否有token（包括localStorage中的）
 const token = store.state.token || localStorage.getItem('token');
 if (token) {
-  store.dispatch('getCurrentUser')
+  // 只有在没有用户信息时才获取
+  if (!store.state.user) {
+    store.dispatch('getCurrentUser')
+  }
 } else {
   // 确保用户状态被清除
   store.commit('CLEAR_USER')

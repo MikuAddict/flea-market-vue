@@ -227,16 +227,6 @@ export default {
     const categories = computed(() => store.state.categories)
     const isLoggedIn = computed(() => store.getters.isLoggedIn)
     
-    // 动态选择API函数
-    const getApiFunction = () => {
-      if (filters.keyword || filters.categoryId !== null || 
-          filters.paymentMethod !== null || filters.minPrice !== null || 
-          filters.maxPrice !== null) {
-        return productApi.advancedSearchProducts
-      }
-      return productApi.getProductList
-    }
-    
     // 使用数据获取组合函数
     const {
       loading,
@@ -245,12 +235,37 @@ export default {
       pagination,
       fetchData,
       handleCurrentChange,
-      handleSizeChange
+      handleSizeChange,
+      filters: dataFilters  // 重命名以避免与组件中的 filters 冲突
     } = useDataFetchWithIdPrecision({
-      apiFunction: getApiFunction,
+      apiFunction: productApi.advancedSearchProducts,
       defaultFilters: filters,
       idFields: ['id']
     })
+    
+    // 搜索二手物品
+    const searchProducts = () => {
+      // 更新 useDataFetch 中的过滤器
+      Object.assign(dataFilters, filters)
+      
+      const query = {
+        ...filters,
+        current: pagination.current,
+        size: pagination.size
+      }
+      
+      // 移除空值参数
+      Object.keys(query).forEach(key => {
+        if (query[key] === null || query[key] === '' || query[key] === undefined) {
+          delete query[key]
+        }
+      })
+      
+      console.log('[ProductList] 搜索参数:', query);
+      
+      router.replace({ query })
+      fetchData()
+    }
     
     // 监听路由查询参数变化
     watch(() => route.query, (newQuery) => {
@@ -263,31 +278,17 @@ export default {
       if (newQuery.current) pagination.current = Number(newQuery.current)
       if (newQuery.size) pagination.size = Number(newQuery.size)
       
-      searchProducts()
-    }, { immediate: true })
-    
-    // 搜索二手物品
-    const searchProducts = () => {
-      const query = {
-        ...filters,
-        current: pagination.current,
-        size: pagination.size
-      }
-      
-      Object.keys(query).forEach(key => {
-        if (query[key] === null || query[key] === '' || query[key] === undefined) {
-          delete query[key]
-        }
-      })
-      
-      router.replace({ query })
+      // 更新 useDataFetch 中的过滤器
+      Object.assign(dataFilters, filters)
       fetchData()
-    }
+    }, { immediate: true })
     
     // 处理搜索
     const handleSearch = () => {
       pagination.current = 1
-      searchProducts()
+      // 更新 useDataFetch 中的过滤器
+      Object.assign(dataFilters, filters)
+      fetchData()
     }
     
     // 重置筛选条件
@@ -302,13 +303,18 @@ export default {
         }
       })
       pagination.current = 1
-      searchProducts()
+      // 更新 useDataFetch 中的过滤器
+      Object.assign(dataFilters, filters)
+      fetchData()
     }
     
     onMounted(async () => {
+      // 只在没有分类数据时才获取分类
       if (categories.value.length === 0) {
         await store.dispatch('fetchCategories')
       }
+      
+      // 路由守卫已经处理了用户信息的获取
     })
     
     return {

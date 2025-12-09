@@ -63,6 +63,8 @@ const request = axios.create({
   ]
 })
 
+console.log('[API Client] 创建了request实例:', request);
+
 // 请求拦截器
 request.interceptors.request.use(
   config => {
@@ -102,6 +104,8 @@ request.interceptors.response.use(
   response => {
     store.commit('SET_LOADING', false)
     
+    console.log('[API Client] 响应拦截器:', response.config.url, response.status, response.data);
+    
     let res = response.data
     
     // 检查是否有code字段，如果有且不为200，则处理为错误
@@ -126,6 +130,8 @@ request.interceptors.response.use(
   },
   error => {
     store.commit('SET_LOADING', false)
+    
+    console.error('[API Client] 请求错误:', error.config?.url, error.response || error.message || error);
     
     // 处理HTTP错误状态
     if (error.response) {

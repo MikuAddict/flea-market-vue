@@ -158,6 +158,11 @@ export default createStore({
           return { success: false, message: '未登录' };
         }
       }
+      
+      // 如果已经有用户信息，避免重复请求
+      if (state.user) {
+        return { success: true, data: state.user };
+      }
 
       commit('SET_LOADING', true)
       try {
@@ -166,6 +171,7 @@ export default createStore({
         commit('SET_USER', data)
         return { success: true, data }
       } catch (error) {
+        console.error('获取用户信息失败:', error)
         // 如果token无效，清除登录状态
         if (error.response && error.response.status === 401) {
           // 检查是否真的没有token
@@ -217,12 +223,19 @@ export default createStore({
     },
     
     // 获取二手物品分类
-    async fetchCategories({ commit }) {
-      if (this.state.categories.length > 0) return
+    async fetchCategories({ commit, state }) {
+      // 如果已有分类数据，避免重复请求
+      if (state.categories.length > 0) {
+        console.log('[Store] 分类数据已存在，无需重复获取');
+        return
+      }
       
       try {
+        console.log('[Store] 开始获取分类数据');
         const response = await categoryApi.getCategoryList()
         const { data } = response.data
+        
+        console.log('[Store] 分类数据获取成功:', data);
         
         // 处理大整数ID，确保精度不丢失
         const processedCategories = data.map(category => ({
@@ -234,13 +247,14 @@ export default createStore({
         
         commit('SET_CATEGORIES', processedCategories)
       } catch (error) {
-        console.error('获取分类失败:', error)
+        console.error('[Store] 获取分类失败:', error)
       }
     },
     
     // 获取最新二手物品
-    async fetchLatestProducts({ commit }) {
-      if (this.state.latestProducts.length > 0) return
+    async fetchLatestProducts({ commit, state }) {
+      // 如果已有最新商品数据，避免重复请求
+      if (state.latestProducts.length > 0) return
       
       try {
         const response = await productApi.getLatestProducts()
@@ -252,8 +266,9 @@ export default createStore({
     },
     
     // 获取最新新闻
-    async fetchLatestNews({ commit }) {
-      if (this.state.latestNews) return
+    async fetchLatestNews({ commit, state }) {
+      // 如果已有最新新闻数据，避免重复请求
+      if (state.latestNews) return
       
       try {
         const response = await newsApi.getLatestNews()

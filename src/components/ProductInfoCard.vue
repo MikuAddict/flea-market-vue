@@ -60,8 +60,19 @@
       <!-- 操作按钮 -->
       <div class="product-actions" v-if="showActions">
         <slot name="actions">
+          <!-- 购物车按钮 -->
           <el-button
-            v-if="defaultAction"
+            v-if="isLoggedIn && product.status === 1 && !isOwnProduct"
+            :type="isInCart ? 'danger' : 'primary'"
+            size="large"
+            @click="handleCartAction"
+          >
+            {{ isInCart ? '移出购物车' : '加入购物车' }}
+          </el-button>
+
+          <!-- 立即购买按钮 -->
+          <el-button
+            v-if="isLoggedIn && product.status === 1 && !isOwnProduct && !isInCart"
             type="primary"
             size="large"
             :disabled="product.status !== 1"
@@ -69,6 +80,7 @@
           >
             {{ defaultActionText }}
           </el-button>
+
         </slot>
       </div>
       
@@ -108,7 +120,10 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
+import { ElMessage } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'
 import { 
   formatPrice, 
@@ -116,6 +131,7 @@ import {
   formatProductStatus,
   getProductStatusType 
 } from '@/utils/format'
+import cartApi from '@/api/cart'
 
 export default {
   name: 'ProductInfoCard',
@@ -171,7 +187,19 @@ export default {
   },
   emits: ['action-click', 'seller-click', 'image-error'],
   setup(props) {
+    const router = useRouter()
+    const store = useStore()
     const currentImageIndex = ref(0)
+    
+    // 状态
+    const isInCart = ref(false)
+    
+    // 计算属性
+    const isLoggedIn = computed(() => store.getters.isLoggedIn)
+    const user = computed(() => store.state.user)
+    const isOwnProduct = computed(() => {
+      return user.value && props.product.user && user.value.id === props.product.user.id
+    })
     
     // 处理图片URL
     const processImageUrl = (url) => {
@@ -212,6 +240,88 @@ export default {
       return null
     })
     
+    // 检查商品是否在购物车中
+    const checkProductInCart = async () => {
+      if (!isLoggedIn.value || !props.product.id) return
+      
+      try {
+        const response = await cartApi.getUserCart()
+        const cartItems = response.data.data || []
+        const cartItem = cartItems.find(item => item.product && item.product.id === props.product.id)
+        isInCart.value = !!cartItem
+      } catch (error) {
+        console.error('检查购物车状态失败:', error)
+      }
+    }
+    
+    // 处理购物车操作
+    const handleCartAction = async () => {
+      if (!isLoggedIn.value) {
+        ElMessage.warning('请先登录')
+        router.push('/login')
+        return
+      }
+      
+      try {
+        if (isInCart.value) {
+          // 先获取购物车列表，找到对应的购物车项ID
+          const cartResponse = await cartApi.getUserCart()
+          const cartItems = cartResponse.data.data || []
+          const cartItem = cartItems.find(item => item.product && item.product.id === props.product.id)
+          
+          if (!cartItem) {
+            ElMessage.error('购物车项不存在，请刷新页面重试')
+            isInCart.value = false
+            return
+          }
+          
+          // 尝试通过购物车项ID移除
+          try {
+            const response = await cartApi.removeFromCart(cartItem.id)
+            if (response.data.code === 200) {
+              isInCart.value = false
+              ElMessage.success('已移出购物车')
+            } else {
+              ElMessage.error(response.data.message || '移出购物车失败')
+            }
+          } catch (removeError) {
+            // 如果通过购物车项ID移除失败，尝试通过商品ID移除
+            console.log('通过购物车项ID移除失败，尝试通过商品ID移除:', removeError)
+            try {
+              const response = await cartApi.removeFromCartByProductId(props.product.id)
+              if (response.data.code === 200) {
+                isInCart.value = false
+                ElMessage.success('已移出购物车')
+              } else {
+                ElMessage.error(response.data.message || '移出购物车失败')
+              }
+            } catch (productRemoveError) {
+              ElMessage.error('移出购物车失败，请稍后重试')
+              console.error('移出购物车失败:', productRemoveError)
+            }
+          }
+        } else {
+          // 加入购物车
+          const response = await cartApi.addToCart(props.product.id)
+          
+          if (response.data.code === 200) {
+            isInCart.value = true
+            ElMessage.success('已加入购物车')
+          } else {
+            ElMessage.error(response.data.message || '加入购物车失败')
+          }
+        }
+      } catch (error) {
+        ElMessage.error(isInCart.value ? '移出购物车失败' : '加入购物车失败')
+        console.error('购物车操作失败:', error)
+      }
+    }
+    
+    // 组件挂载时检查购物车状态
+    onMounted(() => {
+      checkProductInCart()
+    })
+    
     return {
       currentImageIndex,
       productImages,
@@ -219,7 +329,12 @@ export default {
       formatPrice,
       formatPaymentMethod,
       formatProductStatus,
-      getProductStatusType
+      getProductStatusType,
+      isLoggedIn,
+      user,
+      isOwnProduct,
+      isInCart,
+      handleCartAction
     }
   }
 }

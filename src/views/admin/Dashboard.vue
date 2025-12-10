@@ -101,17 +101,27 @@
             <el-card class="unified-card table-card fade-in">
               <template #header>
                 <div class="card-header unified-flex unified-flex-between">
-                  <h3 class="unified-title-base">高需求量二手物品分类排行</h3>
+                  <h3 class="unified-title-base">本月售出二手物品分类排行</h3>
                   <el-button type="text" @click="goToProducts" class="view-more-btn">
                     查看更多
                     <el-icon><ArrowRight /></el-icon>
                   </el-button>
                 </div>
               </template>
-              <el-table :data="hotProducts" style="width: 100%">
-                <el-table-column prop="productName" label="分类名称" min-width="120" />
-                <el-table-column prop="viewCount" label="售出量" width="100" />
-                <el-table-column prop="salesAmount" label="售出金额" width="100">
+              <el-table 
+                :data="hotProducts" 
+                style="width: 100%" 
+                v-loading="highInventoryLoading" 
+                :empty-text="hotProducts.length === 0 ? '加载中...' : '暂无数据'"
+                class="unified-table"
+              >
+                <el-table-column prop="productName" label="分类名称" min-width="120" align="center" />
+                <el-table-column prop="viewCount" label="售出量" width="100" align="center">
+                  <template #default="scope">
+                    <el-tag type="primary" size="small">{{ scope.row.viewCount }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="salesAmount" label="售出金额" width="100" align="center">
                   <template #default="scope">
                     ¥{{ formatPrice(scope.row.salesAmount) }}
                   </template>
@@ -125,16 +135,22 @@
             <el-card class="unified-card table-card fade-in">
               <template #header>
                 <div class="card-header unified-flex unified-flex-between">
-                  <h3 class="unified-title-base">高闲置量二手物品分类排行</h3>
+                  <h3 class="unified-title-base">本月在售二手物品分类排行</h3>
                   <el-button type="text" @click="goToHighInventoryProducts" class="view-more-btn">
                     查看更多
                     <el-icon><ArrowRight /></el-icon>
                   </el-button>
                 </div>
               </template>
-              <el-table :data="highInventoryProducts" style="width: 100%" v-loading="highInventoryLoading">
-                <el-table-column prop="productName" label="分类名称" min-width="120" />
-                <el-table-column prop="inventoryCount" label="闲置数量" width="100">
+              <el-table 
+                :data="highInventoryProducts" 
+                style="width: 100%" 
+                v-loading="highInventoryLoading" 
+                :empty-text="highInventoryProducts.length === 0 ?  '加载中...' : '暂无数据'"
+                class="unified-table"
+              >
+                <el-table-column prop="productName" label="分类名称" min-width="120" align="center" />
+                <el-table-column prop="inventoryCount" label="闲置数量" width="100" align="center">
                   <template #default="scope">
                     <el-tag type="warning" size="small">{{ scope.row.inventoryCount }}</el-tag>
                   </template>
@@ -283,17 +299,37 @@ export default {
     // 获取需求量大的二手物品分类
     const fetchHighDemandCategories = async () => {
       try {
-        const response = await statisticsApi.getHighDemandCategories(5)
-        if (response.data && response.data.code === 200) {
-          // 将API返回的数据转换为表格需要的格式
-          hotProducts.value = (response.data.data || []).map(item => ({
-            id: item.categoryId,
-            productName: item.categoryName,
-            categoryName: item.categoryName,
-            viewCount: item.productCount || 0,
-            salesAmount: item.tradeAmount || 0,
-            imageUrl: item.imageUrl
-          }))
+        // 使用新的月度统计数据
+        const currentDate = new Date()
+        const year = currentDate.getFullYear()
+        const month = currentDate.getMonth() + 1
+        
+        // 使用获取月度综合统计的API，从中提取monthlyCategoryRanking数据
+        const response = await statisticsApi.getMonthlyStatistics(year, month)
+        console.log('月度统计API响应:', response)
+        
+        if (response.status === 200) {
+          // 从月度统计数据中获取monthlyCategoryRanking
+          const data = response.data?.monthlyCategoryRanking
+          console.log('高售出分类排行数据:', data)
+          
+          if (Array.isArray(data) && data.length > 0) {
+            // 将API返回的数据转换为表格需要的格式
+            hotProducts.value = data.slice(0, 5).map(item => ({
+              id: item.categoryId,
+              productName: item.categoryName,
+              categoryName: item.categoryName,
+              viewCount: item.tradeCount || 0,
+              salesAmount: item.totalAmount || 0
+            }))
+          } else {
+            // 如果没有数据，显示默认提示
+            hotProducts.value = []
+          }
+          console.log('处理后的高售出分类数据:', hotProducts.value)
+        } else {
+          console.log('API响应异常:', response.data)
+          hotProducts.value = []
         }
       } catch (error) {
         console.error('获取需求量大的二手物品分类失败:', error)
@@ -318,22 +354,18 @@ export default {
         }
         
         // 并发请求多个API获取统计数据
-        const [currentMonthlyResponse, prevMonthlyResponse, orderStatsResponse] = await Promise.all([
-          statisticsApi.getMonthlyStatistics(currentMonth, currentYear),
-          statisticsApi.getMonthlyStatistics(prevMonth, prevYear),
-          statisticsApi.getOrderStatistics()
+        const [currentMonthlyResponse, prevMonthlyResponse] = await Promise.all([
+          statisticsApi.getMonthlyStatistics(currentYear, currentMonth),
+          statisticsApi.getMonthlyStatistics(prevYear, prevMonth)
         ])
         
+        console.log('月度统计数据API响应:', currentMonthlyResponse.data)
+        console.log('上月统计数据API响应:', prevMonthlyResponse.data)
+        
         // 处理月度统计数据
-        if (currentMonthlyResponse.data && currentMonthlyResponse.data.code === 200) {
-          const currentStats = currentMonthlyResponse.data.data
-          const prevStats = prevMonthlyResponse.data && prevMonthlyResponse.data.code === 200 ? prevMonthlyResponse.data.data : null
-          
-          // 处理订单统计数据
-          let orderStats = {}
-          if (orderStatsResponse.data && orderStatsResponse.data.code === 200) {
-            orderStats = orderStatsResponse.data.data
-          }
+        if (currentMonthlyResponse.status === 200) {
+          const currentStats = currentMonthlyResponse.data
+          const prevStats = prevMonthlyResponse.status === 200 ? prevMonthlyResponse.data : null
           
           // 计算趋势百分比
           const calculateTrend = (current, prev) => {
@@ -346,19 +378,16 @@ export default {
           }
           
           // 获取上月的交易量和交易额
-          const prevTradeCount = prevStats?.totalTradeCount || 0
-          const prevTradeAmount = prevStats?.totalTradeAmount || 0
+          const prevTradeCount = prevStats?.activeUserRanking?.reduce((sum, user) => sum + (user.tradeCount || 0), 0) || 0
+          const prevTradeAmount = prevStats?.monthlyCategoryRanking?.reduce((sum, category) => sum + (category.totalAmount || 0), 0) || 0
           
           // 获取当前的交易量和交易额
-          const currentTradeCount = currentStats?.totalTradeCount || 0
-          const currentTradeAmount = currentStats?.totalTradeAmount || 0
+          const currentTradeCount = currentStats?.activeUserRanking?.reduce((sum, user) => sum + (user.tradeCount || 0), 0) || 0
+          const currentTradeAmount = currentStats?.monthlyCategoryRanking?.reduce((sum, category) => sum + (category.totalAmount || 0), 0) || 0
           
           // 更新交易统计数据
           monthlyTradeAmount.value = currentTradeAmount
           monthlyTradeCount.value = currentTradeCount
-          
-          // 获取订单统计数据
-          const totalOrders = orderStats.totalOrders || 0
           
           // 获取总用户数和总商品数（只包括审核后的数据）
           try {
@@ -393,12 +422,12 @@ export default {
               },
               {
                 title: '交易量',
-                value: totalOrders,
+                value: currentTradeCount,
                 icon: 'ShoppingCartFull',
                 type: 'warning',
-                trend: calculateTrend(totalOrders, prevTradeCount).trend,
-                trendIcon: calculateTrend(totalOrders, prevTradeCount).trend === 'up' ? 'ArrowUp' : 'ArrowDown',
-                trendText: calculateTrend(totalOrders, prevTradeCount).text
+                trend: calculateTrend(currentTradeCount, prevTradeCount).trend,
+                trendIcon: calculateTrend(currentTradeCount, prevTradeCount).trend === 'up' ? 'ArrowUp' : 'ArrowDown',
+                trendText: calculateTrend(currentTradeCount, prevTradeCount).text
               },
               {
                 title: '总交易金额',
@@ -467,21 +496,40 @@ export default {
     const fetchHighInventoryProducts = async () => {
       highInventoryLoading.value = true
       try {
-        const response = await statisticsApi.getHighInventoryCategories(5)
-        if (response.data && response.data.code === 200) {
-          // 将API返回的数据转换为表格需要的格式
-          highInventoryProducts.value = (response.data.data || []).map(item => ({
-            id: item.categoryId,
-            productName: item.categoryName,
-            categoryName: item.categoryName,
-            inventoryCount: item.productCount || 0,
-            price: item.tradeAmount || 0,
-            imageUrl: item.imageUrl
-          }))
+        // 使用新的月度统计数据
+        const currentDate = new Date()
+        const year = currentDate.getFullYear()
+        const month = currentDate.getMonth() + 1
+        
+        // 先尝试从月度统计API中获取在售量数据
+        const monthlyResponse = await statisticsApi.getMonthlyStatistics(year, month)
+        console.log('月度统计API响应:', monthlyResponse)
+        
+        if (monthlyResponse.status === 200) {
+          // 直接使用 categoryOnSaleInventory 数据
+          const data = monthlyResponse.data?.categoryOnSaleInventory
+          console.log('高在售分类排行数据:', data)
+          
+          if (Array.isArray(data) && data.length > 0) {
+            // 将API返回的数据转换为表格需要的格式
+            highInventoryProducts.value = data.slice(0, 5).map(item => ({
+              id: item.categoryId,
+              productName: item.categoryName,
+              categoryName: item.categoryName,
+              inventoryCount: item.itemCount || 0
+            }))
+          } else {
+            // 如果没有数据，显示空数组
+            highInventoryProducts.value = []
+          }
+          
+          console.log('处理后的高在售分类数据:', highInventoryProducts.value)
+        } else {
+          console.log('月度统计API响应异常:', monthlyResponse.data)
+          highInventoryProducts.value = []
         }
       } catch (error) {
         console.error('获取高闲置量二手物品失败:', error)
-        // 清除模拟数据，默认显示空数组
         highInventoryProducts.value = []
       } finally {
         highInventoryLoading.value = false
@@ -491,16 +539,21 @@ export default {
     // 获取需求量大的二手物品
     const fetchHighDemandProducts = async () => {
       try {
-        const response = await statisticsApi.getHighDemandCategories(5)
-        if (response.data && response.data.code === 200) {
+        // 使用新的月度统计数据
+        const currentDate = new Date()
+        const year = currentDate.getFullYear()
+        const month = currentDate.getMonth() + 1
+        
+        const response = await statisticsApi.getMonthlyCategoryRanking(year, month)
+        if (response.status === 200) {
+          const data = response.data?.monthlyCategoryRanking || []
           // 将API返回的数据转换为表格需要的格式
-          hotProducts.value = (response.data.data || []).map(item => ({
+          hotProducts.value = data.slice(0, 5).map(item => ({
             id: item.categoryId,
             productName: item.categoryName,
             categoryName: item.categoryName,
-            demandCount: item.productCount || 0,
-            averagePrice: item.tradeAmount || 0,
-            imageUrl: item.imageUrl
+            demandCount: item.tradeCount || 0,
+            averagePrice: item.totalAmount || 0
           }))
         }
       } catch (error) {
@@ -515,20 +568,21 @@ export default {
       try {
         // 获取月度统计数据
         const currentDate = new Date()
-        const month = currentDate.getMonth() + 1
         const year = currentDate.getFullYear()
+        const month = currentDate.getMonth() + 1
         
         // 获取近一个月的交易趋势数据
-        const monthResponse = await statisticsApi.getMonthlyTopSellingCategories(month, year, 10)
+        const monthResponse = await statisticsApi.getMonthlyCategoryRanking(year, month)
         
         // 初始化趋势图表
         if (trendChart.value) {
           const trendChartInstance = echarts.init(trendChart.value)
           
           // 准备近一个月的交易趋势数据
-          const categoryNames = (monthResponse.data?.data || []).map(item => item.categoryName)
-          const tradeCounts = (monthResponse.data?.data || []).map(item => item.tradeCount || 0)
-          const tradeAmounts = (monthResponse.data?.data || []).map(item => item.tradeAmount || 0)
+          const data = monthResponse.status === 200 ? (monthResponse.data?.monthlyCategoryRanking || []) : []
+          const categoryNames = data.map(item => item.categoryName)
+          const tradeCounts = data.map(item => item.tradeCount || 0)
+          const tradeAmounts = data.map(item => item.totalAmount || 0)
           
           const trendOption = {
             tooltip: {
@@ -621,18 +675,37 @@ export default {
     }
     
     // 刷新仪表盘数据
-    const refreshDashboardData = () => {
+    const refreshDashboardData = async () => {
       ElMessage.info('正在刷新数据...')
-      updateDashboardData()
-      fetchHighInventoryProducts()
-      ElMessage.success('数据已刷新')
+      try {
+        await Promise.all([
+          fetchComprehensiveStatistics(),
+          fetchHighDemandCategories(),
+          fetchHighInventoryProducts()
+        ])
+        ElMessage.success('数据已刷新')
+        console.log('数据刷新完成')
+        console.log('hotProducts:', hotProducts.value)
+        console.log('highInventoryProducts:', highInventoryProducts.value)
+      } catch (error) {
+        console.error('刷新数据失败:', error)
+        ElMessage.error('刷新数据失败')
+      }
     }
     
     onMounted(() => {
       // 获取仪表盘数据
       fetchComprehensiveStatistics()
+        .then(() => console.log('fetchComprehensiveStatistics 完成'))
+        .catch(err => console.error('fetchComprehensiveStatistics 失败:', err))
+      
       fetchHighDemandCategories()
+        .then(() => console.log('fetchHighDemandCategories 完成'))
+        .catch(err => console.error('fetchHighDemandCategories 失败:', err))
+      
       fetchHighInventoryProducts()
+        .then(() => console.log('fetchHighInventoryProducts 完成'))
+        .catch(err => console.error('fetchHighInventoryProducts 失败:', err))
       
       // 等待DOM渲染完成后初始化图表
       setTimeout(() => {
@@ -656,7 +729,7 @@ export default {
       formatDate,
       dashboardFilters,
       updateDashboardData,
-      refreshDashboardData
+      refreshDashboardData,
     }
   }
 }
@@ -853,6 +926,43 @@ export default {
 
 .table-card {
   margin-bottom: var(--spacing-base);
+}
+
+.unified-table {
+  width: 100% !important;
+}
+
+.unified-table .el-table__body-wrapper {
+  overflow-x: auto;
+}
+
+.unified-table th {
+  white-space: nowrap;
+  background-color: #f8f9fa;
+  font-weight: 600;
+  text-align: center !important;
+  vertical-align: middle;
+}
+
+.unified-table td {
+  padding: 12px 8px;
+  min-height: 52px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.unified-table .cell {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+}
+
+.unified-table .el-table__fixed-right {
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
 }
 
 .user-info {

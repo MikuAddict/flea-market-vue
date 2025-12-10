@@ -26,6 +26,15 @@ export default {
     })
   },
 
+  // 通过商品ID从购物车移除商品
+  removeFromCartByProductId(productId) {
+    return request({
+      url: '/cart/remove-by-product',
+      method: 'delete',
+      params: { productId }
+    })
+  },
+
   // 清空购物车
   clearCart() {
     return request({

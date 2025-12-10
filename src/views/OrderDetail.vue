@@ -55,7 +55,7 @@
                     <span>{{ formatDate(order.createTime) }}</span>
                   </div>
                   <div v-if="order.finishTime" class="status-item">
-                    <span class="label">完成时间:</span>
+                     <span class="label">{{ order.status === 3 ? '取消时间' : '完成时间' }}:</span>
                     <span>{{ formatDate(order.finishTime) }}</span>
                   </div>
                 </div>
@@ -63,7 +63,15 @@
                 <!-- 订单操作按钮 -->
                 <div class="order-actions" v-if="isBuyer">
                   <el-button
-                    v-if="order.status === 1"
+                    v-if="order.status === 0"
+                    type="primary"
+                    size="large"
+                    @click="payOrder"
+                  >
+                    立即支付
+                  </el-button>
+                  <el-button
+                    v-if="(order.status === 1 || order.status === 0)"
                     type="danger"
                     size="large"
                     @click="cancelOrder"
@@ -79,10 +87,11 @@
                     确认收货
                   </el-button>
                   <el-button
-                    v-if="order.status === 2" && !hasReviewed
+                    v-if="order.status === 2 && !hasReviewed"
                     type="primary"
                     size="large"
                     @click="showReviewDialog = true"
+                    :loading="checkingReview"
                   >
                     发布评论
                   </el-button>
@@ -180,6 +189,7 @@ export default {
     const showReviewDialog = ref(false)
     const reviewFormRef = ref(null)
     const hasReviewed = ref(false)
+    const checkingReview = ref(false)
     
     const reviewForm = reactive({
       rating: 5,
@@ -289,6 +299,30 @@ export default {
       }
     })
     
+    // 支付订单
+    const payOrder = async () => {
+      try {
+        await ElMessageBox.confirm(
+          '确定要支付这个订单吗？',
+          '支付确认',
+          {
+            confirmButtonText: '确定支付',
+            cancelButtonText: '取消',
+            type: 'info'
+          }
+        )
+        
+        await orderApi.payOrder(orderId.value)
+        ElMessage.success('订单支付成功')
+        await fetchOrderDetail()
+      } catch (error) {
+        if (error !== 'cancel') {
+          console.error('支付订单失败:', error)
+          ElMessage.error('支付订单失败')
+        }
+      }
+    }
+    
     // 取消订单
     const cancelOrder = async () => {
       try {
@@ -341,20 +375,30 @@ export default {
     const checkIfReviewed = async () => {
       if (!order.value || !order.value.id) return
       
+      checkingReview.value = true
       try {
         const response = await reviewApi.getReviewByOrderId(order.value.id)
         if (response.data.code === 200 && response.data.data) {
           hasReviewed.value = true
+        } else {
+          hasReviewed.value = false
         }
       } catch (error) {
         console.error('检查评论状态失败:', error)
+        hasReviewed.value = false
+      } finally {
+        checkingReview.value = false
       }
     }
     
     // 监听订单数据变化，检查是否已评论
     watch(() => order.value, (newOrder) => {
       if (newOrder && newOrder.status === 2) {
+        // 初始化评论状态为true，避免闪烁
+        hasReviewed.value = true
         checkIfReviewed()
+      } else {
+        hasReviewed.value = false
       }
     })
     
@@ -387,6 +431,8 @@ export default {
           ElMessage.success('评论发布成功')
           handleReviewDialogClose()
           hasReviewed.value = true
+          // 刷新订单详情以更新按钮状态
+          await fetchOrderDetail()
         } else {
           throw new Error(response.data.message || '评论发布失败')
         }
@@ -407,6 +453,8 @@ export default {
     // 监听路由参数变化
     watch(() => route.params.id, () => {
       if (route.params.id) {
+        // 重置评论状态
+        hasReviewed.value = false
         fetchOrderDetail(route.params.id)
       }
     }, { immediate: true })
@@ -424,6 +472,7 @@ export default {
       formatDate,
       getOrderStatusType,
       getUserStatusType,
+      payOrder,
       cancelOrder,
       confirmOrder,
       handleImageError,
@@ -432,6 +481,7 @@ export default {
       reviewForm,
       reviewRules,
       hasReviewed,
+      checkingReview, // 添加这个新属性
       handleReviewDialogClose,
       submitReview
     }

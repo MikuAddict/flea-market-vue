@@ -15,6 +15,7 @@ const OrderList = () => import('@/views/OrderList.vue')
 const OrderDetail = () => import('@/views/OrderDetail.vue')
 const NewsList = () => import('@/views/NewsList.vue')
 const NewsDetail = () => import('@/views/NewsDetail.vue')
+const Cart = () => import('@/views/Cart.vue')
 const AdminDashboard = () => import('@/views/admin/Dashboard.vue')
 const AdminUsers = () => import('@/views/admin/Users.vue')
 const AdminCategories = () => import('@/views/admin/Categories.vue')
@@ -109,6 +110,12 @@ const routes = [
     name: 'NewsDetail',
     component: NewsDetail,
     meta: { title: '新闻详情' }
+  },
+  {
+    path: '/cart',
+    name: 'Cart',
+    component: Cart,
+    meta: { title: '我的购物车', requiresAuth: true }
   },
   {
     path: '/admin',

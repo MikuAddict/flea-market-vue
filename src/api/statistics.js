@@ -1,98 +1,48 @@
 import { request } from './api-client'
 
 export default {
-  // 获取用户交易统计
-  getUserTradeStatistics(userId) {
-    return request({
-      url: `/statistics/user/${userId}`,
-      method: 'get'
-    })
-  },
-
-  // 获取二手物品交易统计
-  getProductTradeStatistics(productId) {
-    return request({
-      url: `/statistics/product/${productId}`,
-      method: 'get'
-    })
-  },
-
   // 获取月度统计数据
-  getMonthlyStatistics(month, year) {
+  getMonthlyStatistics(year, month) {
     return request({
       url: '/statistics/monthly',
       method: 'get',
-      params: { month, year }
+      params: { year, month }
     })
   },
 
-  // 获取月度交易二手物品排行
-  getMonthlyTopSellingProducts(month, year, limit) {
+  // 获取每月物品分类已售量
+  getMonthlyCategorySoldInventory(year, month) {
     return request({
-      url: '/statistics/monthly-products',
+      url: '/statistics/monthly/category-sold',
       method: 'get',
-      params: { month, year, limit }
+      params: { year, month }
     })
   },
 
-  // 获取闲置量大二手物品分类排行
-  getHighInventoryCategories(limit) {
+  // 获取每月交易成功物品分类排行
+  getMonthlyCategoryRanking(year, month) {
     return request({
-      url: '/statistics/high-inventory-categories',
+      url: '/statistics/monthly/category-ranking',
       method: 'get',
-      params: { limit }
+      params: { year, month }
     })
   },
 
-  // 获取需求量大二手物品分类排行
-  getHighDemandCategories(limit) {
+  // 获取每月物品分类在售量
+  getMonthlyCategoryOnSaleInventory(year, month) {
     return request({
-      url: '/statistics/high-demand-categories',
+      url: '/statistics/monthly/category-on-sale',
       method: 'get',
-      params: { limit }
+      params: { year, month }
     })
   },
 
-  // 获取月度交易二手物品分类排行
-  getMonthlyTopSellingCategories(month, year, limit) {
+  // 获取每月活跃用户排行
+  getMonthlyActiveUserRanking(year, month) {
     return request({
-      url: '/statistics/monthly-categories',
+      url: '/statistics/monthly/active-user-ranking',
       method: 'get',
-      params: { month, year, limit }
-    })
-  },
-
-  // 获取二手物品分类交易统计
-  getCategoryTradeStatistics(categoryId) {
-    return request({
-      url: `/statistics/category/${categoryId}`,
-      method: 'get'
-    })
-  },
-
-  // 获取综合统计信息
-  getComprehensiveStatistics(startDate, endDate) {
-    return request({
-      url: '/statistics/comprehensive',
-      method: 'get',
-      params: { startDate, endDate }
-    })
-  },
-
-  // 获取活跃用户排行
-  getActiveUsersRanking(limit, startDate, endDate) {
-    return request({
-      url: '/statistics/active-users',
-      method: 'get',
-      params: { limit, startDate, endDate }
-    })
-  },
-
-  // 获取订单统计信息
-  getOrderStatistics() {
-    return request({
-      url: '/order/statistics',
-      method: 'get'
+      params: { year, month }
     })
   }
 }

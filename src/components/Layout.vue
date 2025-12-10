@@ -12,6 +12,7 @@
           <el-menu mode="horizontal" :router="true" :default-active="$route.path" class="category-nav">
             <el-menu-item index="/">首页</el-menu-item>
             <el-menu-item index="/products">二手物品</el-menu-item>
+            <el-menu-item index="/cart" v-if="isLoggedIn">购物车</el-menu-item>
             <el-menu-item index="/news">新闻公告</el-menu-item>
             <el-menu-item index="/admin" v-if="isAdmin">管理后台</el-menu-item>
           </el-menu>

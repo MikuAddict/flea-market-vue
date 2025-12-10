@@ -5,7 +5,7 @@
       <div class="page-header unified-flex unified-flex-between">
         <div>
           <h1 class="unified-title-xl">统计分析</h1>
-          <p class="unified-text-secondary">系统数据分析与统计报表</p>
+          <p class="unified-text-secondary">月度数据分析与统计报表</p>
         </div>
         <div class="header-actions unified-flex">
         </div>
@@ -29,47 +29,33 @@
                 @change="handleTypeChange"
                 class="unified-filter-select"
               >
-                <el-option label="高闲置量二手物品" value="high-inventory" />
-                <el-option label="高需求量二手物品" value="high-demand" />
-                <el-option label="月度热门二手物品" value="monthly-top" />
-                <el-option label="活跃用户排行" value="active-users" />
+                <el-option label="月度综合统计" value="monthly" />
+                <el-option label="分类已售量统计" value="category-sold" />
+                <el-option label="分类交易排行" value="category-ranking" />
+                <el-option label="分类在售量统计" value="category-on-sale" />
+                <el-option label="活跃用户排行" value="active-user" />
               </el-select>
             </div>
             
-            <div class="unified-filter-item" v-if="filters.type !== 'active-users'">
-              <div class="unified-filter-label">数量限制</div>
+            <div class="unified-filter-item">
+              <div class="unified-filter-label">年份</div>
               <el-input-number
-                v-model="filters.limit"
-                :min="1"
-                :max="100"
-                placeholder="显示数量"
+                v-model="filters.year"
+                :min="2020"
+                :max="2030"
+                placeholder="选择年份"
                 @change="handleTypeChange"
               />
             </div>
             
-            <div class="unified-filter-item" v-if="filters.type === 'monthly-top'">
+            <div class="unified-filter-item">
               <div class="unified-filter-label">月份</div>
-              <el-date-picker
+              <el-input-number
                 v-model="filters.month"
-                type="month"
+                :min="1"
+                :max="12"
                 placeholder="选择月份"
-                format="YYYY年MM月"
-                value-format="YYYY-MM"
                 @change="handleTypeChange"
-                class="unified-filter-date"
-              />
-            </div>
-            
-            <div class="unified-filter-item" v-if="filters.type === 'active-users'">
-              <div class="unified-filter-label">日期范围</div>
-              <el-date-picker
-                v-model="filters.dateRange"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="结束日期"
-                @change="handleTypeChange"
-                class="unified-filter-date"
               />
             </div>
           </div>
@@ -78,7 +64,7 @@
             <el-button
               type="primary"
               class="unified-button unified-button-primary"
-              @click="refreshStatistics"
+              @click="fetchStatisticsData"
             >
               <el-icon><Search /></el-icon>
               查询数据
@@ -92,116 +78,153 @@
         <template #header>
           <div class="card-header unified-flex unified-flex-between">
             <h3 class="unified-title-base">{{ getStatisticsTitle() }}</h3>
-            <div class="view-options">
-              <el-radio-group v-model="viewMode" size="small">
-                <el-radio-button label="table">表格视图</el-radio-button>
-                <el-radio-button label="chart">图表视图</el-radio-button>
-              </el-radio-group>
-            </div>
           </div>
         </template>
         
         <!-- 表格视图 -->
-        <div v-if="viewMode === 'table'">
-          <!-- 高闲置量二手物品表格 -->
+        <div>
+          <!-- 月度综合统计表格 -->
+          <div v-if="filters.type === 'monthly'">
+            <h4>分类交易排行</h4>
+            <el-table 
+              v-loading="loading && filters.type === 'monthly'" 
+              :data="statisticsData.monthlyCategoryRanking || []" 
+              style="width: 100%"
+              class="unified-table"
+            >
+              <el-table-column label="排名" width="80" align="center">
+                <template #default="scope">
+                  <el-tag :type="getRankType(scope.$index + 1)" size="small">
+                    {{ scope.$index + 1 }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="categoryName" label="分类名称" min-width="150" align="center" />
+              <el-table-column prop="tradeCount" label="交易次数" width="120" align="center">
+                <template #default="scope">
+                  <el-tag type="primary" size="small">{{ scope.row.tradeCount || 0 }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="totalAmount" label="交易总额" width="120" align="center">
+                <template #default="scope">
+                  ¥{{ formatPrice(scope.row.totalAmount || 0) }}
+                </template>
+              </el-table-column>
+            </el-table>
+            
+            <h4 style="margin-top: 20px;">活跃用户排行</h4>
+            <el-table 
+              v-loading="loading && filters.type === 'monthly'" 
+              :data="statisticsData.activeUserRanking || []" 
+              style="width: 100%"
+              class="unified-table"
+            >
+              <el-table-column label="排名" width="80" align="center">
+                <template #default="scope">
+                  <el-tag :type="getRankType(scope.$index + 1)" size="small">
+                    {{ scope.$index + 1 }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="用户信息" min-width="150" align="center">
+                <template #default="scope">
+                  <div class="user-info unified-flex unified-flex-center">
+                    <el-avatar :size="30" :src="scope.row.avatar">
+                      {{ scope.row.userName?.charAt(0) }}
+                    </el-avatar>
+                    <span class="user-name">{{ scope.row.userName }}</span>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="tradeCount" label="交易次数" width="100" align="center">
+                <template #default="scope">
+                  <el-tag type="primary" size="small">{{ scope.row.tradeCount || 0 }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="totalAmount" label="交易总额" width="120" align="center">
+                <template #default="scope">
+                  ¥{{ formatPrice(scope.row.totalAmount || 0) }}
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+          
+          <!-- 分类已售量统计表格 -->
           <el-table 
-            v-if="filters.type === 'high-inventory'"
-            v-loading="loading" 
-            :data="statisticsData" 
+            v-else-if="filters.type === 'category-sold'"
+            v-loading="loading && filters.type === 'category-sold'" 
+            :data="statisticsData.categorySoldInventory || []" 
             style="width: 100%"
+            class="unified-table"
           >
-            <el-table-column prop="productName" label="分类名称" min-width="150" />
-            <el-table-column prop="categoryName" label="分类" width="100" />
-            <el-table-column prop="inventoryCount" label="闲置数量" width="120">
+            <el-table-column prop="categoryName" label="分类名称" min-width="150" align="center" />
+            <el-table-column prop="itemCount" label="已售数量" width="120" align="center">
               <template #default="scope">
-                <el-tag type="warning" size="small">{{ scope.row.inventoryCount || 0 }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="price" label="参考价格" width="120">
-              <template #default="scope">
-                ¥{{ formatPrice(scope.row.price || 0) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="100">
-              <template #default="scope">
-                <el-button size="small" type="text" @click="viewProduct(scope.row.id)">
-                  查看详情
-                </el-button>
+                <el-tag type="success" size="small">{{ scope.row.itemCount || 0 }}</el-tag>
               </template>
             </el-table-column>
           </el-table>
           
-          <!-- 高需求量二手物品表格 -->
+          <!-- 分类交易排行表格 -->
           <el-table 
-            v-else-if="filters.type === 'high-demand'"
-            v-loading="loading" 
-            :data="statisticsData" 
+            v-else-if="filters.type === 'category-ranking'"
+            v-loading="loading && filters.type === 'category-ranking'" 
+            :data="statisticsData.monthlyCategoryRanking || []" 
             style="width: 100%"
+            class="unified-table"
           >
-            <el-table-column prop="productName" label="分类名称" min-width="150" />
-            <el-table-column prop="categoryName" label="分类" width="100" />
-            <el-table-column prop="demandCount" label="需求次数" width="120">
-              <template #default="scope">
-                <el-tag type="success" size="small">{{ scope.row.demandCount || 0 }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="averagePrice" label="平均价格" width="120">
-              <template #default="scope">
-                ¥{{ formatPrice(scope.row.averagePrice || 0) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="100">
-              <template #default="scope">
-                <el-button size="small" type="text" @click="viewProduct(scope.row.id)">
-                  查看详情
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-          
-          <!-- 月度热门二手物品表格 -->
-          <el-table 
-            v-else-if="filters.type === 'monthly-top'"
-            v-loading="loading" 
-            :data="statisticsData" 
-            style="width: 100%"
-          >
-            <el-table-column prop="productName" label="物品名称" min-width="150" />
-            <el-table-column prop="categoryName" label="分类" width="100" />
-            <el-table-column prop="salesCount" label="销售数量" width="120">
-              <template #default="scope">
-                <el-tag type="primary" size="small">{{ scope.row.tradeCount || 0 }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="totalAmount" label="销售总额" width="120">
-              <template #default="scope">
-                ¥{{ formatPrice(scope.row.tradeAmount || 0) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="100">
-              <template #default="scope">
-                <el-button size="small" type="text" @click="viewProduct(scope.row.productId)">
-                  查看详情
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-          
-          <!-- 活跃用户排行表格 -->
-          <el-table 
-            v-else-if="filters.type === 'active-users'"
-            v-loading="loading" 
-            :data="statisticsData" 
-            style="width: 100%"
-          >
-            <el-table-column label="排名" width="80">
+            <el-table-column label="排名" width="80" align="center">
               <template #default="scope">
                 <el-tag :type="getRankType(scope.$index + 1)" size="small">
                   {{ scope.$index + 1 }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="用户信息" min-width="150">
+            <el-table-column prop="categoryName" label="分类名称" min-width="150" align="center" />
+            <el-table-column prop="tradeCount" label="交易次数" width="120" align="center">
+              <template #default="scope">
+                <el-tag type="primary" size="small">{{ scope.row.tradeCount || 0 }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="totalAmount" label="交易总额" width="120" align="center">
+              <template #default="scope">
+                ¥{{ formatPrice(scope.row.totalAmount || 0) }}
+              </template>
+            </el-table-column>
+          </el-table>
+          
+          <!-- 分类在售量统计表格 -->
+          <el-table 
+            v-else-if="filters.type === 'category-on-sale'"
+            v-loading="loading && filters.type === 'category-on-sale'" 
+            :data="statisticsData.categoryOnSaleInventory || []" 
+            style="width: 100%"
+            class="unified-table"
+          >
+            <el-table-column prop="categoryName" label="分类名称" min-width="150" align="center" />
+            <el-table-column prop="itemCount" label="在售数量" width="120" align="center">
+              <template #default="scope">
+                <el-tag type="warning" size="small">{{ scope.row.itemCount || 0 }}</el-tag>
+              </template>
+            </el-table-column>
+          </el-table>
+          
+          <!-- 活跃用户排行表格 -->
+          <el-table 
+            v-else-if="filters.type === 'active-user'"
+            v-loading="loading && filters.type === 'active-user'" 
+            :data="statisticsData.activeUserRanking || []" 
+            style="width: 100%"
+            class="unified-table"
+          >
+            <el-table-column label="排名" width="80" align="center">
+              <template #default="scope">
+                <el-tag :type="getRankType(scope.$index + 1)" size="small">
+                  {{ scope.$index + 1 }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="用户信息" min-width="150" align="center">
               <template #default="scope">
                 <div class="user-info unified-flex unified-flex-center">
                   <el-avatar :size="30" :src="scope.row.avatar">
@@ -211,28 +234,18 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column prop="tradeCount" label="交易次数" width="100">
+            <el-table-column prop="tradeCount" label="交易次数" width="100" align="center">
               <template #default="scope">
                 <el-tag type="primary" size="small">{{ scope.row.tradeCount || 0 }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="tradeAmount" label="交易总额" width="120">
+            <el-table-column prop="totalAmount" label="交易总额" width="120" align="center">
               <template #default="scope">
-                ¥{{ formatPrice(scope.row.tradeAmount || 0) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="100">
-              <template #default="scope">
-                <el-button size="small" type="text" @click="viewUser(scope.row.userId)">
-                  查看详情
-                </el-button>
+                ¥{{ formatPrice(scope.row.totalAmount || 0) }}
               </template>
             </el-table-column>
           </el-table>
         </div>
-        
-        <!-- 图表视图 -->
-        <div v-else class="chart-container" ref="statisticsChart" v-loading="loading"></div>
       </el-card>
     </div>
   </Layout>
@@ -244,7 +257,6 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Download } from '@element-plus/icons-vue'
 import { formatPrice } from '@/utils/format'
-import * as echarts from 'echarts'
 import { statisticsApi } from '@/api'
 import Layout from '@/components/Layout.vue'
 
@@ -258,16 +270,13 @@ export default {
     
     // 响应式数据
     const loading = ref(false)
-    const statisticsData = ref([])
-    const viewMode = ref('table')
-    const statisticsChart = ref(null)
+    const statisticsData = ref({})
     
     // 筛选条件
     const filters = reactive({
-      type: 'high-inventory',
-      limit: 20,
-      month: null,
-      dateRange: null
+      type: 'monthly',
+      year: new Date().getFullYear(),
+      month: new Date().getMonth() + 1
     })
     
     // 处理统计类型变化
@@ -282,54 +291,37 @@ export default {
         let response
         
         switch (filters.type) {
-          case 'high-inventory':
-            response = await statisticsApi.getHighInventoryCategories(filters.limit)
-            if (response.data && response.data.code === 200) {
-              statisticsData.value = (response.data.data || []).map(item => ({
-                id: item.categoryId,
-                productName: item.categoryName,
-                categoryName: item.categoryName,
-                inventoryCount: item.productCount || 0,
-                price: item.tradeAmount || 0
-              }))
+          case 'monthly':
+            response = await statisticsApi.getMonthlyStatistics(filters.year, filters.month)
+            console.log("月度统计数据响应:", response)
+            if (response.status === 200) {
+              statisticsData.value = response.data || {}
+              console.log("月度统计数据赋值:", statisticsData.value)
             }
             break
-          case 'high-demand':
-            response = await statisticsApi.getHighDemandCategories(filters.limit)
-            if (response.data && response.data.code === 200) {
-              statisticsData.value = (response.data.data || []).map(item => ({
-                id: item.categoryId,
-                productName: item.categoryName,
-                categoryName: item.categoryName,
-                demandCount: item.productCount || 0,
-                averagePrice: item.tradeAmount || 0
-              }))
+          case 'category-sold':
+            response = await statisticsApi.getMonthlyCategorySoldInventory(filters.year, filters.month)
+            if (response.status === 200) {
+              statisticsData.value = response.data || {}
             }
             break
-          case 'monthly-top':
-            if (!filters.month) {
-              ElMessage.warning('请选择月份')
-              loading.value = false
-              return
+          case 'category-ranking':
+            response = await statisticsApi.getMonthlyCategoryRanking(filters.year, filters.month)
+            if (response.status === 200) {
+              statisticsData.value = response.data || {}
             }
-            const [year, month] = filters.month.split('-')
-            response = await statisticsApi.getMonthlyTopSellingProducts(
-              parseInt(month), 
-              parseInt(year), 
-              filters.limit
-            )
             break
-          case 'active-users':
-            if (!filters.dateRange || filters.dateRange.length !== 2) {
-              ElMessage.warning('请选择日期范围')
-              loading.value = false
-              return
+          case 'category-on-sale':
+            response = await statisticsApi.getMonthlyCategoryOnSaleInventory(filters.year, filters.month)
+            if (response.status === 200) {
+              statisticsData.value = response.data || {}
             }
-            response = await statisticsApi.getActiveUsersRanking(
-              filters.limit,
-              filters.dateRange[0],
-              filters.dateRange[1]
-            )
+            break
+          case 'active-user':
+            response = await statisticsApi.getMonthlyActiveUserRanking(filters.year, filters.month)
+            if (response.status === 200) {
+              statisticsData.value = response.data || {}
+            }
             break
           default:
             ElMessage.error('未知的统计类型')
@@ -337,158 +329,32 @@ export default {
             return
         }
         
-        if (response.data && response.data.code === 200) {
-          statisticsData.value = response.data.data || []
-          
-          // 如果是图表视图，更新图表
-          if (viewMode.value === 'chart') {
-            nextTick(() => {
-              updateChart()
-            })
-          }
+        // 更明确地检查响应数据
+        console.log("完整响应检查:", response)
+        if (response && response.status === 200) {
+          console.log("数据获取成功")
         } else {
-          ElMessage.error('获取统计数据失败')
+          console.log("响应数据结构不符合预期:", response)
+          ElMessage.error('获取统计数据失败: 数据格式不正确')
+          statisticsData.value = {} // 确保在失败时清空数据
         }
       } catch (error) {
         console.error('获取统计数据失败:', error)
-        ElMessage.error('获取统计数据失败')
+        ElMessage.error('获取统计数据失败: ' + (error.message || '未知错误'))
+        statisticsData.value = {} // 确保在异常时清空数据
       } finally {
         loading.value = false
       }
     }
     
-    // 更新图表
-    const updateChart = () => {
-      if (!statisticsChart.value) return
-      
-      const chartInstance = echarts.init(statisticsChart.value)
-      let option = {}
-      
-      switch (filters.type) {
-        case 'high-inventory':
-          option = createProductChart('闲置量', 'warning')
-          break
-        case 'high-demand':
-          option = createProductChart('需求量', 'success')
-          break
-        case 'monthly-top':
-          option = createProductChart('销量', 'primary')
-          break
-        case 'active-users':
-          option = createUserChart()
-          break
-      }
-      
-      chartInstance.setOption(option)
-    }
-    
-    // 创建产品相关图表
-    const createProductChart = (yAxisName, color) => {
-      const data = statisticsData.value.slice(0, 10).map(item => ({
-        name: item.productName,
-        value: item.tradeCount || 0
-      }))
-      
-      return {
-        tooltip: {
-          trigger: 'item',
-          formatter: '{a} <br/>{b}: {c}'
-        },
-        xAxis: {
-          type: 'value'
-        },
-        yAxis: {
-          type: 'category',
-          data: data.map(item => item.name),
-          inverse: true,
-          axisLine: { show: false },
-          axisTick: { show: false }
-        },
-        series: [
-          {
-            name: yAxisName,
-            type: 'bar',
-            data: data.map(item => item.value),
-            itemStyle: {
-              color: getColorByType(color)
-            }
-          }
-        ]
-      }
-    }
-    
-    // 创建用户图表
-    const createUserChart = () => {
-      const data = statisticsData.value.slice(0, 10).map(item => ({
-        name: item.userName,
-        value: item.tradeCount || 0,
-        amount: item.tradeAmount || 0
-      }))
-      
-      return {
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'shadow'
-          }
-        },
-        legend: {
-          data: ['交易次数', '交易总额']
-        },
-        xAxis: {
-          type: 'category',
-          data: data.map(item => item.name)
-        },
-        yAxis: [
-          {
-            type: 'value',
-            name: '交易次数'
-          },
-          {
-            type: 'value',
-            name: '交易总额(元)',
-            position: 'right'
-          }
-        ],
-        series: [
-          {
-            name: '交易次数',
-            type: 'bar',
-            data: data.map(item => item.value),
-            itemStyle: {
-              color: '#409EFF'
-            }
-          },
-          {
-            name: '交易总额',
-            type: 'line',
-            yAxisIndex: 1,
-            data: data.map(item => item.amount),
-            itemStyle: {
-              color: '#67C23A'
-            }
-          }
-        ]
-      }
-    }
-    
-    // 根据类型获取颜色
-    const getColorByType = (type) => {
-      const colorMap = {
-        'warning': '#E6A23C',
-        'success': '#67C23A',
-        'primary': '#409EFF'
-      }
-      return colorMap[type] || '#409EFF'
-    }
-    
     // 获取统计标题
     const getStatisticsTitle = () => {
       const titleMap = {
-        'high-inventory': '高闲置量二手物品排行',
-        'high-demand': '高需求量二手物品排行',
-        'monthly-top': '月度热门二手物品排行',
-        'active-users': '活跃用户排行'
+        'monthly': `月度综合统计 (${filters.year}年${filters.month}月)`,
+        'category-sold': `分类已售量统计 (${filters.year}年${filters.month}月)`,
+        'category-ranking': `分类交易排行 (${filters.year}年${filters.month}月)`,
+        'category-on-sale': `分类在售量统计 (${filters.year}年${filters.month}月)`,
+        'active-user': `活跃用户排行 (${filters.year}年${filters.month}月)`
       }
       return titleMap[filters.type] || '统计分析'
     }
@@ -516,15 +382,6 @@ export default {
       ElMessage.info('导出功能开发中')
     }
     
-    // 监听视图模式变化
-    const handleViewModeChange = () => {
-      if (viewMode.value === 'chart') {
-        nextTick(() => {
-          updateChart()
-        })
-      }
-    }
-    
     onMounted(() => {
       fetchStatisticsData()
     })
@@ -533,21 +390,14 @@ export default {
       loading,
       statisticsData,
       filters,
-      viewMode,
-      statisticsChart,
       handleTypeChange,
-      handleViewModeChange,
       getStatisticsTitle,
       getRankType,
       viewProduct,
       viewUser,
       exportData,
-      formatPrice
-    }
-  },
-  watch: {
-    viewMode() {
-      this.handleViewModeChange()
+      formatPrice,
+      fetchStatisticsData
     }
   }
 }
@@ -589,11 +439,41 @@ export default {
   font-weight: 500;
 }
 
-.chart-container {
-  width: 100%;
-  height: 500px;
-  margin-top: var(--spacing-base);
-  overflow: hidden;
+.unified-table {
+  width: 100% !important;
+}
+
+.unified-table .el-table__body-wrapper {
+  overflow-x: auto;
+}
+
+.unified-table th {
+  white-space: nowrap;
+  background-color: #f8f9fa;
+  font-weight: 600;
+  text-align: center !important;
+  vertical-align: middle;
+}
+
+.unified-table td {
+  padding: 12px 8px;
+  min-height: 52px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.unified-table .cell {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+}
+
+.unified-table .el-table__fixed-right {
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 响应式设计 */
@@ -602,11 +482,6 @@ export default {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-base);
-  }
-  
-  .chart-container {
-    height: 350px;
-    overflow: hidden;
   }
 }
 

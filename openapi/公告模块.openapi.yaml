@@ -251,6 +251,8 @@ components:
           format: int64
         authorName:
           type: string
+        authorAvatar:
+          type: string
         createTime:
           type: string
           format: date-time

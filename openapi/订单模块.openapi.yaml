@@ -366,8 +366,8 @@ components:
         status:
           type: integer
           format: int32
-        buyerConfirmed:
-          type: boolean
+        paymentProof:
+          type: string
         createTime:
           type: string
           format: date-time
@@ -488,10 +488,18 @@ components:
           format: int64
         buyerName:
           type: string
+        buyerAvatar:
+          type: string
+        buyerPhone:
+          type: string
         sellerId:
           type: integer
           format: int64
         sellerName:
+          type: string
+        sellerAvatar:
+          type: string
+        sellerPhone:
           type: string
         amount:
           type: number
@@ -505,8 +513,6 @@ components:
           format: int32
         statusDesc:
           type: string
-        buyerConfirmed:
-          type: boolean
         createTime:
           type: string
           format: date-time

@@ -83,18 +83,18 @@ paths:
                 $ref: '#/components/schemas/BaseResponseBoolean'
           headers: {}
       security: []
-  /cart/check/{productId}:
-    get:
-      summary: 检查商品是否在购物车中
+  /cart/{cartId}:
+    delete:
+      summary: 从购物车移除商品
       deprecated: false
-      description: 检查指定二手物品是否在当前用户的购物车中
-      operationId: checkProductInCart
+      description: 用户从购物车中移除指定商品
+      operationId: removeFromCart
       tags:
         - 购物车管理
       parameters:
-        - name: productId
+        - name: cartId
           in: path
-          description: 二手物品ID
+          description: 购物车项ID
           required: true
           example: 0
           schema:
@@ -109,18 +109,18 @@ paths:
                 $ref: '#/components/schemas/BaseResponseBoolean'
           headers: {}
       security: []
-  /cart/{cartId}:
-    delete:
-      summary: 从购物车移除商品
+  /cart/check/{productId}:
+    get:
+      summary: 检查商品是否在购物车中
       deprecated: false
-      description: 用户从购物车中移除指定商品
-      operationId: removeFromCart
+      description: 检查指定二手物品是否在当前用户的购物车中
+      operationId: checkProductInCart
       tags:
         - 购物车管理
       parameters:
-        - name: cartId
+        - name: productId
           in: path
-          description: 购物车项ID
+          description: 二手物品ID
           required: true
           example: 0
           schema:
@@ -181,7 +181,7 @@ components:
           format: int64
         productName:
           type: string
-        productImage:
+        mainImageUrl:
           type: string
         price:
           type: number
@@ -190,6 +190,16 @@ components:
         createTime:
           type: string
           format: date-time
+        sellerName:
+          type: string
+        sellerAvatar:
+          type: string
+        paymentMethod:
+          type: integer
+          format: int32
+        productStatus:
+          type: integer
+          format: int32
   responses: {}
   securitySchemes: {}
 servers: []

@@ -26,6 +26,14 @@ export default {
     })
   },
 
+  // 支付订单
+  payOrder(orderId) {
+    return request({
+      url: `/order/${orderId}/pay`,
+      method: 'put'
+    })
+  },
+
   // 获取订单详情
   getOrderById(orderId) {
     return request({

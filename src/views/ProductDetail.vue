@@ -207,11 +207,6 @@ export default {
         sellerStats.value.published = productsResponse.data.data.total || 0
         
         // 获取卖家订单统计
-        const statsResponse = await statisticsApi.getUserTradeStatistics(sellerId)
-        if (statsResponse.data.code === 200) {
-          const stats = statsResponse.data.data
-          sellerStats.value.completed = stats.totalSales || 0
-        }
       } catch (error) {
         console.error('获取卖家统计失败:', error)
       }
@@ -237,7 +232,9 @@ export default {
     // 创建订单
     const createOrder = async () => {
       try {
-        const response = await orderApi.createOrder(productId.value)
+        // 确保productId是字符串类型，避免精度丢失
+        const productIdStr = typeof productId.value === 'string' ? productId.value : String(productId.value)
+        const response = await orderApi.createOrder(productIdStr)
         
         if (response.data.code === 200) {
           ElMessage.success('订单创建成功')
@@ -247,7 +244,7 @@ export default {
         }
       } catch (error) {
         console.error('创建订单失败:', error)
-        ElMessage.error('创建订单失败')
+        ElMessage.error('创建订单失败: ' + (error.message || '系统异常，请稍后重试'))
       }
     }
     

@@ -28,6 +28,9 @@
         <div v-if="product.category" class="unified-tag unified-tag-warning">
           {{ product.category.name }}
         </div>
+        <div v-if="product.status !== undefined" class="unified-tag" :class="getProductStatusType(product.status)">
+          {{ formatProductStatus(product.status) }}
+        </div>
       </div>
       
       <div class="product-footer" v-if="showUser && product.user">
@@ -35,6 +38,29 @@
           <el-avatar :size="24" :src="product.user.userAvatar">{{ product.user.userName?.charAt(0) }}</el-avatar>
           <span class="user-name">{{ product.user.userName }}</span>
         </div>
+      </div>
+      
+      <!-- 操作按钮（仅在是我的商品页面显示） -->
+      <div v-if="showActions" class="product-actions">
+        <el-button 
+          v-if="product.status === 0 || product.status === 1"
+          size="small" 
+          type="primary" 
+          plain
+          @click.stop="editProduct"
+        >
+          编辑
+        </el-button>
+        <el-button 
+          v-if="product.status === 0 || product.status === 1"
+          size="small" 
+          type="danger" 
+          plain
+          :disabled="product.status === 2"
+          @click.stop="deleteProduct"
+        >
+          删除
+        </el-button>
       </div>
     </div>
   </el-card>
@@ -59,9 +85,14 @@ export default {
     showUser: {
       type: Boolean,
       default: false
+    },
+    showActions: {
+      type: Boolean,
+      default: false
     }
   },
-  setup(props) {
+  emits: ['edit', 'delete', 'status-change'],
+  setup(props, { emit }) {
     const router = useRouter()
     
     const goToDetail = () => {
@@ -93,13 +124,31 @@ export default {
       return null
     }
     
+    // 编辑商品
+    const editProduct = () => {
+      emit('edit', props.product)
+    }
+    
+    // 删除商品
+    const deleteProduct = () => {
+      emit('delete', props.product)
+    }
+    
+    // 切换商品状态
+    const toggleStatus = (status) => {
+      emit('status-change', { product: props.product, status })
+    }
+    
     return {
       goToDetail,
       formatPrice,
       formatPaymentMethod,
       formatProductStatus,
       getProductStatusType,
-      getProductImage
+      getProductImage,
+      editProduct,
+      deleteProduct,
+      toggleStatus
     }
   }
 }
@@ -246,6 +295,19 @@ export default {
   margin-left: var(--spacing-xs);
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
+}
+
+/* 操作按钮区域 */
+.product-actions {
+  margin-top: var(--spacing-sm);
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.product-actions .el-button {
+  flex: 1;
+  min-width: 60px;
 }
 
 /* 响应式设计 */

@@ -5,36 +5,11 @@
         <template #header>
           <div class="card-header">
             <span>订单详情</span>
-            <el-tag :type="getOrderStatusType(order.status)" size="large">
-              {{ formatOrderStatus(order.status) }}
-            </el-tag>
           </div>
         </template>
         
-        <div class="order-info">
-          <el-descriptions title="订单信息" :column="2" border>
-            <el-descriptions-item label="订单号">{{ order.id }}</el-descriptions-item>
-            <el-descriptions-item label="订单状态">
-              <el-tag :type="getOrderStatusType(order.status)" size="small">
-                {{ formatOrderStatus(order.status) }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="创建时间">
-              {{ formatDate(order.createTime) }}
-            </el-descriptions-item>
-            <el-descriptions-item label="完成时间" v-if="order.finishTime">
-              {{ formatDate(order.finishTime) }}
-            </el-descriptions-item>
-            <el-descriptions-item label="支付方式">
-              {{ formatPaymentMethod(order.paymentMethod) }}
-            </el-descriptions-item>
-            <el-descriptions-item label="订单金额">¥{{ formatPrice(order.amount) }}</el-descriptions-item>
-          </el-descriptions>
-        </div>
-        
         <!-- 二手物品详细信息 -->
         <div class="product-detail-section">
-          <h3>二手物品详情</h3>
           <el-row :gutter="20">
             <el-col :xs="24" :lg="14">
               <div v-if="productDetail">
@@ -86,64 +61,86 @@
                 </div>
                 
                 <!-- 订单操作按钮 -->
-                <div class="order-actions" v-if="isBuyer || isSeller">
-                  <el-button 
-                    v-if="isBuyer && order.status === 2 && !order.buyerConfirmed" 
-                    type="success" 
-                    size="large" 
-                    @click="confirmOrder(order.id)"
+                <div class="order-actions" v-if="isBuyer">
+                  <el-button
+                    v-if="order.status === 1"
+                    type="danger"
+                    size="large"
+                    @click="cancelOrder"
+                  >
+                    取消订单
+                  </el-button>
+                  <el-button
+                    v-if="order.status === 1"
+                    type="success"
+                    size="large"
+                    @click="confirmOrder"
                   >
                     确认收货
+                  </el-button>
+                  <el-button
+                    v-if="order.status === 2" && !hasReviewed
+                    type="primary"
+                    size="large"
+                    @click="showReviewDialog = true"
+                  >
+                    发布评论
                   </el-button>
                 </div>
               </el-card>
             </el-col>
           </el-row>
         </div>
-        
-
-        
-        <!-- 订单操作 -->
-        <div class="order-actions">
-          <el-button @click="$router.go(-1)">返回</el-button>
-          
-          <!-- 买家操作 -->
-          <template v-if="isBuyer">
-            <el-button
-              v-if="order.status === 0"
-              type="danger"
-              @click="cancelOrder"
-            >
-              取消订单
-            </el-button>
-            <el-button
-              v-if="order.status === 1 && !order.buyerConfirmed"
-              type="success"
-              @click="confirmOrder"
-            >
-              确认收货
-            </el-button>
-          </template>
-        </div>
       </el-card>
+      
+      <!-- 发布评论对话框 -->
+      <el-dialog
+        v-model="showReviewDialog"
+        title="发布评论"
+        width="500px"
+        :before-close="handleReviewDialogClose"
+      >
+        <el-form
+          ref="reviewFormRef"
+          :model="reviewForm"
+          :rules="reviewRules"
+          label-width="80px"
+        >
+          <el-form-item label="评分" prop="rating">
+            <el-rate v-model="reviewForm.rating" />
+          </el-form-item>
+          <el-form-item label="评论内容" prop="content">
+            <el-input
+              v-model="reviewForm.content"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入您的评论内容"
+            />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="handleReviewDialogClose">取消</el-button>
+            <el-button type="primary" @click="submitReview">提交</el-button>
+          </span>
+        </template>
+      </el-dialog>
     </div>
     
     <div v-else class="loading-container">
       <el-skeleton animated />
     </div>
-    
-
   </Layout>
 </template>
 
 <script>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router'
 import { Picture } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
 import ProductInfoCard from '@/components/ProductInfoCard.vue'
-import { orderApi, productApi, userApi } from '@/api'
+import { orderApi, productApi, userApi, reviewApi } from '@/api'
 import {
   formatPrice,
   formatPaymentMethod,
@@ -179,6 +176,25 @@ export default {
       errorMessage: '订单不存在或已被删除'
     })
     
+    // 评论相关
+    const showReviewDialog = ref(false)
+    const reviewFormRef = ref(null)
+    const hasReviewed = ref(false)
+    
+    const reviewForm = reactive({
+      rating: 5,
+      content: ''
+    })
+    
+    const reviewRules = {
+      rating: [
+        { required: true, message: '请选择评分', trigger: 'change' }
+      ],
+      content: [
+        { required: true, message: '请输入评论内容', trigger: 'blur' },
+        { min: 5, max: 200, message: '评论内容长度应在5到200个字符之间', trigger: 'blur' }
+      ]
+    }
 
     const productDetail = ref(null)
     const productLoading = ref(false)
@@ -186,8 +202,9 @@ export default {
     // 计算属性
     const user = computed(() => store.state.user)
     const orderId = computed(() => route.params.id)
-    const isBuyer = computed(() => user.value && order.value && order.value.buyer && user.value.id === order.value.buyer.id)
-    const isSeller = computed(() => user.value && order.value && order.value.seller && user.value.id === order.value.seller.id)
+    const isBuyer = computed(() => {
+      return user.value && order.value && user.value.id === order.value.buyerId
+    })
     
     // 处理图片URL，将完整后端地址转换为相对路径
     const processImageUrl = (url) => {
@@ -272,8 +289,6 @@ export default {
       }
     })
     
-
-    
     // 取消订单
     const cancelOrder = async () => {
       try {
@@ -322,9 +337,64 @@ export default {
       }
     }
     
-
+    // 检查是否已评论
+    const checkIfReviewed = async () => {
+      if (!order.value || !order.value.id) return
+      
+      try {
+        const response = await reviewApi.getReviewByOrderId(order.value.id)
+        if (response.data.code === 200 && response.data.data) {
+          hasReviewed.value = true
+        }
+      } catch (error) {
+        console.error('检查评论状态失败:', error)
+      }
+    }
     
-
+    // 监听订单数据变化，检查是否已评论
+    watch(() => order.value, (newOrder) => {
+      if (newOrder && newOrder.status === 2) {
+        checkIfReviewed()
+      }
+    })
+    
+    // 关闭评论对话框
+    const handleReviewDialogClose = () => {
+      showReviewDialog.value = false
+      reviewForm.rating = 5
+      reviewForm.content = ''
+      if (reviewFormRef.value) {
+        reviewFormRef.value.resetFields()
+      }
+    }
+    
+    // 提交评论
+    const submitReview = async () => {
+      if (!reviewFormRef.value) return
+      
+      try {
+        await reviewFormRef.value.validate()
+        
+        const reviewData = {
+          orderId: order.value.id,
+          productId: order.value.productId,
+          rating: reviewForm.rating,
+          content: reviewForm.content
+        }
+        
+        const response = await reviewApi.addReview(reviewData)
+        if (response.data.code === 200) {
+          ElMessage.success('评论发布成功')
+          handleReviewDialogClose()
+          hasReviewed.value = true
+        } else {
+          throw new Error(response.data.message || '评论发布失败')
+        }
+      } catch (error) {
+        console.error('发布评论失败:', error)
+        ElMessage.error(error.message || '评论发布失败')
+      }
+    }
     
     // 图片加载错误处理
     const handleImageError = (event) => {
@@ -347,7 +417,6 @@ export default {
       productDetail,
       productLoading,
       isBuyer,
-      isSeller,
       formatPrice,
       formatPaymentMethod,
       formatOrderStatus,
@@ -357,7 +426,14 @@ export default {
       getUserStatusType,
       cancelOrder,
       confirmOrder,
-      handleImageError
+      handleImageError,
+      showReviewDialog,
+      reviewFormRef,
+      reviewForm,
+      reviewRules,
+      hasReviewed,
+      handleReviewDialogClose,
+      submitReview
     }
   }
 }
@@ -572,11 +648,16 @@ export default {
 
 /* 订单操作按钮样式 */
 .order-actions {
-  flex-direction: column;
+  display: flex;
+  flex-direction: row;
+  gap: var(--spacing-base);
+  flex-wrap: wrap;
 }
 
 .order-actions .el-button {
-  width: 100%;
+  width: auto;
+  flex: 1;
+  min-width: 120px;
 }
 
 .extra-payment-action {
@@ -642,6 +723,10 @@ export default {
   
   .order-actions {
     flex-direction: column;
+  }
+  
+  .order-actions .el-button {
+    width: 100%;
   }
 }
 </style>

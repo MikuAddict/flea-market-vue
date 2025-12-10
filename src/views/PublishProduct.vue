@@ -222,8 +222,18 @@ export default {
         Object.keys(productForm).forEach(key => {
           if (product[key] !== undefined) {
             if (key === 'imageUrls' && product[key]) {
-              // 处理图片URL，将逗号分隔的字符串转换为数组
-              const imageUrls = product[key].split(',').filter(url => url.trim())
+              // 处理图片URL，可能已经是数组或者逗号分隔的字符串
+              let imageUrls = [];
+              if (Array.isArray(product[key])) {
+                // 如果已经是数组格式
+                imageUrls = product[key];
+              } else if (typeof product[key] === 'string') {
+                // 如果是逗号分隔的字符串
+                imageUrls = product[key].split(',').filter(url => url.trim());
+              } else {
+                // 其他情况，尝试转换为字符串再处理
+                imageUrls = String(product[key]).split(',').filter(url => url.trim());
+              }
               
               // 填充临时图片数据（编辑模式下已有正式URL）
               tempImages.value = imageUrls.map(url => ({

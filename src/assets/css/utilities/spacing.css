@@ -1,0 +1,13 @@
+/* 统一的间距 */
+
+.unified-m-xs { margin: var(--spacing-xs); }
+.unified-m-sm { margin: var(--spacing-sm); }
+.unified-m-base { margin: var(--spacing-base); }
+.unified-m-lg { margin: var(--spacing-lg); }
+.unified-m-xl { margin: var(--spacing-xl); }
+
+.unified-p-xs { padding: var(--spacing-xs); }
+.unified-p-sm { padding: var(--spacing-sm); }
+.unified-p-base { padding: var(--spacing-base); }
+.unified-p-lg { padding: var(--spacing-lg); }
+.unified-p-xl { padding: var(--spacing-xl); }

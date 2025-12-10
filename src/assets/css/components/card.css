@@ -1,0 +1,15 @@
+/* 统一的卡片样式 */
+
+.unified-card {
+  background-color: var(--bg-white);
+  border-radius: var(--border-radius-base);
+  box-shadow: var(--shadow-light);
+  border: 1px solid var(--border-light);
+  transition: all var(--transition-base);
+  overflow: hidden;
+}
+
+.unified-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}

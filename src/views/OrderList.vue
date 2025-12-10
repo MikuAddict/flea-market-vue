@@ -62,16 +62,19 @@
                 </div>
                 <div class="product-details">
                   <h4>{{ order.product?.productName || '二手物品已删除' }}</h4>
-                  <p v-if="order.product">
-                    分类: {{ order.product.category?.name }}
+                  <p v-if="order.product?.category?.name">
+                    分类: {{ order.product.category.name }}
                   </p>
-                  <p>支付方式: {{ formatPaymentMethod(order.paymentMethod) }}</p>
+                  <p v-else-if="order.product?.categoryName">
+                    分类: {{ order.product.categoryName }}
+                  </p>
+                  <p>支付方式: {{ formatPaymentMethod(order.paymentMethod || order.product?.paymentMethod) }}</p>
                 </div>
               </div>
               
               <div class="order-amount">
                 <div class="amount-label">订单金额</div>
-                <div class="amount-value">¥{{ formatPrice(order.amount) }}</div>
+                <div class="amount-value">¥{{ formatPrice(order.amount || order.product?.price) }}</div>
               </div>
             </div>
             
@@ -410,130 +413,7 @@ export default {
   padding: var(--spacing-xxl) 0;
 }
 
-.order-list {
-  margin-bottom: var(--spacing-xl);
-}
-
-.order-item {
-  margin-bottom: var(--spacing-xl);
-}
-
-.order-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: var(--spacing-sm);
-  border-bottom: 1px solid var(--border-light);
-}
-
-.order-info {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.order-id {
-  font-weight: 500;
-}
-
-.order-time {
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-.order-content {
-  display: flex;
-  justify-content: space-between;
-  padding: var(--spacing-base) 0;
-}
-
-.product-info {
-  display: flex;
-  gap: var(--spacing-base);
-  flex: 1;
-}
-
-.product-image {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--border-radius-small);
-  overflow: hidden;
-}
-
-.product-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.no-image {
-  width: 80px;
-  height: 80px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: var(--bg-light);
-  color: var(--text-placeholder);
-  font-size: var(--font-size-xl);
-}
-
-.product-details h4 {
-  margin: 0 0 var(--spacing-xs) 0;
-  font-size: var(--font-size-base);
-}
-
-.product-details p {
-  margin: 0 0 var(--spacing-xs) 0;
-  color: var(--text-regular);
-  font-size: var(--font-size-sm);
-}
-
-.order-amount {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-  min-width: 120px;
-}
-
-.amount-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-regular);
-}
-
-.amount-value {
-  font-size: var(--font-size-lg);
-  font-weight: bold;
-  color: var(--danger-color);
-  margin-top: var(--spacing-xs);
-}
-
-.order-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--border-light);
-}
-
-.order-seller {
-  color: var(--text-regular);
-  font-size: var(--font-size-sm);
-}
-
-.clickable {
-  cursor: pointer;
-}
-
-.clickable:hover {
-  color: #409eff;
-  text-decoration: underline;
-}
-
-.order-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-}
+/* 订单卡片样式已提取到公共样式文件 */
 
 .pagination-container {
   display: flex;

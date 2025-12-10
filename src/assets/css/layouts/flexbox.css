@@ -1,0 +1,32 @@
+/* 统一的弹性布局 */
+
+.unified-flex {
+  display: flex;
+}
+
+.unified-flex-col {
+  flex-direction: column;
+}
+
+.unified-flex-wrap {
+  flex-wrap: wrap;
+}
+
+.unified-flex-center {
+  justify-content: center;
+  align-items: center;
+}
+
+.unified-flex-between {
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 响应式弹性布局 */
+@media (max-width: 768px) {
+  .unified-flex-between {
+    flex-direction: column;
+    gap: var(--spacing-base);
+    align-items: flex-start;
+  }
+}

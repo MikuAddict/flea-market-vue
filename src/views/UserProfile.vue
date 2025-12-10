@@ -190,16 +190,19 @@
                           </div>
                           <div class="product-details">
                             <h4>{{ order.product?.productName || '二手物品已删除' }}</h4>
-                            <p v-if="order.product">
-                              分类: {{ order.product.category?.name }}
+                            <p v-if="order.product?.category?.name">
+                              分类: {{ order.product.category.name }}
                             </p>
-                            <p>支付方式: {{ formatPaymentMethod(order.paymentMethod) }}</p>
+                            <p v-else-if="order.product?.categoryName">
+                              分类: {{ order.product.categoryName }}
+                            </p>
+                            <p>支付方式: {{ formatPaymentMethod(order.paymentMethod || order.product?.paymentMethod) }}</p>
                           </div>
                         </div>
                         
                         <div class="order-amount">
                           <div class="amount-label">订单金额</div>
-                          <div class="amount-value">¥{{ formatPrice(order.amount) }}</div>
+                          <div class="amount-value">¥{{ formatPrice(order.amount || order.product?.price) }}</div>
                         </div>
                       </div>
                       
@@ -280,6 +283,7 @@
                   empty-text="暂无评价"
                   :show-view-more="true"
                   @go-to-product="goToProduct"
+                  @go-to-user="goToUserProfile"
                 />
               </el-tab-pane>
             </el-tabs>
@@ -489,7 +493,48 @@ export default {
           current: 1,
           size: 10
         })
-        myReviews.value = response.data.data.records || []
+        
+        if (response.data.code === 200) {
+          const reviews = response.data.data.records || []
+          
+          // 为每个评论补充用户和产品信息
+          const enrichedReviews = await Promise.all(
+            reviews.map(async (review) => {
+              const enrichedReview = { ...review }
+              
+              // 如果评论数据中不包含用户信息，则根据userId获取用户信息
+              if (!review.userName || !review.userAvatar) {
+                try {
+                  const userResponse = await userApi.getUserVOById(review.userId)
+                  if (userResponse.data.code === 200) {
+                    enrichedReview.userName = userResponse.data.data.userName
+                    enrichedReview.userAvatar = userResponse.data.data.userAvatar
+                  }
+                } catch (userError) {
+                  console.error('获取用户信息失败:', userError)
+                }
+              }
+              
+              // 如果评论数据中不包含产品信息，则根据productId获取产品信息
+              if (!review.productName || !review.productImage) {
+                try {
+                  const productResponse = await productApi.getProductById(review.productId)
+                  if (productResponse.data.code === 200) {
+                    enrichedReview.productName = productResponse.data.data.productName
+                    enrichedReview.productImage = productResponse.data.data.imageUrl || productResponse.data.data.mainImageUrl
+                    enrichedReview.productPrice = productResponse.data.data.price
+                  }
+                } catch (productError) {
+                  console.error('获取产品信息失败:', productError)
+                }
+              }
+              
+              return enrichedReview
+            })
+          )
+          
+          myReviews.value = enrichedReviews
+        }
       } catch (error) {
         console.error('获取我的评价失败:', error)
       }
@@ -694,6 +739,11 @@ export default {
       router.push(`/products/${productId}`)
     }
     
+    // 跳转到用户资料页面
+    const goToUserProfile = (userId) => {
+      router.push(`/user/${userId}`)
+    }
+    
     // 监听编辑模式变化
     watch(editMode, (newVal) => {
       if (newVal) {
@@ -756,6 +806,7 @@ export default {
       viewOrder,
       cancelOrder,
       goToProduct,
+      goToUserProfile,
       fetchOrders
     }
   }
@@ -996,71 +1047,7 @@ export default {
   margin-bottom: var(--spacing-base);
 }
 
-/* 订单列表样式 */
-.orders-list {
-  margin-bottom: var(--spacing-lg);
-}
-
-.order-item {
-  margin-bottom: var(--spacing-base);
-}
-
-.order-card {
-  border-left: 4px solid var(--primary-color);
-}
-
-.order-header {
-  margin-bottom: var(--spacing-base);
-}
-
-.order-id {
-  font-weight: 500;
-}
-
-.order-product {
-  margin-bottom: var(--spacing-base);
-}
-
-.product-info {
-  flex: 1;
-}
-
-.product-name {
-  margin: 0 0 var(--spacing-xs) 0;
-  color: var(--text-primary);
-}
-
-.order-time {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-.price-info {
-  display: flex;
-  align-items: baseline;
-  color: var(--danger-color);
-}
-
-.price-symbol {
-  font-size: var(--font-size-sm);
-  margin-right: 2px;
-}
-
-.price-value {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-}
-
-.order-footer {
-  padding-top: var(--spacing-base);
-  border-top: 1px solid var(--border-light);
-}
-
-.order-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-}
+/* 订单卡片样式已提取到公共样式文件 */
 
 /* 评价列表样式 */
 .reviews-list {

@@ -1,0 +1,33 @@
+/* 统一的文本样式 */
+
+.unified-text-primary {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.unified-text-secondary {
+  color: var(--text-secondary);
+}
+
+.unified-text-muted {
+  color: var(--text-placeholder);
+}
+
+/* 统一的标题样式 */
+.unified-title {
+  margin: var(--spacing-lg) 0 var(--spacing-base);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.unified-title-xl {
+  font-size: var(--font-size-xxl);
+}
+
+.unified-title-lg {
+  font-size: var(--font-size-xl);
+}
+
+.unified-title-base {
+  font-size: var(--font-size-lg);
+}

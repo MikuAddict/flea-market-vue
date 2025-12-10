@@ -1,0 +1,37 @@
+/* 统一列表项样式 */
+
+.unified-list-item {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  gap: var(--spacing-sm);
+}
+
+.unified-list-item-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.unified-list-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.unified-list-item-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.unified-list-item-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

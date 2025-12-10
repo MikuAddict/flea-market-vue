@@ -1,0 +1,90 @@
+/* 统一的按钮样式 */
+
+.unified-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-round);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--transition-base);
+  cursor: pointer;
+  border: 1px solid transparent;
+  outline: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.unified-button-primary {
+  background-color: var(--primary-color);
+  color: var(--bg-white);
+  border-color: var(--primary-color);
+}
+
+.unified-button-primary:hover {
+  background-color: var(--primary-dark);
+  border-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-base);
+}
+
+.unified-button-outline {
+  background-color: transparent;
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.unified-button-outline:hover {
+  background-color: var(--primary-light);
+  color: var(--bg-white);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-base);
+}
+
+/* 操作按钮样式 */
+.unified-action-buttons {
+  gap: var(--spacing-xs);
+  flex-wrap: nowrap;
+}
+
+.unified-action-btn-edit {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.unified-action-btn-delete {
+  background-color: var(--danger-color);
+  border-color: var(--danger-color);
+}
+
+/* 统一操作按钮样式（与用户管理一致） */
+.action-buttons {
+  gap: var(--spacing-xs);
+  flex-wrap: nowrap;
+}
+
+.action-btn-edit {
+  background-color: transparent;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.action-btn-edit:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.action-btn-delete {
+  background-color: transparent;
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+}
+
+.action-btn-delete:hover {
+  background-color: var(--danger-color);
+  border-color: var(--danger-color);
+  color: white;
+}

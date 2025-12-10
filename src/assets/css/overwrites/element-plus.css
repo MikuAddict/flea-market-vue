@@ -1,0 +1,57 @@
+/* Element Plus 组件覆盖样式 */
+
+.el-card {
+  border-radius: var(--border-radius-base) !important;
+  box-shadow: var(--shadow-light) !important;
+  border: 1px solid var(--border-light) !important;
+  transition: all var(--transition-base);
+}
+
+.el-card:hover {
+  box-shadow: var(--shadow-hover) !important;
+  transform: translateY(-2px);
+}
+
+.el-button {
+  border-radius: var(--border-radius-round) !important;
+  font-weight: 500;
+  transition: all var(--transition-base);
+}
+
+.el-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-base);
+}
+
+.el-input__wrapper {
+  border-radius: var(--border-radius-base) !important;
+  transition: all var(--transition-base);
+}
+
+.el-input__wrapper:hover {
+  box-shadow: var(--shadow-light);
+}
+
+.el-input.is-focus .el-input__wrapper {
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2) !important;
+}
+
+.el-table {
+  border-radius: var(--border-radius-base);
+  overflow: hidden;
+}
+
+.el-table th {
+  background-color: var(--bg-lighter) !important;
+  color: var(--text-regular) !important;
+  font-weight: 600;
+}
+
+.el-pagination {
+  justify-content: center;
+  margin-top: var(--spacing-lg);
+}
+
+.el-tag {
+  border-radius: var(--border-radius-small);
+}

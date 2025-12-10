@@ -1,0 +1,67 @@
+/* 统一列表样式 */
+.unified-list-container {
+  width: 100%;
+  margin-bottom: var(--spacing-xl);
+}
+
+.unified-list-container .el-table {
+  width: 100% !important;
+}
+
+.unified-list-container .el-table__body-wrapper {
+  overflow-x: auto;
+}
+
+.unified-list-container .el-table th {
+  white-space: nowrap;
+  background-color: #f8f9fa;
+  font-weight: 600;
+  text-align: center !important;
+  vertical-align: middle;
+}
+
+.unified-list-container .el-table td {
+  padding: 12px 8px;
+  min-height: 52px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.unified-list-container .el-table .cell {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+}
+
+/* 特殊列的居中处理 */
+.unified-list-container .el-table .user-info .cell {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.unified-list-container .el-table .action-buttons .cell {
+  justify-content: center;
+}
+
+/* 表格列宽自适应 */
+.unified-list-container .el-table--fit {
+  min-width: 100%;
+}
+
+.unified-list-container .el-table .el-table__header-wrapper {
+  overflow: visible;
+}
+
+/* 操作列样式优化 */
+.unified-list-container .el-table__fixed-right {
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 统一分页样式 */
+.unified-pagination-container {
+  margin-top: var(--spacing-xl);
+}

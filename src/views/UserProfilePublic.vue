@@ -53,6 +53,7 @@
                   :show-product-link="true"
                   :show-view-more="false"
                   @go-to-product="goToProduct"
+                  @go-to-user="goToUserProfile"
                 />
               </el-tab-pane>
             </el-tabs>
@@ -150,7 +151,45 @@ export default {
         })
         
         if (response.data.code === 200) {
-          userReviews.value = response.data.data.records || []
+          const reviews = response.data.data.records || []
+          
+          // 为每个评论补充用户和产品信息
+          const enrichedReviews = await Promise.all(
+            reviews.map(async (review) => {
+              const enrichedReview = { ...review }
+              
+              // 如果评论数据中不包含用户信息，则根据userId获取用户信息
+              if (!review.userName || !review.userAvatar) {
+                try {
+                  const userResponse = await userApi.getUserVOById(review.userId)
+                  if (userResponse.data.code === 200) {
+                    enrichedReview.userName = userResponse.data.data.userName
+                    enrichedReview.userAvatar = userResponse.data.data.userAvatar
+                  }
+                } catch (userError) {
+                  console.error('获取用户信息失败:', userError)
+                }
+              }
+              
+              // 如果评论数据中不包含产品信息，则根据productId获取产品信息
+              if (!review.productName || !review.productImage) {
+                try {
+                  const productResponse = await productApi.getProductById(review.productId)
+                  if (productResponse.data.code === 200) {
+                    enrichedReview.productName = productResponse.data.data.productName
+                    enrichedReview.productImage = productResponse.data.data.imageUrl || productResponse.data.data.mainImageUrl
+                    enrichedReview.productPrice = productResponse.data.data.price
+                  }
+                } catch (productError) {
+                  console.error('获取产品信息失败:', productError)
+                }
+              }
+              
+              return enrichedReview
+            })
+          )
+          
+          userReviews.value = enrichedReviews
         }
       } catch (error) {
         console.error('获取用户评论失败:', error)

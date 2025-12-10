@@ -2,21 +2,19 @@
   <Layout>
     <div class="unified-page-container fade-in">
       <!-- 页面标题 -->
-      <section class="section-container">
-        <div class="section-header">
-          <h2 class="unified-title-xl">我的购物车</h2>
-        </div>
+      <section class="unified-mb-xl">
+        <h2 class="unified-title-xl">我的购物车</h2>
       </section>
 
       <!-- 购物车内容 -->
-      <section class="section-container">
+      <section>
         <!-- 加载状态 -->
         <div v-if="loading" class="loading-container">
           <el-skeleton :rows="6" animated />
         </div>
         
         <!-- 空购物车状态 -->
-        <div v-else-if="cartItems.length === 0" class="empty-container unified-flex unified-flex-center">
+        <div v-else-if="cartItems.length === 0" class="unified-empty unified-flex unified-flex-center">
           <el-empty description="购物车是空的">
             <template #image>
               <el-icon size="60" color="var(--text-placeholder)"><ShoppingCart /></el-icon>

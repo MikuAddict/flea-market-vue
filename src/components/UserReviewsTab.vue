@@ -4,38 +4,38 @@
       <h3 class="unified-title-base">{{ title }}</h3>
     </div>
     
-    <div v-if="reviews.length === 0" class="empty-content unified-flex unified-flex-col unified-flex-center">
+    <div v-if="reviews.length === 0" class="unified-empty unified-flex unified-flex-col unified-flex-center">
       <el-icon size="60" color="var(--text-placeholder)"><Star /></el-icon>
-      <p class="empty-text">{{ emptyText }}</p>
+      <p class="unified-empty-text">{{ emptyText }}</p>
     </div>
     
-    <div v-else class="reviews-list">
+    <div v-else class="unified-reviews-list">
       <div 
-        class="review-item fade-in"
+        class="unified-review-item fade-in"
         v-for="(review, index) in reviews" 
         :key="review.id"
         :style="{ animationDelay: `${index * 0.05}s` }"
       >
         <el-card class="unified-card review-card">
           <!-- 买家信息 -->
-          <div class="buyer-info unified-flex unified-flex-center unified-flex-between">
+          <div class="unified-review-header unified-flex unified-flex-center unified-flex-between">
             <div class="buyer-details unified-flex unified-flex-center" @click="goToUserProfile(review.userId)">
               <el-avatar 
                 :size="40" 
                 :src="review.userAvatar" 
                 class="buyer-avatar clickable"
               >
-                {{ review.userName?.charAt(0) || '买' }}
+                {{ review.userName?.charAt(0)}}
               </el-avatar>
               <div class="buyer-text">
-                <div class="buyer-name clickable">{{ review.userName || '买家' }}</div>
+                <div class="buyer-name clickable">{{ review.userName}}</div>
               </div>
             </div>
             <span class="review-time unified-text-secondary">{{ formatDate(review.createTime) }}</span>
           </div>
           
-          <div class="review-content">
-            <p class="review-text">{{ review.content }}</p>
+          <div class="unified-review-content">
+            <p class="unified-review-text">{{ review.content }}</p>
           </div>
           
           <!-- 二手物品信息 -->
@@ -146,29 +146,12 @@ export default {
 </script>
 
 <style scoped>
+/* 内容头部样式 */
 .content-header {
   margin-bottom: var(--spacing-lg);
 }
 
-/* 空状态样式 */
-.empty-content {
-  padding: var(--spacing-xxl) 0;
-}
-
-.empty-text {
-  margin: var(--spacing-base) 0;
-  color: var(--text-secondary);
-}
-
-/* 评论列表样式 */
-.reviews-list {
-  margin-bottom: var(--spacing-lg);
-}
-
-.review-item {
-  margin-bottom: var(--spacing-base);
-}
-
+/* 评论卡片样式 */
 .review-card {
   border-left: 4px solid var(--primary-color);
 }
@@ -212,16 +195,6 @@ export default {
   font-size: var(--font-size-md);
 }
 
-.review-content {
-  margin-bottom: var(--spacing-base);
-}
-
-.review-text {
-  margin: 0;
-  line-height: 1.6;
-  color: var(--text-primary);
-}
-
 /* 二手物品信息样式 */
 .product-info {
   padding: var(--spacing-base);
@@ -229,7 +202,7 @@ export default {
   border-radius: var(--border-radius-base);
   gap: var(--spacing-base);
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color var(--transition-base);
 }
 
 .product-info:hover {

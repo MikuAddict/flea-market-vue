@@ -31,7 +31,7 @@
             </template>
             
             <template #avatar-overlay v-if="editMode">
-              <div class="avatar-overlay">
+              <div class="unified-avatar-overlay">
                 <el-upload
                   class="avatar-uploader"
                   :auto-upload="false"
@@ -40,7 +40,7 @@
                   :before-upload="beforeAvatarUpload"
                   accept="image/jpeg, image/png"
                 >
-                  <div class="upload-icon">
+                  <div class="unified-upload-icon">
                     <el-icon><Camera /></el-icon>
                     <p>更换头像</p>
                   </div>
@@ -88,11 +88,11 @@
         <!-- 右侧内容区域 -->
         <el-col :xs="24" :md="16" :lg="17">
           <el-card class="unified-card content-card fade-in">
-            <el-tabs v-model="activeTab" class="profile-tabs" @tab-click="handleTabClick">
+            <el-tabs v-model="activeTab" class="unified-tabs" @tab-click="handleTabClick">
               <!-- 我的二手物品 -->
               <el-tab-pane name="products">
                 <template #label>
-                  <div class="tab-label unified-flex unified-flex-center">
+                  <div class="unified-tab-label unified-flex unified-flex-center">
                     <el-icon><Box /></el-icon>
                     <span>我的二手物品</span>
                   </div>
@@ -131,7 +131,7 @@
               <!-- 我的订单 -->
               <el-tab-pane name="orders">
                 <template #label>
-                  <div class="tab-label unified-flex unified-flex-center">
+                  <div class="unified-tab-label unified-flex unified-flex-center">
                     <el-icon><Document /></el-icon>
                     <span>我的订单</span>
                   </div>
@@ -154,41 +154,41 @@
                     </el-select>
                   </div>
                   
-                  <div v-if="orders.length === 0" class="empty-content unified-flex unified-flex-col unified-flex-center">
+                  <div v-if="orders.length === 0" class="unified-empty unified-flex unified-flex-col unified-flex-center">
                     <el-icon size="60" color="var(--text-placeholder)"><Document /></el-icon>
-                    <p class="empty-text">暂无订单</p>
+                    <p class="unified-empty-text">暂无订单</p>
                   </div>
                   
-                  <div v-else class="order-list">
+                  <div v-else>
                     <el-card
                       v-for="order in orders"
                       :key="order.id"
-                      class="order-item"
+                      class="unified-order-item"
                       shadow="hover"
                     >
-                      <div class="order-header">
-                        <div class="order-info">
+                      <div class="unified-order-header">
+                        <div class="unified-order-info">
                           <span class="order-id">订单号: {{ order.id }}</span>
                           <el-tag :type="getOrderStatusType(order.status)" size="small">
                             {{ formatOrderStatus(order.status) }}
                           </el-tag>
                         </div>
-                        <span class="order-time">{{ formatDate(order.createTime) }}</span>
+                        <span class="unified-order-time">{{ formatDate(order.createTime) }}</span>
                       </div>
                       
-                      <div class="order-content">
-                        <div class="product-info">
-                          <div class="product-image">
+                      <div class="unified-order-content">
+                        <div class="unified-product-info">
+                          <div class="unified-product-image">
                             <img
                               v-if="order.product && order.product.imageUrl"
                               :src="order.product.imageUrl"
                               :alt="order.product.productName"
                             />
-                            <div v-else class="no-image">
+                            <div v-else class="unified-no-image">
                               <el-icon><Picture /></el-icon>
                             </div>
                           </div>
-                          <div class="product-details">
+                          <div class="unified-product-details">
                             <h4>{{ order.product?.productName || '二手物品已删除' }}</h4>
                             <p v-if="order.product?.category?.name">
                               分类: {{ order.product.category.name }}
@@ -200,31 +200,31 @@
                           </div>
                         </div>
                         
-                        <div class="order-amount">
-                          <div class="amount-label">订单金额</div>
-                          <div class="amount-value">¥{{ formatPrice(order.amount || order.product?.price) }}</div>
+                        <div class="unified-order-amount">
+                          <div class="unified-amount-label">订单金额</div>
+                          <div class="unified-amount-value">¥{{ formatPrice(order.amount || order.product?.price) }}</div>
                         </div>
                       </div>
                       
-                      <div class="order-footer">
-                        <div class="order-seller" v-if="order.seller">
+                      <div class="unified-order-footer">
+                        <div class="unified-order-seller" v-if="order.seller">
                           卖家: 
                           <el-avatar 
                             :size="20" 
                             :src="order.seller.userAvatar" 
-                            style="margin-right: 5px; vertical-align: middle; cursor: pointer;"
+                            class="unified-mr-xs unified-cursor-pointer"
                             @click="goToUserProfile(order.seller.id)"
                           >
                             {{ order.seller.userName?.charAt(0) }}
                           </el-avatar>
-                          <span class="clickable" @click="goToUserProfile(order.seller.id)">
+                          <span class="unified-cursor-pointer" @click="goToUserProfile(order.seller.id)">
                             {{ order.seller.userName || '未知' }}
                           </span>
                         </div>
-                        <div class="order-seller" v-else>
+                        <div class="unified-order-seller" v-else>
                           卖家: 未知
                         </div>
-                        <div class="order-actions">
+                        <div class="unified-order-actions">
                           <el-button
                             size="small"
                             @click="viewOrder(order.id)"
@@ -271,7 +271,7 @@
               <!-- 我的评价 -->
               <el-tab-pane name="reviews">
                 <template #label>
-                  <div class="tab-label unified-flex unified-flex-center">
+                  <div class="unified-tab-label unified-flex unified-flex-center">
                     <el-icon><Star /></el-icon>
                     <span>我的评价</span>
                   </div>
@@ -820,17 +820,7 @@ export default {
   text-align: center;
 }
 
-/* 个人信息卡片样式 */
-.profile-card {
-  margin-bottom: var(--spacing-xl);
-  transition: all var(--transition-base);
-}
-
-.profile-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
-}
-
+/* 编辑按钮样式 */
 .edit-btn {
   font-weight: 500;
   display: flex;
@@ -838,141 +828,7 @@ export default {
   gap: var(--spacing-xs);
 }
 
-/* 头像部分样式 */
-.avatar-section {
-  margin-bottom: var(--spacing-lg);
-}
-
-.avatar-container {
-  position: relative;
-}
-
-.user-avatar {
-  border: 3px solid var(--border-lighter);
-  box-shadow: var(--shadow-light);
-  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
-}
-
-.avatar-text {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: white;
-}
-
-.avatar-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--transition-base);
-}
-
-.avatar-container:hover .avatar-overlay {
-  opacity: 1;
-}
-
-.upload-icon {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: white;
-  cursor: pointer;
-}
-
-.upload-icon p {
-  margin-top: var(--spacing-xs);
-  font-size: var(--font-size-xs);
-}
-
-/* 新增的已上传头像提示样式 */
-.avatar-uploaded-tip {
-  font-size: var(--font-size-sm);
-  margin-top: var(--spacing-xs);
-}
-
-/* 个人信息详情样式 */
-.profile-info {
-  text-align: center;
-}
-
-.user-details {
-  margin-bottom: var(--spacing-lg);
-}
-
-.user-info {
-  align-items: center;
-}
-
-.user-name {
-  margin: 0 0 var(--spacing-sm) 0;
-  color: var(--text-primary);
-}
-
-.user-role {
-  margin-top: var(--spacing-xs);
-}
-
-/* 统计信息样式 */
-.info-stats {
-  margin: var(--spacing-lg) 0;
-  padding: var(--spacing-base) 0;
-}
-
-.stat-item {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: var(--primary-color);
-  margin-bottom: var(--spacing-xs);
-}
-
-.stat-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.stat-divider {
-  width: 1px;
-  height: 40px;
-  background-color: var(--border-light);
-}
-
-/* 详细信息样式 */
-.info-details {
-  text-align: left;
-}
-
-.detail-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-base);
-}
-
-.detail-label {
-  font-weight: 500;
-}
-
-.detail-value {
-  color: var(--text-primary);
-}
-
-/* 编辑表单样式 */
-.edit-form {
-  text-align: left;
-  padding-top: var(--spacing-base);
-}
-
+/* 保存按钮样式 */
 .save-btn {
   width: 100%;
   margin-top: var(--spacing-base);
@@ -983,59 +839,14 @@ export default {
   min-height: 500px;
 }
 
-/* 标签页样式 */
-.profile-tabs {
-  background-color: transparent;
-  box-shadow: none;
-  border: none;
-}
-
-:deep(.el-tabs__header) {
-  margin-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--border-lighter);
-}
-
-:deep(.el-tabs__nav-wrap) {
-  padding: 0;
-}
-
-:deep(.el-tabs__item) {
-  padding: 0 var(--spacing-lg);
-  height: 50px;
-  line-height: 50px;
-  font-weight: 500;
-  color: var(--text-regular);
-}
-
-:deep(.el-tabs__item.is-active) {
-  color: var(--primary-color);
-}
-
-:deep(.el-tabs__active-bar) {
-  background-color: var(--primary-color);
-}
-
-.tab-label {
-  gap: var(--spacing-xs);
-  font-weight: 500;
-}
-
+/* 标签页内容样式 */
 .tab-content {
   padding: 0;
 }
 
+/* 内容头部样式 */
 .content-header {
   margin-bottom: var(--spacing-lg);
-}
-
-/* 空状态样式 */
-.empty-content {
-  padding: var(--spacing-xxl) 0;
-}
-
-.empty-text {
-  margin: var(--spacing-base) 0;
-  color: var(--text-secondary);
 }
 
 /* 产品网格样式 */
@@ -1047,100 +858,14 @@ export default {
   margin-bottom: var(--spacing-base);
 }
 
-/* 订单卡片样式已提取到公共样式文件 */
-
-/* 评价列表样式 */
-.reviews-list {
-  margin-bottom: var(--spacing-lg);
-}
-
-.review-item {
-  margin-bottom: var(--spacing-base);
-}
-
-.review-header {
-  margin-bottom: var(--spacing-base);
-}
-
-.review-content {
-  margin-bottom: var(--spacing-base);
-}
-
-.review-text {
-  margin: 0;
-  line-height: 1.6;
-  color: var(--text-primary);
-}
-
-.review-product {
-  font-size: var(--font-size-sm);
-}
-
-.product-link {
-  font-weight: 500;
-}
-
 /* 查看更多按钮 */
 .view-more-container {
   margin-top: var(--spacing-lg);
 }
 
-/* 响应式设计 */
-@media (max-width: 992px) {
-  .unified-page-container {
-    padding: var(--spacing-lg);
-  }
-  
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .unified-page-container {
-    padding: var(--spacing-base);
-  }
-  
-  .profile-header {
-    margin-bottom: var(--spacing-lg);
-  }
-  
-  .products-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  :deep(.el-tabs__item) {
-    padding: 0 var(--spacing-base);
-    font-size: var(--font-size-sm);
-  }
-  
-  .order-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-xs);
-  }
-  
-  .order-product {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-xs);
-  }
-  
-  .order-footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
-  }
-}
-
-@media (max-width: 576px) {
-  .stat-value {
-    font-size: var(--font-size-lg);
-  }
-  
-  .price-value {
-    font-size: var(--font-size-lg);
-  }
+/* 筛选选择器样式 */
+.filter-select {
+  width: 150px;
 }
 
 /* Element Plus 组件覆盖样式 */
@@ -1148,9 +873,5 @@ export default {
   font-size: var(--font-size-sm);
   color: var(--text-regular);
   margin-left: var(--spacing-xs);
-}
-
-.filter-select {
-  width: 150px;
 }
 </style>

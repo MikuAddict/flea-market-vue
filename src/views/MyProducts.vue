@@ -2,8 +2,8 @@
   <Layout>
     <div class="unified-page-container fade-in">
       <!-- 标题区域 -->
-      <section class="section-container">
-        <div class="section-header">
+      <section class="unified-mb-xl">
+        <div class="unified-flex unified-flex-between unified-mb-lg">
           <h2 class="unified-title-xl">我的二手物品</h2>
           <el-button 
             type="primary" 
@@ -17,8 +17,8 @@
       </section>
 
       <!-- 二手物品列表 -->
-      <section class="section-container">
-        <div class="list-header">
+      <section class="unified-mb-xl">
+        <div class="list-header unified-mb-base">
           <h3 class="unified-title-base unified-text-primary">
             共找到 <span class="highlight">{{ total }}</span> 件二手物品
           </h3>
@@ -43,9 +43,9 @@
           </el-empty>
         </div>
         
-        <div v-else class="products-grid unified-grid unified-grid-4">
+        <div v-else class="unified-grid unified-grid-4">
           <div 
-            class="product-item fade-in"
+            class="fade-in"
             v-for="(product, index) in products" 
             :key="product.id"
             :style="{ animationDelay: `${index * 0.05}s` }"
@@ -62,7 +62,7 @@
         </div>
         
         <!-- 分页 -->
-        <div v-if="total > 0" class="pagination-container unified-flex unified-flex-center">
+        <div v-if="total > 0" class="unified-flex unified-flex-center unified-mt-xl">
           <el-pagination
             v-model:current-page="pagination.current"
             v-model:page-size="pagination.size"

@@ -1,0 +1,114 @@
+/* 间距工具类 - 边距 */
+.unified-m-0 { margin: 0; }
+.unified-m-xs { margin: var(--spacing-xs); }
+.unified-m-sm { margin: var(--spacing-sm); }
+.unified-m-base { margin: var(--spacing-base); }
+.unified-m-lg { margin: var(--spacing-lg); }
+.unified-m-xl { margin: var(--spacing-xl); }
+
+.unified-mt-0 { margin-top: 0; }
+.unified-mt-xs { margin-top: var(--spacing-xs); }
+.unified-mt-sm { margin-top: var(--spacing-sm); }
+.unified-mt-base { margin-top: var(--spacing-base); }
+.unified-mt-lg { margin-top: var(--spacing-lg); }
+.unified-mt-xl { margin-top: var(--spacing-xl); }
+
+.unified-mb-0 { margin-bottom: 0; }
+.unified-mb-xs { margin-bottom: var(--spacing-xs); }
+.unified-mb-sm { margin-bottom: var(--spacing-sm); }
+.unified-mb-base { margin-bottom: var(--spacing-base); }
+.unified-mb-lg { margin-bottom: var(--spacing-lg); }
+.unified-mb-xl { margin-bottom: var(--spacing-xl); }
+
+.unified-ml-0 { margin-left: 0; }
+.unified-ml-xs { margin-left: var(--spacing-xs); }
+.unified-ml-sm { margin-left: var(--spacing-sm); }
+.unified-ml-base { margin-left: var(--spacing-base); }
+.unified-ml-lg { margin-left: var(--spacing-lg); }
+.unified-ml-xl { margin-left: var(--spacing-xl); }
+
+.unified-mr-0 { margin-right: 0; }
+.unified-mr-xs { margin-right: var(--spacing-xs); }
+.unified-mr-sm { margin-right: var(--spacing-sm); }
+.unified-mr-base { margin-right: var(--spacing-base); }
+.unified-mr-lg { margin-right: var(--spacing-lg); }
+.unified-mr-xl { margin-right: var(--spacing-xl); }
+
+/* 间距工具类 - 内边距 */
+.unified-p-0 { padding: 0; }
+.unified-p-xs { padding: var(--spacing-xs); }
+.unified-p-sm { padding: var(--spacing-sm); }
+.unified-p-base { padding: var(--spacing-base); }
+.unified-p-lg { padding: var(--spacing-lg); }
+.unified-p-xl { padding: var(--spacing-xl); }
+
+.unified-pt-0 { padding-top: 0; }
+.unified-pt-xs { padding-top: var(--spacing-xs); }
+.unified-pt-sm { padding-top: var(--spacing-sm); }
+.unified-pt-base { padding-top: var(--spacing-base); }
+.unified-pt-lg { padding-top: var(--spacing-lg); }
+.unified-pt-xl { padding-top: var(--spacing-xl); }
+
+.unified-pb-0 { padding-bottom: 0; }
+.unified-pb-xs { padding-bottom: var(--spacing-xs); }
+.unified-pb-sm { padding-bottom: var(--spacing-sm); }
+.unified-pb-base { padding-bottom: var(--spacing-base); }
+.unified-pb-lg { padding-bottom: var(--spacing-lg); }
+.unified-pb-xl { padding-bottom: var(--spacing-xl); }
+
+.unified-pl-0 { padding-left: 0; }
+.unified-pl-xs { padding-left: var(--spacing-xs); }
+.unified-pl-sm { padding-left: var(--spacing-sm); }
+.unified-pl-base { padding-left: var(--spacing-base); }
+.unified-pl-lg { padding-left: var(--spacing-lg); }
+.unified-pl-xl { padding-left: var(--spacing-xl); }
+
+.unified-pr-0 { padding-right: 0; }
+.unified-pr-xs { padding-right: var(--spacing-xs); }
+.unified-pr-sm { padding-right: var(--spacing-sm); }
+.unified-pr-base { padding-right: var(--spacing-base); }
+.unified-pr-lg { padding-right: var(--spacing-lg); }
+.unified-pr-xl { padding-right: var(--spacing-xl); }
+
+/* 颜色工具类 */
+.unified-bg-white { background-color: var(--bg-white); }
+.unified-bg-light { background-color: var(--bg-light); }
+.unified-bg-lighter { background-color: var(--bg-lighter); }
+.unified-bg-primary { background-color: var(--primary-color); }
+.unified-bg-primary-light { background-color: var(--primary-light); }
+.unified-bg-success { background-color: var(--success-color); }
+.unified-bg-warning { background-color: var(--warning-color); }
+.unified-bg-danger { background-color: var(--danger-color); }
+.unified-bg-info { background-color: var(--info-color); }
+
+.unified-text-primary { color: var(--text-primary); }
+.unified-text-regular { color: var(--text-regular); }
+.unified-text-secondary { color: var(--text-secondary); }
+.unified-text-placeholder { color: var(--text-placeholder); }
+.unified-text-white { color: var(--bg-white); }
+.unified-text-primary-color { color: var(--primary-color); }
+.unified-text-success { color: var(--success-color); }
+.unified-text-warning { color: var(--warning-color); }
+.unified-text-danger { color: var(--danger-color); }
+.unified-text-info { color: var(--info-color); }
+
+/* 字体大小 */
+.unified-text-xs { font-size: var(--font-size-xs); }
+.unified-text-sm { font-size: var(--font-size-sm); }
+.unified-text-base { font-size: var(--font-size-base); }
+.unified-text-md { font-size: var(--font-size-md); }
+.unified-text-lg { font-size: var(--font-size-lg); }
+.unified-text-xl { font-size: var(--font-size-xl); }
+.unified-text-xxl { font-size: var(--font-size-xxl); }
+
+/* 字体粗细 */
+.unified-font-light { font-weight: 300; }
+.unified-font-normal { font-weight: 400; }
+.unified-font-medium { font-weight: 500; }
+.unified-font-semibold { font-weight: 600; }
+.unified-font-bold { font-weight: 700; }
+
+/* 行高 */
+.unified-leading-tight { line-height: 1.2; }
+.unified-leading-normal { line-height: 1.4; }
+.unified-leading-relaxed { line-height: 1.6; }

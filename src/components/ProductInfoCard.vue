@@ -1,5 +1,5 @@
 <template>
-  <el-card class="product-info-card" :class="{ 'compact-mode': compact }">
+  <el-card class="unified-card product-info-card" :class="{ 'compact-mode': compact }">
     <!-- 图片展示区域 -->
     <div class="product-gallery">
       <!-- 主图 -->
@@ -10,7 +10,7 @@
           :alt="product.productName"
           @error="$emit('image-error')"
         />
-        <div v-else class="image-placeholder">
+        <div v-else class="unified-no-image">
           <el-icon size="50"><Picture /></el-icon>
           <p>暂无图片</p>
         </div>
@@ -39,16 +39,16 @@
         <span class="price-value">¥{{ formatPrice(product.price) }}</span>
       </div>
       
-      <div class="product-meta">
-        <el-tag type="info" size="large">
+      <div class="unified-flex unified-flex-wrap unified-gap-sm">
+        <div class="unified-tag unified-tag-info">
           {{ formatPaymentMethod(product.paymentMethod) }}
-        </el-tag>
-        <el-tag v-if="product.category" type="success" size="large">
+        </div>
+        <div v-if="product.category" class="unified-tag unified-tag-success">
           {{ product.category.name }}
-        </el-tag>
-        <el-tag v-if="showStatus && product.status" :type="getProductStatusType(product.status)" size="large">
+        </div>
+        <div v-if="showStatus && product.status" class="unified-tag" :class="getProductStatusType(product.status)">
           {{ formatProductStatus(product.status) }}
-        </el-tag>
+        </div>
       </div>
       
       <!-- 描述信息 -->
@@ -58,13 +58,14 @@
       </div>
       
       <!-- 操作按钮 -->
-      <div class="product-actions" v-if="showActions">
+      <div class="unified-flex unified-flex-wrap unified-gap-base" v-if="showActions">
         <slot name="actions">
           <!-- 购物车按钮 -->
           <el-button
             v-if="isLoggedIn && product.status === 1 && !isOwnProduct"
             :type="isInCart ? 'danger' : 'primary'"
             size="large"
+            class="unified-w-auto"
             @click="handleCartAction"
           >
             {{ isInCart ? '移出购物车' : '加入购物车' }}
@@ -75,6 +76,7 @@
             v-if="isLoggedIn && product.status === 1 && !isOwnProduct && !isInCart"
             type="primary"
             size="large"
+            class="unified-w-auto"
             :disabled="product.status !== 1"
             @click="$emit('action-click')"
           >
@@ -92,7 +94,7 @@
       <!-- 卖家信息 -->
       <div class="seller-info" v-if="showSellerInfo && product.user">
         <h4>卖家信息</h4>
-        <div class="seller-details">
+        <div class="unified-flex unified-flex-center unified-gap-sm">
           <el-avatar 
             :size="sellerAvatarSize" 
             :src="product.user.userAvatar"
@@ -351,15 +353,15 @@ export default {
 }
 
 .product-gallery {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .main-image {
   text-align: center;
-  background-color: #f5f7fa;
-  border-radius: 4px;
+  background-color: var(--bg-light);
+  border-radius: var(--border-radius-base);
   overflow: hidden;
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-base);
 }
 
 .main-image img {
@@ -374,29 +376,29 @@ export default {
 
 .thumbnail-list {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
   overflow-x: auto;
-  padding: 8px 0;
+  padding: var(--spacing-sm) 0;
 }
 
 .thumbnail-item {
   width: 80px;
   height: 80px;
-  border-radius: 4px;
+  border-radius: var(--border-radius-base);
   overflow: hidden;
   cursor: pointer;
   border: 2px solid transparent;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
   flex-shrink: 0;
 }
 
 .thumbnail-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-hover);
 }
 
 .thumbnail-item.active {
-  border-color: #409eff;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 1px rgba(64, 158, 255, 0.2);
 }
 
@@ -412,7 +414,7 @@ export default {
   justify-content: center;
   align-items: center;
   height: 400px;
-  color: #909399;
+  color: var(--text-placeholder);
 }
 
 .compact-mode .image-placeholder {
@@ -420,92 +422,72 @@ export default {
 }
 
 .product-basic-info {
-  padding: 0 10px;
+  padding: 0 var(--spacing-sm);
 }
 
 .product-name {
-  margin: 0 0 15px 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #303133;
+  margin: 0 0 var(--spacing-base) 0;
+  font-size: var(--font-size-xxl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
 }
 
 .compact-mode .product-name {
-  font-size: 18px;
+  font-size: var(--font-size-lg);
 }
 
 .product-price {
   display: flex;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: var(--spacing-base);
 }
 
 .price-label {
-  font-size: 16px;
-  color: #606266;
-  margin-right: 10px;
+  font-size: var(--font-size-base);
+  color: var(--text-regular);
+  margin-right: var(--spacing-sm);
 }
 
 .price-value {
   font-size: 28px;
-  font-weight: bold;
-  color: #f56c6c;
+  font-weight: var(--font-bold);
+  color: var(--danger-color);
 }
 
 .compact-mode .price-value {
-  font-size: 22px;
-}
-
-.product-meta {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+  font-size: var(--font-size-xl);
 }
 
 .product-description {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .product-description h4 {
-  margin: 0 0 10px 0;
-  font-size: 16px;
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-base);
 }
 
 .product-description p {
   margin: 0;
-  color: #606266;
-  line-height: 1.6;
+  color: var(--text-regular);
+  line-height: var(--leading-relaxed);
   white-space: pre-wrap;
 }
 
-.product-actions {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 20px;
-  align-items: center;
-}
-
 .product-notice {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .seller-info {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #ebeef5;
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-light);
 }
 
 .seller-info h4 {
-  margin: 0 0 10px 0;
-  font-size: 16px;
-  color: #303133;
-}
-
-.seller-details {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
 }
 
 .seller-text {
@@ -513,16 +495,16 @@ export default {
 }
 
 .seller-name {
-  margin: 0 0 5px 0;
-  font-size: 16px;
-  font-weight: 500;
-  color: #303133;
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
 }
 
 .seller-contact {
   margin: 0;
-  font-size: 14px;
-  color: #606266;
+  font-size: var(--font-size-sm);
+  color: var(--text-regular);
 }
 
 .clickable {
@@ -530,12 +512,12 @@ export default {
 }
 
 .clickable:hover {
-  color: #409eff;
+  color: var(--primary-color);
 }
 
 @media (max-width: 768px) {
   .product-name {
-    font-size: 20px;
+    font-size: var(--font-size-xl);
   }
   
   .price-value {

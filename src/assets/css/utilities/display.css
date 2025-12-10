@@ -1,0 +1,81 @@
+/* 显示相关的工具类 */
+
+/* Flexbox 布局 */
+.unified-flex-row { flex-direction: row; }
+.unified-flex-column { flex-direction: column; }
+.unified-flex-wrap { flex-wrap: wrap; }
+.unified-flex-nowrap { flex-wrap: nowrap; }
+
+/* Flex 对齐方式 */
+.unified-justify-start { justify-content: flex-start; }
+.unified-justify-center { justify-content: center; }
+.unified-justify-end { justify-content: flex-end; }
+.unified-justify-between { justify-content: space-between; }
+.unified-justify-around { justify-content: space-around; }
+
+.unified-align-start { align-items: flex-start; }
+.unified-align-center { align-items: center; }
+.unified-align-end { align-items: flex-end; }
+.unified-align-stretch { align-items: stretch; }
+
+/* 间隙 */
+.unified-gap-xs { gap: var(--spacing-xs); }
+.unified-gap-sm { gap: var(--spacing-sm); }
+.unified-gap-base { gap: var(--spacing-base); }
+.unified-gap-lg { gap: var(--spacing-lg); }
+.unified-gap-xl { gap: var(--spacing-xl); }
+
+/* 显示与隐藏 */
+.unified-block { display: block; }
+.unified-inline { display: inline; }
+.unified-inline-block { display: inline-block; }
+.unified-flex { display: flex; }
+.unified-hidden { display: none; }
+
+/* 文本对齐 */
+.unified-text-left { text-align: left; }
+.unified-text-center { text-align: center; }
+.unified-text-right { text-align: right; }
+
+/* 位置 */
+.unified-relative { position: relative; }
+.unified-absolute { position: absolute; }
+
+/* 宽度 */
+.unified-w-full { width: 100%; }
+.unified-w-auto { width: auto; }
+
+/* 高度 */
+.unified-h-full { height: 100%; }
+.unified-h-auto { height: auto; }
+
+/* 溢出 */
+.unified-overflow-hidden { overflow: hidden; }
+.unified-overflow-auto { overflow: auto; }
+
+/* 光标 */
+.unified-cursor-pointer { cursor: pointer; }
+.unified-cursor-default { cursor: default; }
+
+/* 过渡动画 */
+.unified-transition { transition: all var(--transition-base); }
+.unified-transition-fast { transition: all var(--transition-fast); }
+.unified-transition-slow { transition: all var(--transition-slow); }
+
+/* 边框 */
+.unified-border { border: 1px solid var(--border-light); }
+.unified-border-light { border: 1px solid var(--border-lighter); }
+.unified-border-dark { border: 1px solid var(--border-dark); }
+.unified-border-none { border: none; }
+
+/* 圆角 */
+.unified-rounded { border-radius: var(--border-radius-base); }
+.unified-rounded-sm { border-radius: var(--border-radius-small); }
+.unified-rounded-lg { border-radius: var(--border-radius-round); }
+.unified-rounded-none { border-radius: 0; }
+
+/* 阴影 */
+.unified-shadow-light { box-shadow: var(--shadow-light); }
+.unified-shadow-base { box-shadow: var(--shadow-base); }
+.unified-shadow-hover { box-shadow: var(--shadow-hover); }
+.unified-shadow-none { box-shadow: none; }

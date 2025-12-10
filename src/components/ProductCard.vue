@@ -3,12 +3,12 @@
     <div class="product-image-container">
       <div class="product-image">
         <img v-if="getProductImage(product)" :src="getProductImage(product)" :alt="product.productName" />
-        <div v-else class="image-placeholder">
+        <div v-else class="unified-no-image">
           <el-icon><Picture /></el-icon>
         </div>
       </div>
       <div class="product-overlay">
-        <el-button type="primary" class="view-detail-btn" size="small">查看详情</el-button>
+        <el-button type="primary" class="unified-button view-detail-btn" size="small">查看详情</el-button>
       </div>
     </div>
     
@@ -21,7 +21,7 @@
         </div>
       </div>
       
-      <div class="product-meta unified-flex unified-flex-wrap">
+      <div class="unified-flex unified-flex-wrap unified-gap-sm">
         <div class="unified-tag unified-tag-success">
           {{ formatPaymentMethod(product.paymentMethod) }}
         </div>
@@ -34,19 +34,20 @@
       </div>
       
       <div class="product-footer" v-if="showUser && product.user">
-        <div class="unified-flex unified-flex-center">
+        <div class="unified-flex unified-flex-center unified-gap-xs">
           <el-avatar :size="24" :src="product.user.userAvatar">{{ product.user.userName?.charAt(0) }}</el-avatar>
           <span class="user-name">{{ product.user.userName }}</span>
         </div>
       </div>
       
       <!-- 操作按钮 -->
-      <div class="product-actions">
+      <div class="unified-flex unified-flex-wrap unified-gap-xs">
         <!-- 购物车按钮 -->
         <el-button 
           v-if="isLoggedIn && product.status === 1 && !isOwnProduct"
           size="small" 
           :type="isInCart ? 'danger' : 'primary'"
+          class="unified-w-auto"
           @click.stop="handleCartAction"
         >
           {{ isInCart ? '移出购物车' : '加入购物车' }}
@@ -57,6 +58,7 @@
           v-if="isLoggedIn && product.status === 1 && !isOwnProduct"
           size="small" 
           type="primary"
+          class="unified-w-auto"
           @click.stop="handleBuyNow"
         >
           立即购买
@@ -69,6 +71,7 @@
             size="small" 
             type="primary" 
             plain
+            class="unified-w-auto"
             @click.stop="editProduct"
           >
             编辑
@@ -78,6 +81,7 @@
             size="small" 
             type="danger" 
             plain
+            class="unified-w-auto"
             :disabled="product.status === 2"
             @click.stop="deleteProduct"
           >
@@ -290,18 +294,10 @@ export default {
 /* 产品卡片整体样式 */
 .product-card {
   margin-bottom: var(--spacing-base);
-  border-radius: var(--border-radius-base);
-  overflow: hidden;
   cursor: pointer;
-  transition: all var(--transition-base);
   height: 100%;
   display: flex;
   flex-direction: column;
-}
-
-.product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-hover);
 }
 
 /* 产品图片容器 */
@@ -412,34 +408,10 @@ export default {
   font-weight: 600;
 }
 
-.product-meta {
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-base);
-}
-
 .product-footer {
   margin-top: auto;
   padding-top: var(--spacing-sm);
   border-top: 1px solid var(--border-light);
-}
-
-.user-name {
-  margin-left: var(--spacing-xs);
-  font-size: var(--font-size-xs);
-  color: var(--text-secondary);
-}
-
-/* 操作按钮区域 */
-.product-actions {
-  margin-top: var(--spacing-sm);
-  display: flex;
-  gap: var(--spacing-xs);
-  flex-wrap: wrap;
-}
-
-.product-actions .el-button {
-  flex: 1;
-  min-width: 60px;
 }
 
 /* 响应式设计 */

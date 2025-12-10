@@ -2,25 +2,25 @@
   <Layout>
     <div class="admin-dashboard unified-page-container fade-in">
       <!-- 页面标题 -->
-      <div class="page-header">
+      <div class="page-header unified-mb-xl unified-text-center">
         <h1 class="unified-title-xl">管理仪表盘</h1>
       </div>
             
       <!-- 快速操作区域 -->
-      <div class="actions-container">
+      <div class="actions-container unified-mb-xl">
         <el-card class="unified-card actions-card fade-in">
           <template #header>
             <h3 class="unified-title-base">快速操作</h3>
           </template>
-          <div class="actions-grid unified-grid unified-grid-5">
+          <div class="actions-grid unified-grid unified-grid-5 unified-gap-base">
             <div 
-              class="action-item fade-in" 
+              class="action-item fade-in unified-action-btn" 
               v-for="(action, index) in quickActions" 
               :key="action.title"
               @click="action.handler"
               :style="{ animationDelay: `${index * 0.1}s` }"
             >
-              <div class="action-icon unified-flex unified-flex-center">
+              <div class="action-icon unified-action-icon">
                 <el-icon :size="24"><component :is="action.icon" /></el-icon>
               </div>
               <p class="action-title">{{ action.title }}</p>
@@ -29,19 +29,19 @@
         </el-card>
       </div>
       <!-- 统计卡片区域 -->
-      <div class="stats-container">
-        <div class="unified-grid unified-grid-4">
+      <div class="stats-container unified-mb-xl">
+        <div class="unified-grid unified-grid-4 unified-gap-lg">
           <div class="stat-card fade-in" v-for="(stat, index) in statsData" :key="stat.title" :style="{ animationDelay: `${index * 0.1}s` }">
-            <el-card class="unified-card stat-item" :class="`stat-item-${stat.type}`">
-              <div class="stat-content unified-flex unified-flex-col">
-                <div class="stat-icon unified-flex unified-flex-center">
+            <el-card class="unified-card stat-item unified-stat-card" :class="`stat-item-${stat.type}`">
+              <div class="stat-content">
+                <div class="stat-icon" :class="`stat-item-${stat.type}`">
                   <el-icon :size="32"><component :is="stat.icon" /></el-icon>
                 </div>
                 <div class="stat-info">
                   <h3 class="stat-value">{{ stat.value }}</h3>
                   <p class="stat-title">{{ stat.title }}</p>
                 </div>
-                <div class="stat-trend unified-flex unified-flex-center" :class="`trend-${stat.trend}`">
+                <div class="stat-trend" :class="`trend-${stat.trend}`">
                 </div>
               </div>
             </el-card>

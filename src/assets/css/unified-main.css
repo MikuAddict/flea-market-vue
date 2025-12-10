@@ -11,11 +11,15 @@
 @import './components/card.css';
 @import './components/button.css';
 @import './components/input.css';
+@import './components/forms.css';
+@import './components/avatar.css';
+@import './components/image.css';
 @import './components/tag.css';
 @import './components/divider.css';
 @import './components/text.css';
 @import './components/meta.css';
 @import './components/list-item.css';
+@import './components/admin-components.css';
 
 /* 4. 布局样式 */
 @import './layouts/flexbox.css';
@@ -24,6 +28,8 @@
 
 /* 5. 工具类 */
 @import './utilities/spacing.css';
+@import './utilities/display.css';
+@import './utilities/space-color.css';
 
 /* 6. 第三方组件覆盖样式 */
 @import './overwrites/element-plus.css';

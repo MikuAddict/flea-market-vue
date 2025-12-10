@@ -5,13 +5,13 @@
       <slot name="header-actions"></slot>
     </div>
     
-    <div v-if="products.length === 0" class="empty-content unified-flex unified-flex-col unified-flex-center">
+    <div v-if="products.length === 0" class="unified-empty unified-flex unified-flex-col unified-flex-center">
       <el-icon size="60" color="var(--text-placeholder)"><Box /></el-icon>
-      <p class="empty-text">{{ emptyText }}</p>
+      <p class="unified-empty-text">{{ emptyText }}</p>
       <slot name="empty-actions"></slot>
     </div>
     
-    <div v-else class="products-grid unified-grid unified-grid-3">
+    <div v-else class="unified-products-grid">
       <div 
         class="product-item fade-in"
         v-for="(product, index) in products" 
@@ -82,43 +82,20 @@ export default {
 </script>
 
 <style scoped>
+/* 内容头部样式 */
 .content-header {
   margin-bottom: var(--spacing-lg);
 }
 
-/* 空状态样式 */
-.empty-content {
-  padding: var(--spacing-xxl) 0;
-}
-
-.empty-text {
-  margin: var(--spacing-base) 0;
-  color: var(--text-secondary);
-}
-
-/* 商品网格样式 */
-.products-grid {
-  margin-bottom: var(--spacing-lg);
-}
-
-.product-item {
-  margin-bottom: var(--spacing-base);
-}
-
-/* 查看更多按钮容器 */
-.view-more-container {
-  margin-top: var(--spacing-lg);
-}
-
 /* 响应式设计 */
 @media (max-width: 992px) {
-  .products-grid {
+  .unified-products-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
-  .products-grid {
+  .unified-products-grid {
     grid-template-columns: 1fr;
   }
 }

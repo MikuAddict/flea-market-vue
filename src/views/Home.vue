@@ -5,9 +5,9 @@
       <!-- 主要内容区域 -->
       <div class="content-wrapper">
         <!-- 最新公告 -->
-        <section class="section-container fade-in" v-if="latestNews">
-          <div class="section-header unified-flex unified-flex-between">
-            <h3 class="section-title unified-title-base">最新公告</h3>
+        <section class="unified-mb-xl fade-in" v-if="latestNews">
+          <div class="unified-flex unified-flex-between unified-mb-lg">
+            <h3 class="unified-title-base">最新公告</h3>
             <el-button text type="primary" @click="$router.push('/news')" class="view-more-btn">
               查看更多
               <el-icon><ArrowRight /></el-icon>
@@ -17,8 +17,8 @@
             <div class="news-content">
               <h4 class="news-title unified-title-base">{{ latestNews.title }}</h4>
               <p class="news-summary unified-text-secondary">{{ latestNews.content.substring(0, 120) }}...</p>
-              <div class="unified-meta news-meta">
-                <div class="unified-meta-item">
+              <div class="unified-flex unified-flex-between unified-mt-base">
+                <div class="unified-flex unified-flex-center unified-gap-sm">
                   <el-icon><Calendar /></el-icon>
                   <span>{{ formatDate(latestNews.createTime, 'YYYY-MM-DD') }}</span>
                 </div>
@@ -31,11 +31,9 @@
         </section>
 
         <!-- 二手物品分类 -->
-        <section class="section-container fade-in" v-if="categories.length > 0">
-          <div class="section-header">
-            <h3 class="section-title unified-title-base">物品分类</h3>
-          </div>
-          <div class="category-grid unified-grid unified-grid-4">
+        <section class="unified-mb-xl fade-in" v-if="categories.length > 0">
+          <h3 class="unified-title-base unified-mb-lg">物品分类</h3>
+          <div class="unified-grid unified-grid-4">
             <div
               class="category-item fade-in"
               v-for="(category, index) in categories"
@@ -44,26 +42,26 @@
               :style="{ animationDelay: `${index * 0.1}s` }"
             >
               <el-card class="unified-card category-card unified-flex unified-flex-col unified-flex-center">
-                <div class="category-icon unified-flex unified-flex-center">
+                <div class="unified-flex unified-flex-center category-icon">
                   <el-icon :size="40"><component :is="getCategoryIcon(category.id)" /></el-icon>
                 </div>
                 <h4 class="category-name">{{ category.name }}</h4>
-                <p class="category-count">{{ category.productCount || 0 }} 件物品</p>
+                <p class="category-count">{{ category.productCount}} 件物品</p>
               </el-card>
             </div>
           </div>
         </section>
 
         <!-- 最新二手物品 -->
-        <section class="section-container fade-in" v-if="latestProducts.length > 0">
-          <div class="section-header unified-flex unified-flex-between">
-            <h3 class="section-title unified-title-base">最新二手物品</h3>
+        <section class="unified-mb-xl fade-in" v-if="latestProducts.length > 0">
+          <div class="unified-flex unified-flex-between unified-mb-lg">
+            <h3 class="unified-title-base">最新二手物品</h3>
             <el-button text type="primary" @click="$router.push('/products')" class="view-more-btn">
               查看更多
               <el-icon><ArrowRight /></el-icon>
             </el-button>
           </div>
-          <div class="products-grid unified-grid unified-grid-4">
+          <div class="unified-grid unified-grid-4">
             <div 
               class="product-card-wrapper fade-in" 
               v-for="(product, index) in latestProducts" 
@@ -169,77 +167,6 @@ export default {
 </script>
 
 <style scoped>
-/* 页面容器样式 */
-.unified-page-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--spacing-xl);
-}
-
-/* 轮播图样式 */
-.banner-section {
-  margin-bottom: var(--spacing-xxl);
-  border-radius: var(--border-radius-base);
-  overflow: hidden;
-}
-
-.unified-carousel {
-  border-radius: var(--border-radius-base);
-  box-shadow: var(--shadow-base);
-}
-
-.banner-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.banner-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.banner-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 100%);
-}
-
-.banner-content {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  color: white;
-  text-align: center;
-  padding: 0 20px;
-}
-
-.banner-title {
-  color: white;
-  margin-bottom: var(--spacing-base);
-  font-weight: 600;
-}
-
-.banner-desc {
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: var(--spacing-xl);
-  font-size: var(--font-size-lg);
-}
-
-.banner-actions .primary-btn {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-  padding: var(--spacing-sm) var(--spacing-xl);
-  font-weight: 500;
-  border: none;
-  box-shadow: var(--shadow-base);
-}
-
 /* 内容区域样式 */
 .content-wrapper {
   background-color: var(--bg-white);
@@ -263,7 +190,6 @@ export default {
 /* 新闻卡片样式 */
 .news-card {
   padding: var(--spacing-xl);
-  border-radius: var(--border-radius-base);
   transition: all var(--transition-base);
 }
 
@@ -279,18 +205,14 @@ export default {
 
 .news-summary {
   margin-bottom: var(--spacing-lg);
-  line-height: 1.6;
+  line-height: var(--leading-relaxed);
 }
 
 .news-meta {
   margin-top: var(--spacing-base);
 }
 
-/* 分类网格样式 */
-.category-grid {
-  gap: var(--spacing-lg);
-}
-
+/* 分类卡片样式 */
 .category-item {
   cursor: pointer;
   transition: all var(--transition-base);
@@ -330,7 +252,7 @@ export default {
 
 .category-name {
   font-size: var(--font-size-base);
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   margin-bottom: var(--spacing-xs);
   color: var(--text-primary);
   display: flex;
@@ -344,11 +266,7 @@ export default {
   justify-content: center;
 }
 
-/* 产品网格样式 */
-.products-grid {
-  gap: var(--spacing-lg);
-}
-
+/* 产品卡片样式 */
 .product-card-wrapper {
   transition: all var(--transition-base);
 }
@@ -358,49 +276,7 @@ export default {
 }
 
 /* 响应式设计 */
-@media (max-width: 992px) {
-  .unified-page-container {
-    padding: var(--spacing-lg);
-  }
-  
-  .category-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media (max-width: 768px) {
-  .unified-page-container {
-    padding: var(--spacing-base);
-  }
-  
-  .category-grid,
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .banner-content {
-    padding: 0 var(--spacing-base);
-  }
-  
-  .banner-title {
-    font-size: var(--font-size-xl);
-  }
-  
-  .banner-desc {
-    font-size: var(--font-size-base);
-  }
-}
-
-@media (max-width: 480px) {
-  .category-grid,
-  .products-grid {
-    grid-template-columns: 1fr;
-  }
-  
   .content-wrapper {
     padding: var(--spacing-base);
   }
@@ -412,7 +288,7 @@ export default {
 
 /* 动画延迟效果 */
 .fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn var(--transition-slow) ease-out forwards;
   opacity: 0;
 }
 

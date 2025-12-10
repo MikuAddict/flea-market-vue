@@ -9,9 +9,9 @@
     
     <div class="profile-content">
       <div class="avatar-section unified-flex unified-flex-center">
-        <div class="avatar-container">
-          <el-avatar :size="100" :src="user.userAvatar" class="user-avatar">
-            <span class="avatar-text">{{ user.userName?.charAt(0) }}</span>
+        <div class="unified-relative">
+          <el-avatar :size="100" :src="user.userAvatar" class="unified-avatar">
+            <span class="unified-avatar-text">{{ user.userName?.charAt(0) }}</span>
           </el-avatar>
           <slot name="avatar-overlay"></slot>
         </div>
@@ -19,7 +19,7 @@
       
       <div v-if="showUploadedTip && avatarFile" class="unified-text-success unified-flex unified-flex-center avatar-uploaded-tip">
         <el-icon><Check /></el-icon>
-        <span style="margin-left: 5px;">新头像已选择</span>
+        <span class="unified-ml-xs">新头像已选择</span>
       </div>
       
       <slot name="edit-form" :user="user" v-if="editMode"></slot>
@@ -34,24 +34,24 @@
           </div>
         </div>
         
-        <div class="info-stats unified-flex unified-flex-between">
-          <div class="stat-item unified-flex unified-flex-col unified-flex-center">
-            <span class="stat-value">{{ user.point || 0 }}</span>
-            <span class="stat-label">积分</span>
+        <div class="unified-stats">
+          <div class="unified-stat-item">
+            <span class="unified-stat-value">{{ user.point}}</span>
+            <span class="unified-stat-label">积分</span>
           </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item unified-flex unified-flex-col unified-flex-center">
-            <span class="stat-value">{{ productsCount }}</span>
-            <span class="stat-label">物品</span>
+          <div class="unified-stat-divider"></div>
+          <div class="unified-stat-item">
+            <span class="unified-stat-value">{{ productsCount }}</span>
+            <span class="unified-stat-label">物品</span>
           </div>
-          <div v-if="ordersCount !== undefined" class="stat-divider"></div>
-          <div v-if="ordersCount !== undefined" class="stat-item unified-flex unified-flex-col unified-flex-center">
-            <span class="stat-value">{{ ordersCount }}</span>
-            <span class="stat-label">订单</span>
+          <div v-if="ordersCount !== undefined" class="unified-stat-divider"></div>
+          <div v-if="ordersCount !== undefined" class="unified-stat-item">
+            <span class="unified-stat-value">{{ ordersCount }}</span>
+            <span class="unified-stat-label">订单</span>
           </div>
         </div>
         
-        <el-divider class="unified-divider" />
+        <el-divider />
         
         <div class="info-details">
           <div class="detail-item">
@@ -60,7 +60,7 @@
           </div>
           <div class="detail-item" v-if="user.userPhone">
             <span class="detail-label unified-text-secondary">手机号</span>
-            <span class="detail-value">{{ user.userPhone || '未设置' }}</span>
+            <span class="detail-value">{{ user.userPhone}}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label unified-text-secondary">注册时间</span>
@@ -128,12 +128,6 @@ export default {
 /* 用户信息卡片样式 */
 .profile-card {
   margin-bottom: var(--spacing-xl);
-  transition: all var(--transition-base);
-}
-
-.profile-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
 }
 
 /* 头像部分样式 */
@@ -185,34 +179,6 @@ export default {
   margin-top: var(--spacing-xs);
 }
 
-/* 统计信息样式 */
-.info-stats {
-  margin: var(--spacing-lg) 0;
-  padding: var(--spacing-base) 0;
-}
-
-.stat-item {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: var(--primary-color);
-  margin-bottom: var(--spacing-xs);
-}
-
-.stat-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.stat-divider {
-  width: 1px;
-  height: 40px;
-  background-color: var(--border-light);
-}
-
 /* 详细信息样式 */
 .info-details {
   text-align: left;
@@ -234,12 +200,12 @@ export default {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .info-stats {
+  .unified-stats {
     flex-direction: column;
     gap: var(--spacing-base);
   }
   
-  .stat-divider {
+  .unified-stat-divider {
     width: 100%;
     height: 1px;
   }

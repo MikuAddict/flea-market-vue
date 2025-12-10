@@ -2,7 +2,7 @@
   <Layout>
     <div class="admin-news unified-page-container fade-in">
       <!-- 页面标题和操作区域 -->
-      <div class="page-header unified-flex unified-flex-between">
+      <div class="page-header unified-flex unified-flex-between unified-mb-xl">
         <div>
           <h1 class="unified-title-xl">新闻管理</h1>
           <p class="unified-text-secondary">管理系统中的所有新闻公告</p>
@@ -389,7 +389,6 @@ export default {
               type: 'warning'
             })
             
-            // 更新新闻状态功能在API中未定义，需要实现
             ElMessage.warning('更新新闻状态功能暂未实现')
             return
           } catch (error) {

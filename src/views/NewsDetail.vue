@@ -1,27 +1,27 @@
 <template>
   <Layout>
-    <div class="news-detail-container" v-if="!loading && news">
-      <el-card class="news-card">
-        <div class="news-header">
-          <h1>{{ news.title }}</h1>
-          <div class="news-meta">
+    <div class="news-detail-container unified-page-container unified-max-width-900 unified-p-xl" v-if="!loading && news">
+      <el-card class="unified-card">
+        <div class="news-header unified-text-center unified-mb-lg unified-pb-sm unified-border-b">
+          <h1 class="unified-title-xxl unified-mb-sm">{{ news.title }}</h1>
+          <div class="news-meta unified-flex unified-justify-center unified-gap-lg unified-text-sm unified-text-secondary">
             <span class="news-author">作者: {{ news.author }}</span>
             <span class="news-date">{{ formatDate(news.createTime) }}</span>
           </div>
         </div>
         
-        <div class="news-content">
-          <div v-html="formatContent(news.content)"></div>
+        <div class="news-content unified-mb-xl">
+          <div v-html="formatContent(news.content)" class="unified-line-height-1_8 unified-text-md"></div>
         </div>
         
-        <div class="news-actions">
+        <div class="news-actions unified-text-center unified-pt-xl unified-border-t">
           <el-button @click="$router.go(-1)">返回</el-button>
           <el-button type="primary" @click="$router.push('/news')">新闻列表</el-button>
         </div>
       </el-card>
     </div>
     
-    <div v-else class="loading-container">
+    <div v-else class="loading-container unified-p-xl">
       <el-skeleton animated />
     </div>
   </Layout>
@@ -87,47 +87,11 @@ export default {
 </script>
 
 <style scoped>
-.news-detail-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: var(--spacing-xl);
-}
-
 .news-header {
-  text-align: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
   border-bottom: 1px solid #ebeef5;
 }
 
-.news-header h1 {
-  margin: 0 0 10px 0;
-  font-size: 28px;
-  color: #303133;
-}
-
-.news-meta {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  color: #909399;
-  font-size: 14px;
-}
-
-.news-content {
-  margin-bottom: 30px;
-  line-height: 1.8;
-  font-size: 16px;
-  color: #606266;
-}
-
 .news-actions {
-  text-align: center;
-  padding-top: var(--spacing-xl);
   border-top: 1px solid var(--border-light);
-}
-
-.loading-container {
-  padding: var(--spacing-xl);
 }
 </style>

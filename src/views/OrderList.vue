@@ -1,9 +1,9 @@
 <template>
   <Layout>
     <div class="order-list-container">
-      <el-card class="order-card">
+      <el-card class="unified-card order-card">
         <template #header>
-          <div class="card-header">
+          <div class="unified-flex unified-flex-between unified-w-full">
             <span>我的订单</span>
           </div>
         </template>
@@ -13,7 +13,7 @@
           <div class="unified-filter-form">
             <div class="unified-filter-item">
               <div class="unified-filter-label">订单状态</div>
-              <el-tabs v-model="activeTab" @tab-click="handleTabClick" class="unified-filter-tabs">
+              <el-tabs v-model="activeTab" @tab-click="handleTabClick">
                 <el-tab-pane label="全部" name="all" />
                 <el-tab-pane label="已完成" name="2" />
                 <el-tab-pane label="已取消" name="3" />
@@ -27,7 +27,7 @@
           <el-skeleton :rows="3" animated />
         </div>
         
-        <div v-else-if="orders.length === 0" class="empty-container">
+        <div v-else-if="orders.length === 0" class="unified-empty">
           <el-empty description="暂无订单" />
         </div>
         
@@ -35,17 +35,17 @@
           <el-card
             v-for="order in orders"
             :key="order.id"
-            class="order-item"
+            class="unified-order-item"
             shadow="hover"
           >
-            <div class="order-header">
-              <div class="order-info">
+            <div class="unified-order-header">
+              <div class="unified-order-info">
                 <span class="order-id">订单号: {{ order.id }}</span>
                 <el-tag :type="getOrderStatusType(order.status)" size="small">
                   {{ formatOrderStatus(order.status) }}
                 </el-tag>
               </div>
-              <span class="order-time">{{ formatDate(order.createTime) }}</span>
+              <span class="unified-order-time">{{ formatDate(order.createTime) }}</span>
             </div>
             
             <div class="order-content">

@@ -1,0 +1,352 @@
+/* 表单样式 */
+.unified-form {
+  margin: 0;
+}
+
+.unified-form-item {
+  margin-bottom: var(--spacing-lg);
+}
+
+.unified-form-item:last-child {
+  margin-bottom: 0;
+}
+
+.unified-form-label {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+/* 标签页样式 */
+.unified-tabs {
+  background-color: transparent;
+  box-shadow: none;
+  border: none;
+}
+
+.unified-tabs :deep(.el-tabs__header) {
+  margin-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-lighter);
+}
+
+.unified-tabs :deep(.el-tabs__nav-wrap) {
+  padding: 0;
+}
+
+.unified-tabs :deep(.el-tabs__item) {
+  padding: 0 var(--spacing-lg);
+  height: 50px;
+  line-height: 50px;
+  font-weight: 500;
+  color: var(--text-regular);
+}
+
+.unified-tabs :deep(.el-tabs__item.is-active) {
+  color: var(--primary-color);
+}
+
+.unified-tabs :deep(.el-tabs__active-bar) {
+  background-color: var(--primary-color);
+}
+
+.unified-tab-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-weight: 500;
+}
+
+/* 头像样式 */
+.unified-avatar {
+  border: 3px solid var(--border-lighter);
+  box-shadow: var(--shadow-light);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
+}
+
+.unified-avatar-text {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: white;
+}
+
+.unified-avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.unified-avatar-overlay:hover {
+  opacity: 1;
+}
+
+.unified-upload-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+  cursor: pointer;
+}
+
+.unified-upload-icon p {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+}
+
+/* 统计信息样式 */
+.unified-stats {
+  display: flex;
+  justify-content: space-around;
+  margin: var(--spacing-lg) 0;
+  padding: var(--spacing-base) 0;
+}
+
+.unified-stat-item {
+  text-align: center;
+}
+
+.unified-stat-value {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.unified-stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.unified-stat-divider {
+  width: 1px;
+  height: 40px;
+  background-color: var(--border-light);
+}
+
+/* 空状态样式 */
+.unified-empty {
+  padding: var(--spacing-xxl) 0;
+  text-align: center;
+}
+
+.unified-empty-text {
+  margin: var(--spacing-base) 0;
+  color: var(--text-secondary);
+}
+
+/* 产品网格样式 */
+.unified-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* 订单样式 */
+.unified-order-item {
+  margin-bottom: var(--spacing-lg);
+}
+
+.unified-order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-base);
+}
+
+.unified-order-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-base);
+}
+
+.unified-order-time {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.unified-order-content {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-base);
+}
+
+.unified-product-info {
+  display: flex;
+  gap: var(--spacing-base);
+}
+
+.unified-product-image {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--border-radius-base);
+  overflow: hidden;
+}
+
+.unified-product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.unified-no-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-light);
+  color: var(--text-placeholder);
+}
+
+.unified-product-details {
+  flex: 1;
+}
+
+.unified-product-details h4 {
+  margin: 0 0 var(--spacing-xs);
+  font-weight: 600;
+}
+
+.unified-product-details p {
+  margin: var(--spacing-xs) 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.unified-order-amount {
+  text-align: right;
+}
+
+.unified-amount-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.unified-amount-value {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--danger-color);
+}
+
+.unified-order-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--spacing-base);
+  border-top: 1px solid var(--border-lighter);
+}
+
+.unified-order-seller {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.unified-order-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* 评价样式 */
+.unified-reviews-list {
+  margin-bottom: var(--spacing-lg);
+}
+
+.unified-review-item {
+  margin-bottom: var(--spacing-base);
+  padding-bottom: var(--spacing-base);
+  border-bottom: 1px solid var(--border-lighter);
+}
+
+.unified-review-item:last-child {
+  border-bottom: none;
+}
+
+.unified-review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-base);
+}
+
+.unified-review-content {
+  margin-bottom: var(--spacing-base);
+}
+
+.unified-review-text {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.unified-review-product {
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-xs);
+}
+
+.unified-product-link {
+  font-weight: 500;
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.unified-product-link:hover {
+  text-decoration: underline;
+}
+
+/* 响应式设计 */
+@media (max-width: 992px) {
+  .unified-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .unified-products-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .unified-tabs :deep(.el-tabs__item) {
+    padding: 0 var(--spacing-base);
+    font-size: var(--font-size-sm);
+  }
+  
+  .unified-order-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+  
+  .unified-product-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+  
+  .unified-order-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 576px) {
+  .unified-stat-value {
+    font-size: var(--font-size-lg);
+  }
+  
+  .unified-amount-value {
+    font-size: var(--font-size-lg);
+  }
+}

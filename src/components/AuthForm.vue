@@ -11,7 +11,7 @@
     <div class="auth-card-container">
       <el-card class="unified-card auth-card">
         <div class="auth-header unified-flex unified-flex-center">
-          <div class="logo unified-flex unified-flex-center">
+          <div class="unified-flex unified-flex-center unified-gap-sm">
             <el-icon size="40" color="var(--primary-color)"><Shop /></el-icon>
             <h1 class="site-title">校园跳蚤市场</h1>
           </div>
@@ -22,16 +22,16 @@
           :rules="rules"
           ref="formRef"
           label-position="top"
-          class="auth-form"
+          class="unified-form auth-form"
           @submit.prevent="handleSubmit"
         >
           <slot name="form-fields"></slot>
           
-          <el-form-item>
+          <el-form-item class="unified-form-item">
             <el-button
               type="primary"
               :loading="loading"
-              class="unified-button unified-button-primary submit-btn"
+              class="unified-button unified-button-primary submit-btn unified-w-full"
               size="large"
               @click="handleSubmit"
             >
@@ -40,7 +40,7 @@
           </el-form-item>
         </el-form>
         
-        <div class="auth-footer unified-flex unified-flex-center">
+        <div class="unified-flex unified-flex-center unified-gap-sm auth-footer">
           <span class="unified-text-secondary">{{ footerText }}</span>
           <el-link type="primary" @click="handleFooterClick">{{ footerLinkText }}</el-link>
         </div>
@@ -191,56 +191,56 @@ export default {
 .auth-card-container {
   width: 100%;
   max-width: 450px;
-  padding: 20px;
+  padding: var(--spacing-base);
   z-index: 1;
 }
 
 .auth-card {
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  padding: var(--spacing-xl);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-hover);
 }
 
 .auth-header {
-  margin-bottom: 30px;
+  margin-bottom: var(--spacing-xl);
   text-align: center;
 }
 
 .logo {
-  margin-bottom: 15px;
+  margin-bottom: var(--spacing-base);
 }
 
 .logo h1 {
-  margin: 0 0 0 10px;
-  font-size: 24px;
-  font-weight: 600;
-  color: #303133;
+  margin: 0 0 0 var(--spacing-sm);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
 }
 
 .auth-subtitle {
-  margin-top: 10px;
-  font-size: 14px;
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-sm);
 }
 
 .auth-form {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .submit-btn {
   width: 100%;
-  padding: 12px 0;
-  font-size: 16px;
-  font-weight: 500;
+  padding: var(--spacing-base) 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-medium);
 }
 
 .auth-footer {
-  margin-top: 20px;
-  font-size: 14px;
+  margin-top: var(--spacing-lg);
+  font-size: var(--font-size-sm);
 }
 
 /* 表单字段间距调整 */
 .auth-form :deep(.el-form-item) {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .auth-form :deep(.el-form-item:last-child) {
@@ -250,11 +250,11 @@ export default {
 /* 移动端适配 */
 @media (max-width: 768px) {
   .auth-card-container {
-    padding: 10px;
+    padding: var(--spacing-sm);
   }
   
   .auth-card {
-    padding: 20px;
+    padding: var(--spacing-lg);
   }
   
   .shape-1 {

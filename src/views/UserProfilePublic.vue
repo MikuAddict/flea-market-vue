@@ -1,7 +1,7 @@
 <template>
   <Layout>
     <div class="public-user-profile unified-page-container fade-in" v-if="!loading">
-      <div class="profile-header">
+      <div class="profile-header unified-mb-xl unified-text-center">
         <h1 class="unified-title-xl">用户资料</h1>
       </div>
 
@@ -18,12 +18,12 @@
         
         <!-- 右侧内容区域 -->
         <el-col :xs="24" :md="16" :lg="17">
-          <el-card class="unified-card content-card fade-in">
-            <el-tabs v-model="activeTab" class="profile-tabs" @tab-click="handleTabClick">
+          <el-card class="unified-card content-card unified-min-height-500 fade-in">
+            <el-tabs v-model="activeTab" class="profile-tabs unified-tabs" @tab-click="handleTabClick">
               <!-- 在售的二手物品 -->
               <el-tab-pane name="products">
                 <template #label>
-                  <div class="tab-label unified-flex unified-flex-center">
+                  <div class="tab-label unified-flex unified-flex-center unified-gap-xs">
                     <el-icon><Box /></el-icon>
                     <span>在售的二手物品</span>
                   </div>
@@ -40,7 +40,7 @@
               <!-- 收到的评论 -->
               <el-tab-pane name="reviews">
                 <template #label>
-                  <div class="tab-label unified-flex unified-flex-center">
+                  <div class="tab-label unified-flex unified-flex-center unified-gap-xs">
                     <el-icon><Star /></el-icon>
                     <span>收到的评论</span>
                   </div>
@@ -62,7 +62,7 @@
       </el-row>
     </div>
 
-    <div v-else class="loading-container">
+    <div v-else class="loading-container unified-p-xl">
       <el-skeleton animated />
     </div>
   </Layout>
@@ -232,118 +232,6 @@ export default {
 </script>
 
 <style scoped>
-/* 页面头部样式 */
-.profile-header {
-  margin-bottom: var(--spacing-xl);
-  text-align: center;
-}
-
-/* 用户信息卡片样式 */
-.profile-card {
-  margin-bottom: var(--spacing-xl);
-  transition: all var(--transition-base);
-}
-
-.profile-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
-}
-
-/* 头像部分样式 */
-.avatar-section {
-  margin-bottom: var(--spacing-lg);
-}
-
-.avatar-container {
-  position: relative;
-}
-
-.user-avatar {
-  border: 3px solid var(--border-lighter);
-  box-shadow: var(--shadow-light);
-  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
-}
-
-.avatar-text {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: white;
-}
-
-/* 用户信息详情样式 */
-.profile-info {
-  text-align: center;
-}
-
-.user-details {
-  margin-bottom: var(--spacing-lg);
-}
-
-.user-info {
-  align-items: center;
-}
-
-.user-name {
-  margin: 0 0 var(--spacing-sm) 0;
-  color: var(--text-primary);
-}
-
-.user-role {
-  margin-top: var(--spacing-xs);
-}
-
-/* 统计信息样式 */
-.info-stats {
-  margin: var(--spacing-lg) 0;
-  padding: var(--spacing-base) 0;
-}
-
-.stat-item {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: var(--primary-color);
-  margin-bottom: var(--spacing-xs);
-}
-
-.stat-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.stat-divider {
-  width: 1px;
-  height: 40px;
-  background-color: var(--border-light);
-}
-
-/* 详细信息样式 */
-.info-details {
-  text-align: left;
-}
-
-.detail-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-base);
-}
-
-.detail-label {
-  font-weight: 500;
-}
-
-.detail-value {
-  color: var(--text-primary);
-}
-
-/* 内容区域样式 */
-.content-card {
-  min-height: 500px;
-}
-
 /* 标签页样式 */
 .profile-tabs {
   background-color: transparent;
@@ -377,96 +265,6 @@ export default {
 }
 
 .tab-label {
-  gap: var(--spacing-xs);
   font-weight: 500;
-}
-
-.tab-content {
-  padding: 0;
-}
-
-.content-header {
-  margin-bottom: var(--spacing-lg);
-}
-
-/* 空状态样式 */
-.empty-content {
-  padding: var(--spacing-xxl) 0;
-}
-
-.empty-text {
-  margin: var(--spacing-base) 0;
-  color: var(--text-secondary);
-}
-
-/* 商品网格样式 */
-.products-grid {
-  margin-bottom: var(--spacing-lg);
-}
-
-.product-item {
-  margin-bottom: var(--spacing-base);
-}
-
-/* 评论列表样式 */
-.reviews-list {
-  margin-bottom: var(--spacing-lg);
-}
-
-.review-item {
-  margin-bottom: var(--spacing-base);
-}
-
-.review-card {
-  border-left: 4px solid var(--primary-color);
-}
-
-.review-header {
-  margin-bottom: var(--spacing-base);
-}
-
-.rating :deep(.el-rate__icon) {
-  font-size: var(--font-size-md);
-}
-
-.review-content {
-  margin-bottom: var(--spacing-base);
-}
-
-.review-text {
-  margin: 0;
-  line-height: 1.6;
-  color: var(--text-primary);
-}
-
-.review-product {
-  font-size: var(--font-size-sm);
-}
-
-.product-link {
-  font-weight: 500;
-}
-
-/* 响应式设计 */
-@media (max-width: 992px) {
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .products-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .info-stats {
-    flex-direction: column;
-    gap: var(--spacing-base);
-  }
-  
-  .stat-divider {
-    width: 100%;
-    height: 1px;
-  }
 }
 </style>

@@ -18,19 +18,19 @@
 
         <el-col :xs="24" :lg="10">
           <!-- 二手物品留言 -->
-          <el-card class="review-card" v-if="product.id">
+          <el-card class="unified-card review-card" v-if="product.id">
             <template #header>
-              <div class="card-header">
+              <div class="unified-flex unified-flex-between unified-w-full">
                 <span>二手物品留言</span>
               </div>
             </template>
-            <div v-if="comments.length === 0" class="empty-reviews">
+            <div v-if="comments.length === 0" class="unified-empty">
             </div>
             <div v-else>
               <div class="review-list-container">
                 <div class="review-list">
-                  <div v-for="comment in comments" :key="comment.id" class="review-item">
-                    <div class="review-header">
+                  <div v-for="comment in comments" :key="comment.id" class="unified-review-item">
+                    <div class="unified-review-header">
                       <el-avatar 
                         :size="30" 
                         :src="comment.userAvatar" 
@@ -46,7 +46,7 @@
                       </div>
                       <div class="review-time">{{ formatDate(comment.createTime, 'YYYY-MM-DD') }}</div>
                     </div>
-                    <div class="review-content">{{ comment.content }}</div>
+                    <div class="unified-review-content">{{ comment.content }}</div>
                   </div>
                 </div>
               </div>
@@ -71,6 +71,7 @@
                     @click="submitComment" 
                     :loading="commentSubmitting"
                     size="small"
+                    class="unified-w-auto"
                   >
                     发表留言
                   </el-button>
@@ -387,38 +388,25 @@ export default {
   display: block;
 }
 
-.seller-info-card, .review-card {
-  margin-bottom: 20px;
-  flex: none;
-  display: block;
+.review-card {
+  margin-bottom: var(--spacing-lg);
 }
 
-.seller-info-card :deep(.el-card__body),
 .review-card :deep(.el-card__body) {
   flex: none;
   display: block;
 }
 
-.review-card :deep(.el-card__body) > div {
-  flex: none;
-  display: block;
-}
-
-.review-card :deep(.el-card__body) > div > div {
-  flex: none;
-  display: block;
-}
-
 .product-gallery {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .main-image {
   text-align: center;
-  background-color: #f5f7fa;
-  border-radius: 4px;
+  background-color: var(--bg-light);
+  border-radius: var(--border-radius-base);
   overflow: hidden;
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-base);
 }
 
 .main-image img {
@@ -430,29 +418,29 @@ export default {
 /* 缩略图列表样式 */
 .thumbnail-list {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
   overflow-x: auto;
-  padding: 8px 0;
+  padding: var(--spacing-sm) 0;
 }
 
 .thumbnail-item {
   width: 80px;
   height: 80px;
-  border-radius: 4px;
+  border-radius: var(--border-radius-base);
   overflow: hidden;
   cursor: pointer;
   border: 2px solid transparent;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
   flex-shrink: 0;
 }
 
 .thumbnail-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-hover);
 }
 
 .thumbnail-item.active {
-  border-color: #409eff;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 1px rgba(64, 158, 255, 0.2);
 }
 
@@ -462,69 +450,60 @@ export default {
   object-fit: cover;
 }
 
-.image-placeholder {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 400px;
-  color: #909399;
-}
-
 .product-basic-info {
-  padding: 0 10px;
+  padding: 0 var(--spacing-sm);
 }
 
 .product-name {
-  margin: 0 0 15px 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #303133;
+  margin: 0 0 var(--spacing-base) 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
 }
 
 .product-price {
   display: flex;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: var(--spacing-base);
 }
 
 .price-label {
-  font-size: 16px;
-  color: #606266;
-  margin-right: 10px;
+  font-size: var(--font-size-base);
+  color: var(--text-regular);
+  margin-right: var(--spacing-sm);
 }
 
 .price-value {
   font-size: 28px;
-  font-weight: bold;
-  color: #f56c6c;
+  font-weight: var(--font-bold);
+  color: var(--danger-color);
 }
 
 .product-meta {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
 }
 
 .product-description {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .product-description h4 {
-  margin: 0 0 10px 0;
-  font-size: 16px;
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-base);
 }
 
 .product-description p {
   margin: 0;
-  color: #606266;
-  line-height: 1.6;
+  color: var(--text-regular);
+  line-height: var(--leading-relaxed);
 }
 
 .product-actions {
   display: flex;
-  gap: 15px;
-  margin-bottom: 20px;
+  gap: var(--spacing-base);
+  margin-bottom: var(--spacing-lg);
   align-items: center;
 }
 
@@ -540,18 +519,18 @@ export default {
 }
 
 .seller-mini-avatar {
-  margin-right: 8px;
+  margin-right: var(--spacing-sm);
 }
 
 .seller-name {
-  font-size: 14px;
-  color: #606266;
-  margin-right: 8px;
+  font-size: var(--font-size-sm);
+  color: var(--text-regular);
+  margin-right: var(--spacing-sm);
 }
 
 .seller-phone-inline {
-  font-size: 14px;
-  color: #909399;
+  font-size: var(--font-size-sm);
+  color: var(--text-placeholder);
 }
 
 .clickable {
@@ -559,25 +538,11 @@ export default {
 }
 
 .clickable:hover {
-  color: #409eff;
+  color: var(--primary-color);
 }
 
 .review-user.clickable:hover {
   text-decoration: underline;
-}
-
-.seller-info-card, .review-card {
-  margin-bottom: 20px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.seller-info-card :deep(.el-card__body),
-.review-card :deep(.el-card__body) {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 .card-header {
@@ -589,32 +554,32 @@ export default {
 .seller-profile {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .seller-details {
-  margin-left: 15px;
+  margin-left: var(--spacing-base);
   flex: 1;
 }
 
 .seller-details h3 {
-  margin: 0 0 5px 0;
-  font-size: 18px;
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-lg);
 }
 
 .seller-phone {
   display: flex;
   align-items: center;
-  margin-top: 8px;
-  color: #606266;
+  margin-top: var(--spacing-sm);
+  color: var(--text-regular);
 }
 
 .seller-phone .el-icon {
-  margin-right: 5px;
+  margin-right: var(--spacing-xs);
 }
 
 .seller-stats {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .stat-item {
@@ -622,30 +587,30 @@ export default {
 }
 
 .stat-value {
-  font-size: 20px;
-  font-weight: bold;
-  color: #303133;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
 }
 
 .stat-label {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 5px;
+  font-size: var(--font-size-sm);
+  color: var(--text-placeholder);
+  margin-top: var(--spacing-xs);
 }
 
 .seller-actions {
-  margin-top: 10px;
+  margin-top: var(--spacing-sm);
 }
 
 .review-summary {
   display: flex;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: var(--spacing-base);
 }
 
 .rating-text {
-  margin-left: 10px;
-  color: #606266;
+  margin-left: var(--spacing-sm);
+  color: var(--text-regular);
 }
 
 .review-list-container {
@@ -659,9 +624,9 @@ export default {
 }
 
 .review-item {
-  border-bottom: 1px solid #ebeef5;
-  padding-bottom: 15px;
-  margin-bottom: 15px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: var(--spacing-base);
+  margin-bottom: var(--spacing-base);
 }
 
 .review-item:last-child {
@@ -673,28 +638,28 @@ export default {
 .review-header {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .review-info {
   flex: 1;
-  margin-left: 10px;
+  margin-left: var(--spacing-sm);
 }
 
 .review-user {
-  font-size: 14px;
-  margin-bottom: 3px;
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-xs);
 }
 
 .review-time {
-  font-size: 12px;
-  color: #909399;
+  font-size: var(--font-size-sm);
+  color: var(--text-placeholder);
 }
 
 .review-content {
-  color: #606266;
-  font-size: 14px;
-  line-height: 1.5;
+  color: var(--text-regular);
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-normal);
 }
 
 .related-products-card {
@@ -712,14 +677,14 @@ export default {
 
 /* 留言表单样式 */
 .add-comment-form {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-light);
 }
 
 .login-prompt {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-light);
 }
 </style>

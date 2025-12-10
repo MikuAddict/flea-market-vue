@@ -1,9 +1,9 @@
 <template>
   <Layout>
     <div class="publish-container">
-      <el-card class="publish-card">
+      <el-card class="unified-card publish-card">
         <template #header>
-          <div class="card-header">
+          <div class="unified-flex unified-flex-between unified-w-full">
             <span>{{ isEdit ? '编辑二手物品' : '发布二手物品' }}</span>
           </div>
         </template>
@@ -13,20 +13,22 @@
           :rules="productRules"
           ref="productFormRef"
           label-width="100px"
+          class="unified-form"
           @submit.prevent="handleSubmit"
         >
-          <el-form-item label="二手物品名称" prop="productName">
+          <el-form-item label="二手物品名称" prop="productName" class="unified-form-item">
             <el-input
               v-model="productForm.productName"
               placeholder="请输入二手物品名称"
+              class="unified-w-full"
             />
           </el-form-item>
           
-          <el-form-item label="二手物品分类" prop="categoryId">
+          <el-form-item label="二手物品分类" prop="categoryId" class="unified-form-item">
             <el-select
               v-model="productForm.categoryId"
               placeholder="请选择二手物品分类"
-              style="width: 100%"
+              class="unified-w-full"
             >
               <el-option
                 v-for="category in categories"
@@ -37,14 +39,14 @@
             </el-select>
           </el-form-item>
           
-          <el-form-item label="价格" prop="price">
+          <el-form-item label="价格" prop="price" class="unified-form-item">
             <el-input-number
               v-model="productForm.price"
               :precision="2"
               :min="0"
               :step="0.01"
               placeholder="请输入价格"
-              style="width: 100%"
+              class="unified-w-full"
             />
           </el-form-item>
           

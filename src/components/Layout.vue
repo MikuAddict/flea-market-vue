@@ -33,13 +33,13 @@
         </div>
         
         <!-- 用户操作区 -->
-        <div class="user-actions">
+        <div class="unified-flex unified-flex-center user-actions">
           <template v-if="isLoggedIn">
             <el-dropdown @command="handleCommand" class="user-dropdown">
-              <span class="user-info">
+              <span class="unified-flex unified-flex-center user-info">
                 <el-avatar :size="32" :src="user?.userAvatar" v-if="user?.userAvatar" />
-                <el-avatar :size="32" v-else>{{ user?.userName?.charAt(0) || '?' }}</el-avatar>
-                <span class="username">{{ user?.userName || '未知用户' }}</span>
+                <el-avatar :size="32" v-else>{{ user?.userName?.charAt(0)}}</el-avatar>
+                <span class="unified-ml-xs unified-font-medium username">{{ user?.userName}}</span>
                 <el-icon class="el-icon--right"><arrow-down /></el-icon>
               </span>
               <template #dropdown>
@@ -53,8 +53,8 @@
             </el-dropdown>
           </template>
           <template v-else>
-            <el-button type="primary" @click="$router.push('/login')" class="login-btn">登录</el-button>
-            <el-button @click="$router.push('/register')" class="register-btn">注册</el-button>
+            <el-button type="primary" @click="$router.push('/login')" class="unified-button unified-button-primary login-btn">登录</el-button>
+            <el-button @click="$router.push('/register')" class="unified-button unified-button-outline register-btn">注册</el-button>
           </template>
         </div>
       </div>
@@ -62,7 +62,7 @@
     
     <!-- 主要内容区域 -->
     <el-main class="main-content">
-      <div class="page-container">
+      <div class="unified-page-container">
         <slot />
       </div>
     </el-main>
@@ -215,6 +215,7 @@ export default {
   color: var(--primary-color);
   border-bottom: 2px solid var(--primary-color);
 }
+
 /* 搜索栏样式 */
 .search-bar {
   max-width: 300px;
@@ -225,54 +226,12 @@ export default {
   border-radius: var(--border-radius-round);
 }
 
-/* 用户操作区样式 */
-.user-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.user-dropdown {
-  cursor: pointer;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--border-radius-round);
-  transition: background-color var(--transition-base);
-}
-
-.user-info:hover {
-  background-color: var(--bg-light);
-}
-
-.username {
-  margin: 0 var(--spacing-sm);
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.login-btn,
-.register-btn {
-  border-radius: var(--border-radius-round);
-  padding: var(--spacing-sm) var(--spacing-base);
-  font-weight: 500;
-}
-
 /* 主要内容区域 */
 .main-content {
   margin-top: 60px; /* 为固定导航栏留出空间 */
   background-color: var(--bg-light);
   padding: 0;
   min-height: calc(100vh - 120px);
-}
-
-.page-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--spacing-xl);
 }
 
 /* 页脚样式 */
@@ -360,12 +319,6 @@ export default {
   .category-nav .el-sub-menu__title {
     font-size: 12px;
     padding: 0 8px;
-  }
-  
-  .login-btn,
-  .register-btn {
-    font-size: 12px;
-    padding: 6px 12px;
   }
 }
 </style>

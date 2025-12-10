@@ -1,20 +1,20 @@
 <template>
   <Layout>
-    <div class="news-list-container">
-      <el-card class="news-card">
+    <div class="news-list-container unified-page-container unified-max-width-1000 unified-p-xl">
+      <el-card class="unified-card">
         <template #header>
-          <span>新闻公告</span>
+          <span class="unified-title-lg">新闻公告</span>
         </template>
         
-        <div v-if="loading" class="loading-container">
+        <div v-if="loading" class="loading-container unified-p-xl">
           <el-skeleton :rows="5" animated />
         </div>
         
-        <div v-else-if="newsList.length === 0" class="empty-container">
+        <div v-else-if="newsList.length === 0" class="empty-container unified-p-xl">
           <el-empty description="暂无新闻" />
         </div>
         
-        <div v-else class="news-timeline">
+        <div v-else class="news-timeline unified-mb-lg">
           <el-timeline>
             <el-timeline-item
               v-for="news in newsList"
@@ -23,16 +23,16 @@
               placement="top"
               @click="navigateToDetail(news.id)"
             >
-              <el-card shadow="hover" class="news-item">
+              <el-card shadow="hover" class="news-item unified-card unified-hover-lift unified-cursor-pointer">
                 <div class="news-header">
-                  <h3>{{ news.title }}</h3>
+                  <h3 class="unified-title-md unified-mb-sm">{{ news.title }}</h3>
                 </div>
 
-                <div class="news-content">
-                  <p>{{ news.content.substring(0, 200) }}...</p>
+                <div class="news-content unified-mb-sm">
+                  <p class="unified-text-regular unified-line-height-1_6">{{ news.content.substring(0, 200) }}...</p>
                 </div>
-                <div class="news-footer">
-                  <span class="news-author">作者: {{ news.authorName }}</span>
+                <div class="news-footer unified-flex unified-flex-between unified-flex-center">
+                  <span class="news-author unified-text-sm unified-text-secondary">作者: {{ news.authorName }}</span>
                   <el-button type="text" @click.stop="navigateToDetail(news.id)">
                     阅读全文
                   </el-button>
@@ -43,7 +43,7 @@
         </div>
         
         <!-- 分页 -->
-        <div v-if="total > 0" class="pagination-container">
+        <div v-if="total > 0" class="pagination-container unified-flex unified-justify-center unified-mt-lg">
           <el-pagination
             v-model:current-page="pagination.current"
             v-model:page-size="pagination.size"
@@ -114,57 +114,7 @@ export default {
 </script>
 
 <style scoped>
-.news-list-container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: var(--spacing-xl);
-}
-
-.loading-container, .empty-container {
-  padding: 40px 0;
-}
-
-.news-timeline {
-  margin-bottom: 20px;
-}
-
 .news-item {
-  cursor: pointer;
-  transition: transform 0.3s;
   margin-bottom: 15px;
-}
-
-.news-item:hover {
-  transform: translateY(-5px);
-}
-
-.news-header h3 {
-  margin: 0 0 10px 0;
-  font-size: 18px;
-  color: #303133;
-}
-
-.news-content {
-  margin-bottom: 15px;
-}
-
-.news-content p {
-  margin: 0;
-  color: #606266;
-  line-height: 1.6;
-}
-
-.news-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-  color: #909399;
-}
-
-.pagination-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
 }
 </style>

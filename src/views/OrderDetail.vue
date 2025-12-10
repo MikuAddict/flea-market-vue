@@ -1,9 +1,9 @@
 <template>
   <Layout>
     <div class="order-detail-container" v-if="!loading && order">
-      <el-card class="order-card">
+      <el-card class="unified-card order-card">
         <template #header>
-          <div class="card-header">
+          <div class="unified-flex unified-flex-between unified-w-full">
             <span>订单详情</span>
           </div>
         </template>
@@ -31,22 +31,22 @@
             
             <el-col :xs="24" :lg="10">
               <!-- 订单状态信息 -->
-              <el-card class="order-status-card">
+              <el-card class="unified-card order-status-card">
                 <template #header>
                   <span>订单状态</span>
                 </template>
-                <div class="status-info">
-                  <div class="status-item">
+                <div class="unified-flex unified-flex-col unified-gap-base status-info">
+                  <div class="unified-flex unified-flex-between status-item">
                     <span class="label">当前状态:</span>
                     <el-tag :type="getOrderStatusType(order.status)" size="large">
                       {{ formatOrderStatus(order.status) }}
                     </el-tag>
                   </div>
-                  <div class="status-item">
+                  <div class="unified-flex unified-flex-between status-item">
                     <span class="label">支付方式:</span>
                     <span>{{ formatPaymentMethod(order.paymentMethod) }}</span>
                   </div>
-                  <div class="status-item">
+                  <div class="unified-flex unified-flex-between status-item">
                     <span class="label">订单金额:</span>
                     <span class="price">¥{{ formatPrice(order.amount) }}</span>
                   </div>

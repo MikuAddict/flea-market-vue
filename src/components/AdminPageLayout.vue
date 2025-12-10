@@ -2,7 +2,7 @@ b<template>
   <Layout>
     <div class="admin-page unified-page-container fade-in">
       <!-- 页面标题和操作区域 -->
-      <div class="page-header unified-flex unified-flex-between">
+      <div class="unified-flex unified-flex-between unified-mb-xl">
         <div>
           <h1 class="unified-title-xl">{{ pageTitle }}</h1>
           <p class="unified-text-secondary">{{ pageSubtitle }}</p>
@@ -19,11 +19,11 @@ b<template>
       </div>
       
       <!-- 统计卡片区域 -->
-      <div v-if="stats && stats.length > 0" class="stats-cards unified-grid unified-grid-4">
+      <div v-if="stats && stats.length > 0" class="unified-grid unified-grid-4 unified-mb-xl">
         <div class="stat-card fade-in" v-for="(stat, index) in stats" :key="stat.title" :style="{ animationDelay: `${index * 0.1}s` }">
           <el-card class="unified-card stat-item" :class="`stat-item-${stat.type}`">
-            <div class="stat-content unified-flex unified-flex-center">
-              <div class="stat-icon unified-flex unified-flex-center">
+            <div class="unified-flex unified-flex-center">
+              <div class="unified-flex unified-flex-center stat-icon">
                 <el-icon :size="24"><component :is="stat.icon" /></el-icon>
               </div>
               <div class="stat-info">
@@ -36,9 +36,9 @@ b<template>
       </div>
       
       <!-- 筛选区域 -->
-      <el-card v-if="showFilter" class="unified-card filter-card fade-in">
+      <el-card v-if="showFilter" class="unified-card filter-card fade-in unified-mb-xl">
         <template #header>
-          <div class="card-header unified-flex unified-flex-between">
+          <div class="unified-flex unified-flex-between unified-w-full">
             <h3 class="unified-title-base">筛选与搜索</h3>
             <el-button 
               type="text" 
@@ -54,11 +54,11 @@ b<template>
       </el-card>
       
       <!-- 主内容区域 -->
-      <el-card class="unified-card main-content-card fade-in">
+      <el-card class="unified-card main-content-card fade-in unified-mb-xl">
         <template #header v-if="showHeader">
-          <div class="card-header unified-flex unified-flex-between">
+          <div class="unified-flex unified-flex-between unified-w-full">
             <h3 class="unified-title-base">{{ contentTitle }}</h3>
-            <div class="batch-actions unified-flex unified-flex-center">
+            <div class="unified-flex unified-flex-center unified-gap-sm">
               <slot name="header-actions"></slot>
             </div>
           </div>
@@ -68,7 +68,7 @@ b<template>
       </el-card>
       
       <!-- 分页区域 -->
-      <div v-if="showPagination && total > 0" class="pagination-container">
+      <div v-if="showPagination && total > 0" class="unified-flex unified-flex-center">
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
@@ -205,7 +205,7 @@ export default {
 .stat-info h3 {
   margin: 0;
   font-size: var(--font-size-xl);
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 .stat-info p {
@@ -230,10 +230,6 @@ export default {
   color: var(--primary-color);
 }
 
-.batch-actions {
-  gap: var(--spacing-sm);
-}
-
 .pagination-container {
   display: flex;
   justify-content: center;
@@ -249,7 +245,7 @@ export default {
 :deep(.el-table th) {
   background-color: var(--bg-lighter) !important;
   color: var(--text-regular) !important;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 :deep(.el-table__empty-block) {
@@ -277,24 +273,10 @@ export default {
   width: 100%;
 }
 
-.filter-select {
-  width: 100%;
-}
-
 /* 响应式优化 */
 @media (max-width: 768px) {
   .admin-page {
     padding: var(--spacing-base);
-  }
-  
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-base);
-  }
-  
-  .stats-cards {
-    grid-template-columns: repeat(2, 1fr);
   }
   
   .unified-grid-4 {
@@ -303,10 +285,6 @@ export default {
 }
 
 @media (max-width: 480px) {
-  .stats-cards {
-    grid-template-columns: 1fr;
-  }
-  
   .unified-grid-4 {
     grid-template-columns: 1fr;
   }

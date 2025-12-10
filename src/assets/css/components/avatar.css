@@ -1,0 +1,46 @@
+/* 头像样式 */
+
+.unified-avatar {
+  border: 3px solid var(--border-lighter);
+  box-shadow: var(--shadow-light);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
+}
+
+.unified-avatar-text {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-semibold);
+  color: white;
+}
+
+.unified-avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.unified-avatar-overlay:hover {
+  opacity: 1;
+}
+
+.unified-upload-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+  cursor: pointer;
+}
+
+.unified-upload-icon p {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+}

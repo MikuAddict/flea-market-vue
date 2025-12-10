@@ -139,11 +139,6 @@ export default {
     // 二手物品数据
     const product = ref({})
     const loading = ref(true)
-    const averageRating = ref(0)
-    const reviewCount = ref(0)
-    const reviews = ref([])
-    const relatedProducts = ref([])
-    const sellerStats = ref({ published: 0, completed: 0 })
     const comments = ref([]) // 添加留言数据
     const commentForm = ref({ content: '' }) // 留言表单
     const commentFormRef = ref(null) // 留言表单引用
@@ -345,15 +340,10 @@ export default {
     return {
       product,
       loading,
-      averageRating,
-      reviewCount,
-      reviews,
       comments, // 添加comments
       commentForm, // 添加commentForm
       commentFormRef, // 添加commentFormRef
       commentSubmitting, // 添加commentSubmitting
-      relatedProducts,
-      sellerStats,
       isLoggedIn,
       userId,
       formatPrice,

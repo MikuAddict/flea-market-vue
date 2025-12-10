@@ -261,12 +261,6 @@ export default {
     const highInventoryProducts = ref([])
     const highInventoryLoading = ref(false)
     
-    // 仪表盘筛选条件
-    const dashboardFilters = ref({
-      timeRange: '30d',
-      statsType: 'all'
-    })
-    
     // 快速操作
     const quickActions = ref([
       {
@@ -536,33 +530,6 @@ export default {
       }
     }
     
-    // 获取需求量大的二手物品
-    const fetchHighDemandProducts = async () => {
-      try {
-        // 使用新的月度统计数据
-        const currentDate = new Date()
-        const year = currentDate.getFullYear()
-        const month = currentDate.getMonth() + 1
-        
-        const response = await statisticsApi.getMonthlyCategoryRanking(year, month)
-        if (response.status === 200) {
-          const data = response.data?.monthlyCategoryRanking || []
-          // 将API返回的数据转换为表格需要的格式
-          hotProducts.value = data.slice(0, 5).map(item => ({
-            id: item.categoryId,
-            productName: item.categoryName,
-            categoryName: item.categoryName,
-            demandCount: item.tradeCount || 0,
-            averagePrice: item.totalAmount || 0
-          }))
-        }
-      } catch (error) {
-        console.error('获取需求量大的二手物品分类失败:', error)
-        // 清除模拟数据，默认显示空数组
-        hotProducts.value = []
-      }
-    }
-    
     // 初始化图表
     const initCharts = async () => {
       try {
@@ -646,16 +613,6 @@ export default {
       }
     }
     
-    // 查看产品详情
-    const viewProduct = (id) => {
-      router.push(`/products/${id}`)
-    }
-    
-    // 审核用户
-    const auditUser = (user) => {
-      router.push(`/admin/users?action=audit&id=${user.id}`)
-    }
-    
     // 跳转到产品页面
     const goToProducts = () => {
       router.push('/admin/statistics?type=high-demand')
@@ -664,14 +621,6 @@ export default {
     // 跳转到高闲置量二手物品页面
     const goToHighInventoryProducts = () => {
       router.push('/admin/statistics?type=high-inventory')
-    }
-    
-    // 更新仪表盘数据
-    const updateDashboardData = () => {
-      // 根据筛选条件更新数据
-      fetchComprehensiveStatistics()
-      fetchHighDemandCategories()
-      initCharts()
     }
     
     // 刷新仪表盘数据
@@ -722,13 +671,10 @@ export default {
       trendChart,
       monthlyTradeAmount,
       monthlyTradeCount,
-      viewProduct,
       goToProducts,
       goToHighInventoryProducts,
       formatPrice,
       formatDate,
-      dashboardFilters,
-      updateDashboardData,
       refreshDashboardData,
     }
   }

@@ -175,7 +175,6 @@ export default {
     const categoryList = ref([])
     const categoryDialogVisible = ref(false)
     const dialogMode = ref('add')
-    const viewMode = ref('list')
     const categoryFormSubmitting = ref(false)
     
     // 分类表单
@@ -197,52 +196,6 @@ export default {
         { type: 'number', message: '排序值必须是数字', trigger: 'blur' }
       ]
     }
-    
-    // 分类统计数据
-    const categoryStats = computed(() => [
-      {
-        title: '总分类数',
-        value: categoryList.value.length,
-        icon: 'Goods',
-        type: 'primary'
-      },
-      {
-        title: '顶级分类',
-        value: categoryList.value.filter(c => !c.parentId).length,
-        icon: 'FolderOpened',
-        type: 'success'
-      },
-      {
-        title: '二级分类',
-        value: categoryList.value.filter(c => c.parentId).length,
-        icon: 'Folder',
-        type: 'warning'
-      },
-      {
-        title: '三级分类',
-        value: categoryList.value.filter(c => c.parentId && c.level === 2).length,
-        icon: 'FolderAdd',
-        type: 'danger'
-      }
-    ])
-    
-    // 分类树形数据（根据OpenAPI规范，当前不包含父子级关系，所以简化处理）
-    const categoryTree = computed(() => {
-      // 当前API不返回父子级关系，所以直接返回一级列表
-      return categoryList.value.map(category => ({
-        ...category,
-        children: [] // 空子节点
-      }))
-    })
-    
-    // 分类选项（用于父级分类选择）
-    const categoryOptions = computed(() => {
-      // 当前API不返回父子级关系，所以简化处理
-      return [
-        { id: null, name: '顶级分类' },
-        ...categoryList.value
-      ]
-    })
     
     // 树形组件默认属性
     const defaultProps = {
@@ -283,14 +236,6 @@ export default {
     const showAddCategoryDialog = () => {
       dialogMode.value = 'add'
       resetCategoryForm()
-      categoryDialogVisible.value = true
-    }
-    
-    // 显示添加子分类对话框
-    const showAddSubCategoryDialog = (parent) => {
-      dialogMode.value = 'add'
-      resetCategoryForm()
-      categoryForm.parentId = parent.id
       categoryDialogVisible.value = true
     }
     
@@ -352,34 +297,6 @@ export default {
       }
     }
     
-    // 处理分类操作
-    const handleCategoryAction = async (command, category) => {
-      switch (command) {
-        case 'move':
-          // 这里可以实现移动分类的功能
-          ElMessage.info('移动分类功能开发中')
-          break
-          
-        case 'delete':
-          try {
-            await ElMessageBox.confirm(`确定要删除分类 "${category.name}" 吗？删除后，该分类下的所有产品将重新分类，此操作不可恢复。`, '警告', {
-              confirmButtonText: '确定',
-              cancelButtonText: '取消',
-              type: 'error'
-            })
-            
-            await adminApi.category.deleteCategory(category.id)
-            ElMessage.success('分类删除成功')
-            fetchCategories()
-          } catch (error) {
-            if (error !== 'cancel') {
-              ElMessage.error('分类删除失败')
-            }
-          }
-          break
-      }
-    }
-    
     // 删除分类（用于树形视图）
     const handleDeleteCategory = async (category) => {
       try {
@@ -406,24 +323,18 @@ export default {
     return {
       loading,
       categoryList,
-      categoryTree,
-      categoryOptions,
       defaultProps,
       categoryDialogVisible,
       dialogMode,
-      viewMode,
       categoryForm,
       categoryFormRef,
       categoryFormRules,
       categoryFormSubmitting,
-      categoryStats,
       fetchCategories,
       showAddCategoryDialog,
-      showAddSubCategoryDialog,
       showEditCategoryDialog,
       resetCategoryForm,
       submitCategoryForm,
-      handleCategoryAction,
       handleDeleteCategory
     }
   }

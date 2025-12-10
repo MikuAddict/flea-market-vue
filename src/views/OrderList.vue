@@ -96,16 +96,25 @@
                   查看详情
                 </el-button>
                 
-                <!-- 已完成状态的操作 -->
-                <template v-if="order.status === 2 && !order.buyerConfirmed">
-                  <el-button
-                    size="small"
-                    type="success"
-                    @click="confirmOrder(order.id)"
-                  >
-                    确认收货
-                  </el-button>
-                </template>
+                <!-- 取消订单（状态为0：待支付） -->
+                <el-button
+                  v-if="order.status === 0"
+                  size="small"
+                  type="danger"
+                  @click="cancelOrder(order.id)"
+                >
+                  取消订单
+                </el-button>
+                
+                <!-- 确认收货（状态为1：已支付，且买家未确认） -->
+                <el-button
+                  v-if="order.status === 1 && !order.buyerConfirmed"
+                  size="small"
+                  type="success"
+                  @click="confirmOrder(order.id)"
+                >
+                  确认收货
+                </el-button>
               </div>
             </div>
           </el-card>
@@ -144,6 +153,7 @@ import {
 } from '@/utils/format'
 import { useDataFetchWithIdPrecision } from '@/composables/useDataFetch'
 import { useDeleteHandler } from '@/composables/useEventHandlers'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 export default {
   name: 'OrderList',

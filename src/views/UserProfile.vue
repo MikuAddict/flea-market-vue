@@ -159,60 +159,98 @@
                     <p class="empty-text">暂无订单</p>
                   </div>
                   
-                  <div v-else class="orders-list">
-                    <div 
-                      class="order-item fade-in"
-                      v-for="(order, index) in orders" 
+                  <div v-else class="order-list">
+                    <el-card
+                      v-for="order in orders"
                       :key="order.id"
-                      :style="{ animationDelay: `${index * 0.05}s` }"
+                      class="order-item"
+                      shadow="hover"
                     >
-                      <el-card class="unified-card order-card">
-                        <div class="order-header unified-flex unified-flex-between">
-                          <div class="order-id">
-                            <span class="unified-text-secondary">订单号：</span>
-                            <span>{{ order.id }}</span>
-                          </div>
-                          <div class="unified-tag" :class="`unified-tag-${getOrderTagClass(order.status)}`">
+                      <div class="order-header">
+                        <div class="order-info">
+                          <span class="order-id">订单号: {{ order.id }}</span>
+                          <el-tag :type="getOrderStatusType(order.status)" size="small">
                             {{ formatOrderStatus(order.status) }}
+                          </el-tag>
+                        </div>
+                        <span class="order-time">{{ formatDate(order.createTime) }}</span>
+                      </div>
+                      
+                      <div class="order-content">
+                        <div class="product-info">
+                          <div class="product-image">
+                            <img
+                              v-if="order.product && order.product.imageUrl"
+                              :src="order.product.imageUrl"
+                              :alt="order.product.productName"
+                            />
+                            <div v-else class="no-image">
+                              <el-icon><Picture /></el-icon>
+                            </div>
+                          </div>
+                          <div class="product-details">
+                            <h4>{{ order.product?.productName || '二手物品已删除' }}</h4>
+                            <p v-if="order.product">
+                              分类: {{ order.product.category?.name }}
+                            </p>
+                            <p>支付方式: {{ formatPaymentMethod(order.paymentMethod) }}</p>
                           </div>
                         </div>
                         
-                        <div class="order-product unified-flex unified-flex-between">
-                          <div class="product-info">
-                            <h4 class="product-name">{{ order.productName || '获取中...' }}</h4>
-                            <p class="order-time">{{ formatDate(order.createTime) }}</p>
-                          </div>
-                          <div class="price-info">
-                            <span class="price-symbol">¥</span>
-                            <span class="price-value">{{ formatPrice(order.amount) }}</span>
-                          </div>
+                        <div class="order-amount">
+                          <div class="amount-label">订单金额</div>
+                          <div class="amount-value">¥{{ formatPrice(order.amount) }}</div>
                         </div>
-                        
-                        <div class="order-footer unified-flex unified-flex-between">
-                          <div class="payment-method unified-text-secondary">
-                            支付方式：{{ formatPaymentMethod(order.paymentMethod) }}
-                          </div>
-                          <div class="order-actions">
-                            <el-button 
-                              size="small" 
-                              class="unified-button unified-button-outline"
-                              @click="viewOrder(order.id)"
-                            >
-                              查看详情
-                            </el-button>
-                            <el-button 
-                              v-if="order.status === 0"
-                              size="small" 
-                              type="danger"
-                              class="unified-button"
-                              @click="cancelOrder(order.id)"
-                            >
-                              取消订单
-                            </el-button>
-                          </div>
+                      </div>
+                      
+                      <div class="order-footer">
+                        <div class="order-seller" v-if="order.seller">
+                          卖家: 
+                          <el-avatar 
+                            :size="20" 
+                            :src="order.seller.userAvatar" 
+                            style="margin-right: 5px; vertical-align: middle; cursor: pointer;"
+                            @click="goToUserProfile(order.seller.id)"
+                          >
+                            {{ order.seller.userName?.charAt(0) }}
+                          </el-avatar>
+                          <span class="clickable" @click="goToUserProfile(order.seller.id)">
+                            {{ order.seller.userName || '未知' }}
+                          </span>
                         </div>
-                      </el-card>
-                    </div>
+                        <div class="order-seller" v-else>
+                          卖家: 未知
+                        </div>
+                        <div class="order-actions">
+                          <el-button
+                            size="small"
+                            @click="viewOrder(order.id)"
+                          >
+                            查看详情
+                          </el-button>
+                          
+                          <!-- 取消订单（状态为0：待支付） -->
+                          <el-button
+                            v-if="order.status === 0"
+                            size="small"
+                            type="danger"
+                            @click="cancelOrder(order.id)"
+                          >
+                            取消订单
+                          </el-button>
+                          
+                          <!-- 确认收货（状态为1：已支付，且买家未确认） -->
+                          <el-button
+                            v-if="order.status === 1 && !order.buyerConfirmed"
+                            size="small"
+                            type="success"
+                            @click="confirmOrder(order.id)"
+                          >
+                            确认收货
+                          </el-button>
+                        </div>
+                      </div>
+                    </el-card>
                   </div>
                   
                   <div class="view-more-container unified-flex unified-flex-center" v-if="orders.length > 0">
@@ -256,7 +294,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   Edit, 
   Close, 
@@ -264,7 +302,8 @@ import {
   Box, 
   Plus, 
   Document, 
-  Star 
+  Star,
+  Picture
 } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
 import UserBasicInfoCard from '@/components/UserBasicInfoCard.vue'
@@ -357,6 +396,29 @@ export default {
       }
     }
     
+    // 处理图片URL，将完整后端地址转换为相对路径
+    const processImageUrl = (url) => {
+      if (!url) return null
+      
+      // 如果URL包含localhost:7023，转换为相对路径
+      if (url.includes('localhost:7023')) {
+        return url.replace('http://localhost:7023', '/api')
+      }
+      
+      // 如果是相对路径且以images开头，添加/api前缀
+      if (url.startsWith('images/') || url.includes('/images/')) {
+        return `/api/${url.replace(/^\/?/, '')}`
+      }
+      
+      // 如果已经是相对路径（以/api开头），直接返回
+      if (url.startsWith('/api/')) {
+        return url
+      }
+      
+      // 其他情况返回原URL
+      return url
+    }
+    
     // 获取我的订单
     const fetchOrders = async () => {
       try {
@@ -373,7 +435,48 @@ export default {
           ordersData = ordersData.filter(order => order.status === orderStatus.value)
         }
         
-        orders.value = ordersData
+        // 为每个订单获取详细的商品信息和卖家信息
+        const enrichedOrders = []
+        for (const order of ordersData) {
+          // 获取商品详情
+          if (order.productId) {
+            try {
+              const productResponse = await productApi.getProductById(order.productId)
+              order.product = productResponse.data.data
+              
+              // 处理商品图片 - 只使用mainImageUrl
+              if (order.product && order.product.mainImageUrl) {
+                order.product.imageUrl = processImageUrl(order.product.mainImageUrl)
+              } else if (order.product && order.product.imageUrl) {
+                // 如果没有mainImageUrl，则使用imageUrl
+                order.product.imageUrl = processImageUrl(order.product.imageUrl)
+              }
+            } catch (error) {
+              console.error('获取商品详情失败:', error)
+              order.product = null
+            }
+          }
+          
+          // 获取卖家信息
+          if (order.sellerId) {
+            try {
+              const sellerResponse = await userApi.getUserVOById(order.sellerId)
+              order.seller = sellerResponse.data.data
+              
+              // 处理卖家头像
+              if (order.seller && order.seller.userAvatar) {
+                order.seller.userAvatar = processImageUrl(order.seller.userAvatar)
+              }
+            } catch (error) {
+              console.error('获取卖家信息失败:', error)
+              order.seller = null
+            }
+          }
+          
+          enrichedOrders.push(order)
+        }
+        
+        orders.value = enrichedOrders
       } catch (error) {
         console.error('获取我的订单失败:', error)
       }
@@ -541,11 +644,48 @@ export default {
     // 取消订单
     const cancelOrder = async (orderId) => {
       try {
+        await ElMessageBox.confirm(
+          '确定要取消这个订单吗？',
+          '取消确认',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        )
+        
         await orderApi.cancelOrder(orderId)
         ElMessage.success('订单已取消')
         fetchOrders()
       } catch (error) {
-        console.error('取消订单失败:', error)
+        if (error !== 'cancel') {
+          console.error('取消订单失败:', error)
+          ElMessage.error('取消订单失败')
+        }
+      }
+    }
+    
+    // 确认收货
+    const confirmOrder = async (orderId) => {
+      try {
+        await ElMessageBox.confirm(
+          '确认已收到二手物品吗？确认后订单将完成。',
+          '确认收货',
+          {
+            confirmButtonText: '确认收货',
+            cancelButtonText: '取消',
+            type: 'info'
+          }
+        )
+        
+        await orderApi.confirmOrder(orderId)
+        ElMessage.success('订单已完成')
+        fetchOrders()
+      } catch (error) {
+        if (error !== 'cancel') {
+          console.error('确认收货失败:', error)
+          ElMessage.error('确认收货失败')
+        }
       }
     }
     

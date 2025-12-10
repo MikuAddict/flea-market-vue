@@ -4,90 +4,16 @@
       <el-row :gutter="20">
         <!-- 左侧二手物品信息 -->
         <el-col :xs="24" :lg="14">
-          <el-card class="product-info-card">
-          <div class="product-gallery">
-            <!-- 主图 -->
-            <div class="main-image">
-              <img
-                v-if="currentImage"
-                :src="currentImage"
-                :alt="product.productName"
-                @error="handleImageError"
-              />
-              <el-image v-else style="width: 100%; height: 400px">
-                <template #error>
-                  <div class="image-placeholder">
-                    <el-icon size="50"><Picture /></el-icon>
-                    <p>暂无图片</p>
-                  </div>
-                </template>
-              </el-image>
-            </div>
-            
-            <!-- 缩略图列表 -->
-            <div v-if="productImages.length > 1" class="thumbnail-list">
-              <div 
-                v-for="(image, index) in productImages" 
-                :key="index"
-                class="thumbnail-item"
-                :class="{ active: currentImageIndex === index }"
-                @click="currentImageIndex = index"
-              >
-                <img :src="image" :alt="`图片${index + 1}`" />
-              </div>
-            </div>
-          </div>
-            <div class="product-basic-info">
-              <h2 class="product-name">{{ product.productName }}</h2>
-              <div class="product-price">
-                <span class="price-label">价格</span>
-                <span class="price-value">¥{{ formatPrice(product.price) }}</span>
-              </div>
-              <div class="product-meta">
-                <el-tag type="info" size="large">
-                  {{ formatPaymentMethod(product.paymentMethod) }}
-                </el-tag>
-                <el-tag v-if="product.category" type="success" size="large">
-                  {{ product.category.name }}
-                </el-tag>
-              </div>
-              <div class="product-description">
-                <h4>二手物品描述</h4>
-                <p>{{ product.description || '暂无描述' }}</p>
-              </div>
-              <div class="product-actions" v-if="isLoggedIn && product.user?.id !== userId">
-                <el-button
-                  type="primary"
-                  size="large"
-                  :disabled="product.status !== 1"
-                  @click="createOrder"
-                >
-                  {{ getActionText() }}
-                </el-button>
-              </div>
-              <div class="product-notice" v-else-if="!isLoggedIn">
-                <el-alert title="请先登录" type="info" show-icon :closable="false">
-                </el-alert>
-              </div>
-              
-              <!-- 卖家信息显示在购买按钮旁边或单独显示 -->
-              <div class="seller-contact-inline" v-if="product.user">
-                <div class="seller-contact-item">
-                  <el-avatar 
-                    :size="24" 
-                    :src="product.user.userAvatar" 
-                    class="seller-mini-avatar clickable"
-                    @click="goToUserProfile(product.user.id)"
-                  >
-                    {{ product.user.userName?.charAt(0) }}
-                  </el-avatar>
-                  <span class="seller-name clickable" @click="goToUserProfile(product.user.id)">
-                    {{ product.user.userName }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </el-card>
+          <ProductInfoCard
+            :product="product"
+            :show-login-notice="!isLoggedIn"
+            :default-action="isLoggedIn && product.user?.id !== userId && product.status === 1"
+            :default-action-text="getActionText()"
+            @action-click="createOrder"
+            @seller-click="goToUserProfile"
+            @image-error="handleImageError"
+          >
+          </ProductInfoCard>
         </el-col>
 
         <el-col :xs="24" :lg="10">
@@ -99,7 +25,6 @@
               </div>
             </template>
             <div v-if="comments.length === 0" class="empty-reviews">
-              <el-empty description="暂无留言" />
             </div>
             <div v-else>
               <div class="review-list-container">
@@ -181,6 +106,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Picture, ChatDotRound, Phone } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import Layout from '@/components/Layout.vue'
+import ProductInfoCard from '@/components/ProductInfoCard.vue'
 import ProductCard from '@/components/ProductCard.vue'
 import { productApi, orderApi, reviewApi, statisticsApi, commentApi, userApi } from '@/api'
 import {
@@ -198,6 +124,7 @@ export default {
   name: 'ProductDetail',
   components: {
     Layout,
+    ProductInfoCard,
     ProductCard,
     Picture,
     ChatDotRound,
@@ -216,56 +143,10 @@ export default {
     const reviews = ref([])
     const relatedProducts = ref([])
     const sellerStats = ref({ published: 0, completed: 0 })
-    const currentImageIndex = ref(0)
     const comments = ref([]) // 添加留言数据
     const commentForm = ref({ content: '' }) // 留言表单
     const commentFormRef = ref(null) // 留言表单引用
     const commentSubmitting = ref(false) // 留言提交状态
-    
-    // 处理图片URL，将完整后端地址转换为相对路径
-    const processImageUrl = (url) => {
-      if (!url) return null
-      
-      // 如果URL包含localhost:7023，转换为相对路径
-      if (url.includes('localhost:7023')) {
-        return url.replace('http://localhost:7023', '/api')
-      }
-      
-      // 如果是相对路径且以images开头，添加/api前缀
-      if (url.startsWith('images/') || url.includes('/images/')) {
-        return `/api/${url.replace(/^\/?/, '')}`
-      }
-      
-      // 如果已经是相对路径（以/api开头），直接返回
-      if (url.startsWith('/api/')) {
-        return url
-      }
-      
-      // 其他情况返回原URL
-      return url
-    }
-    
-    // 计算属性：处理图片数组
-    const productImages = computed(() => {
-      if (product.value.imageUrls && typeof product.value.imageUrls === 'string') {
-        // 将逗号分隔的字符串转换为数组
-        return product.value.imageUrls.split(',').filter(url => url.trim()).map(processImageUrl)
-      } else if (Array.isArray(product.value.imageUrls)) {
-        return product.value.imageUrls.map(processImageUrl)
-      } else {
-        // 如果没有多图，使用单图
-        const mainImage = product.value.mainImageUrl || product.value.imageUrl
-        return mainImage ? [processImageUrl(mainImage)] : []
-      }
-    })
-    
-    // 当前显示的图片
-    const currentImage = computed(() => {
-      if (productImages.value.length > 0) {
-        return productImages.value[currentImageIndex.value]
-      }
-      return null
-    })
     
     // 计算属性
     const isLoggedIn = computed(() => store.getters.isLoggedIn)
@@ -475,9 +356,6 @@ export default {
       commentSubmitting, // 添加commentSubmitting
       relatedProducts,
       sellerStats,
-      productImages,
-      currentImage,
-      currentImageIndex,
       isLoggedIn,
       userId,
       formatPrice,
@@ -828,6 +706,7 @@ export default {
 
 .empty-reviews {
   padding: var(--spacing-xl) 0;
+  text-align: center;
 }
 
 .loading-container {

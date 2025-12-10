@@ -39,13 +39,6 @@
         <template #header>
           <div class="card-header unified-flex unified-flex-between">
             <h3 class="unified-title-base">筛选与搜索</h3>
-            <el-button 
-              type="text" 
-              @click="resetFilters"
-              class="reset-btn"
-            >
-              重置
-            </el-button>
           </div>
         </template>
         
@@ -133,12 +126,13 @@
           :data="userList"
           @selection-change="handleSelectionChange"
           style="width: 100%"
+          :fit="true"
         >
-          <el-table-column type="selection" width="55" />
+          <el-table-column type="selection" width="55" align="center" />
           
-          <el-table-column prop="id" label="ID" width="80" />
+          <el-table-column prop="userAccount" label="用户账号" min-width="80" align="center" />
           
-          <el-table-column label="用户信息" min-width="180">
+          <el-table-column label="用户信息" min-width="200" :resizable="true" align="center">
             <template #default="scope">
               <div class="user-info unified-flex unified-flex-center">
                 <el-avatar :size="36" :src="scope.row.userAvatar">
@@ -146,15 +140,14 @@
                 </el-avatar>
                 <div class="user-details">
                   <div class="user-name">{{ scope.row.userName }}</div>
-                  <div class="user-account">{{ scope.row.userAccount || scope.row.userName }}</div>
                 </div>
               </div>
             </template>
           </el-table-column>
           
-          <el-table-column prop="userPhone" label="手机号" width="130" />
+          <el-table-column prop="userPhone" label="手机号" min-width="130" :resizable="true" align="center" />
           
-          <el-table-column prop="userRole" label="角色" width="100">
+          <el-table-column prop="userRole" label="角色" min-width="100" :resizable="true" align="center">
             <template #default="scope">
               <el-tag :type="scope.row.userRole === 'admin' ? 'danger' : 'primary'" size="small">
                 {{ scope.row.userRole === 'admin' ? '管理员' : '普通用户' }}
@@ -162,7 +155,7 @@
             </template>
           </el-table-column>
           
-          <el-table-column prop="userStatus" label="用户状态" width="120">
+          <el-table-column prop="userStatus" label="用户状态" min-width="120" :resizable="true" align="center">
             <template #default="scope">
               <el-tag :type="getStatusType(scope.row.userStatus)" size="small">
                 {{ getStatusText(scope.row.userStatus) }}
@@ -170,15 +163,15 @@
             </template>
           </el-table-column>
           
-          <el-table-column prop="point" label="积分" width="80" />
+          <el-table-column prop="point" label="积分" min-width="80" :resizable="true" align="center" />
           
-          <el-table-column prop="registerTime" label="注册时间" width="180">
+          <el-table-column prop="registerTime" label="注册时间" min-width="180" :resizable="true" align="center">
             <template #default="scope">
               {{ formatDate(scope.row.registerTime) }}
             </template>
           </el-table-column>
           
-          <el-table-column label="操作" width="250" fixed="right">
+          <el-table-column label="操作" min-width="150" fixed="right" :resizable="true" align="center">
             <template #default="scope">
               <div class="action-buttons unified-flex">
                 <el-button
@@ -187,13 +180,6 @@
                   @click="showEditUserDialog(scope.row)"
                 >
                   编辑
-                </el-button>
-                <el-button
-                  size="small"
-                  type="text"
-                  @click="handleResetPassword(scope.row)"
-                >
-                  重置密码
                 </el-button>
               </div>
             </template>
@@ -979,7 +965,6 @@ export default {
 }
 
 .reset-btn {
-  color: var(--text-secondary);
 }
 
 .filter-select {
@@ -991,30 +976,99 @@ export default {
   margin-bottom: var(--spacing-xl);
 }
 
+/* 表格自适应布局优化 */
+.users-card .el-table {
+  width: 100% !important;
+}
+
+.users-card .el-table__body-wrapper {
+  overflow-x: auto;
+}
+
+.users-card .el-table th {
+  white-space: nowrap;
+  background-color: #f8f9fa;
+  font-weight: 600;
+  text-align: center !important;
+  vertical-align: middle;
+}
+
+.users-card .el-table td {
+  padding: 12px 8px;
+  min-height: 52px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.users-card .el-table .cell {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+}
+
+/* 特殊列的居中处理 */
+.users-card .el-table .user-info .cell {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.users-card .el-table .action-buttons .cell {
+  justify-content: center;
+}
+
 .user-info {
   gap: var(--spacing-sm);
+  align-items: center;
+  min-height: 40px;
 }
 
 .user-details {
   flex: 1;
+  min-width: 0; /* 允许文本截断 */
 }
 
 .user-name {
   font-weight: 500;
   color: var(--text-primary);
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .user-account {
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .action-buttons {
   gap: var(--spacing-xs);
+  flex-wrap: nowrap;
 }
 
 .pagination-container {
   margin-top: var(--spacing-xl);
+}
+
+/* 表格列宽自适应 */
+.users-card .el-table--fit {
+  min-width: 100%;
+}
+
+.users-card .el-table .el-table__header-wrapper {
+  overflow: visible;
+}
+
+/* 操作列样式优化 */
+.users-card .el-table__fixed-right {
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 对话框样式 */

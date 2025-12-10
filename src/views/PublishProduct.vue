@@ -145,8 +145,9 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
 import { Plus } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import Layout from '@/components/Layout.vue'
-import { productApi } from '@/api'
+import { productApi, imageApi, request } from '@/api'
 import { useFormHandler } from '@/composables/useEventHandlers'
 
 export default {
@@ -304,7 +305,7 @@ export default {
               }
             } catch (uploadError) {
               console.error('图片上传失败:', uploadError)
-              ElMessage.error(`上传图片失败: ${uploadError.message}`)
+              ElMessage.error(`上传图片失败: ${uploadError.message || '系统异常，请稍后重试'}`)
               throw uploadError
             }
           }

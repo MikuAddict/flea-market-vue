@@ -17,22 +17,6 @@
         </el-button>
       </div>
       
-      <!-- 新闻统计卡片 -->
-      <div class="stats-cards unified-grid unified-grid-4">
-        <div class="stat-card fade-in" v-for="(stat, index) in newsStats" :key="stat.title" :style="{ animationDelay: `${index * 0.1}s` }">
-          <el-card class="unified-card stat-item" :class="`stat-item-${stat.type}`">
-            <div class="stat-content unified-flex unified-flex-center">
-              <div class="stat-icon unified-flex unified-flex-center">
-                <el-icon :size="24"><component :is="stat.icon" /></el-icon>
-              </div>
-              <div class="stat-info">
-                <h3 class="stat-value">{{ stat.value }}</h3>
-                <p class="stat-title">{{ stat.title }}</p>
-              </div>
-            </div>
-          </el-card>
-        </div>
-      </div>
       
       <!-- 新闻列表 -->
       <el-card class="unified-card news-list-card fade-in">
@@ -40,15 +24,6 @@
           <div class="card-header unified-flex unified-flex-between">
             <h3 class="unified-title-base">新闻列表</h3>
             <div class="batch-actions unified-flex unified-flex-center">
-              <el-button
-                v-if="selectedNews.length > 0"
-                type="primary"
-                size="small"
-                class="unified-button"
-                @click="batchPublishNews"
-              >
-                批量发布
-              </el-button>
               <el-button
                 v-if="selectedNews.length > 0"
                 type="danger"

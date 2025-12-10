@@ -70,11 +70,15 @@ export default {
   },
 
   // 确认订单（买家确认收货）
-  confirmOrder(data) {
+  confirmOrder(orderId) {
     return request({
       url: '/order/confirm',
       method: 'put',
-      data
+      data: {
+        orderId: orderId,
+        confirmType: 1, // 买家确认收货
+        description: '买家确认收货'
+      }
     })
   }
 }

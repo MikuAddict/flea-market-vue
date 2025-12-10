@@ -37,63 +37,17 @@
           <h3>二手物品详情</h3>
           <el-row :gutter="20">
             <el-col :xs="24" :lg="14">
-              <el-card class="product-info-card" v-if="productDetail">
-                <div class="product-gallery">
-                  <!-- 主图 -->
-                  <div class="main-image">
-                    <img
-                      v-if="productDetail.imageUrl"
-                      :src="productDetail.imageUrl"
-                      :alt="productDetail.productName"
-                      @error="handleImageError"
-                    />
-                    <div v-else class="image-placeholder">
-                      <el-icon size="50"><Picture /></el-icon>
-                      <p>暂无图片</p>
-                    </div>
-                  </div>
-                </div>
-                <div class="product-basic-info">
-                  <h2 class="product-name">{{ productDetail.productName }}</h2>
-                  <div class="product-price">
-                    <span class="price-label">价格</span>
-                    <span class="price-value">¥{{ formatPrice(productDetail.price) }}</span>
-                  </div>
-                  <div class="product-meta">
-                    <el-tag v-if="productDetail.category" type="success" size="large">
-                      {{ productDetail.category.name }}
-                    </el-tag>
-                    <el-tag type="info" size="large">
-                      {{ formatPaymentMethod(productDetail.paymentMethod) }}
-                    </el-tag>
-                  </div>
-                  <div class="product-description">
-                    <h4>二手物品描述</h4>
-                    <p>{{ productDetail.description || '暂无描述' }}</p>
-                  </div>
-                  
-                  <!-- 显示卖家信息 -->
-                  <div class="seller-info" v-if="productDetail.user">
-                    <h4>卖家信息</h4>
-                    <div class="seller-details">
-                      <el-avatar 
-                        :size="40" 
-                        :src="productDetail.user.userAvatar"
-                        class="clickable"
-                        @click="$router.push(`/user/${productDetail.user.id}`)"
-                      >
-                        {{ productDetail.user.userName ? productDetail.user.userName.charAt(0) : '' }}
-                      </el-avatar>
-                      <div class="seller-text">
-                        <p class="seller-name clickable" @click="$router.push(`/user/${productDetail.user.id}`)">
-                          {{ productDetail.user.userName }}
-                        </p>
-                        <p class="seller-contact">联系方式: {{ productDetail.user.userPhone || '未设置' }}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </el-card>
+              <div v-if="productDetail">
+                <ProductInfoCard
+                  :product="productDetail"
+                  :show-actions="false"
+                  :show-login-notice="false"
+                  :seller-avatar-size="40"
+                  @seller-click="(userId) => $router.push(`/user/${userId}`)"
+                  @image-error="handleImageError"
+                >
+                </ProductInfoCard>
+              </div>
               <div v-else-if="productLoading" class="loading-container">
                 <el-skeleton :rows="5" animated />
               </div>
@@ -156,7 +110,14 @@
           <!-- 买家操作 -->
           <template v-if="isBuyer">
             <el-button
-              v-if="order.status === 2 && !order.buyerConfirmed"
+              v-if="order.status === 0"
+              type="danger"
+              @click="cancelOrder"
+            >
+              取消订单
+            </el-button>
+            <el-button
+              v-if="order.status === 1 && !order.buyerConfirmed"
               type="success"
               @click="confirmOrder"
             >
@@ -181,6 +142,7 @@ import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router'
 import { Picture } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
+import ProductInfoCard from '@/components/ProductInfoCard.vue'
 import { orderApi, productApi, userApi } from '@/api'
 import {
   formatPrice,
@@ -198,7 +160,8 @@ export default {
   name: 'OrderDetail',
   components: {
     Layout,
-    Picture
+    Picture,
+    ProductInfoCard
   },
   setup() {
     const store = useStore()
@@ -393,7 +356,8 @@ export default {
       getOrderStatusType,
       getUserStatusType,
       cancelOrder,
-      confirmOrder
+      confirmOrder,
+      handleImageError
     }
   }
 }
@@ -453,6 +417,41 @@ export default {
 
 .image-placeholder .el-icon {
   margin-bottom: var(--spacing-sm);
+}
+
+/* 缩略图列表样式 */
+.thumbnail-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.thumbnail-item {
+  width: 80px;
+  height: 80px;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.thumbnail-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.thumbnail-item.active {
+  border-color: #409eff;
+  box-shadow: 0 0 0 1px rgba(64, 158, 255, 0.2);
+}
+
+.thumbnail-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .product-basic-info {

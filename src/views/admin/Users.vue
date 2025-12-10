@@ -42,54 +42,60 @@
           </div>
         </template>
         
-        <el-form :model="filters" :inline="true" label-width="80px">
-          <el-form-item label="用户名">
-            <el-input
-              v-model="filters.userName"
-              placeholder="搜索用户名"
-              clearable
-              class="unified-input"
-            />
-          </el-form-item>
+        <div class="unified-filter-container">
+          <div class="unified-filter-form">
+            <div class="unified-filter-item">
+              <div class="unified-filter-label">用户名</div>
+              <el-input
+                v-model="filters.userName"
+                placeholder="搜索用户名"
+                clearable
+                class="unified-filter-input"
+              />
+            </div>
+            
+            <div class="unified-filter-item">
+              <div class="unified-filter-label">用户角色</div>
+              <el-select
+                v-model="filters.userRole"
+                placeholder="选择角色"
+                clearable
+                class="unified-filter-select"
+              >
+                <el-option label="普通用户" value="user" />
+                <el-option label="管理员" value="admin" />
+              </el-select>
+            </div>
+            
+            <div class="unified-filter-item">
+              <div class="unified-filter-label">用户状态</div>
+              <el-select
+                v-model="filters.userStatus"
+                placeholder="选择状态"
+                clearable
+                class="unified-filter-select"
+              >
+                <el-option label="待审核" :value="0" />
+                <el-option label="已通过" :value="1" />
+                <el-option label="已拒绝" :value="2" />
+                <el-option label="已封禁" :value="3" />
+              </el-select>
+            </div>
+            
+            <div class="unified-filter-item">
+              <div class="unified-filter-label">注册时间</div>
+              <el-date-picker
+                v-model="filters.dateRange"
+                type="daterange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                class="unified-filter-date"
+              />
+            </div>
+          </div>
           
-          <el-form-item label="用户角色">
-            <el-select
-              v-model="filters.userRole"
-              placeholder="选择角色"
-              clearable
-              class="unified-input filter-select"
-            >
-              <el-option label="普通用户" value="user" />
-              <el-option label="管理员" value="admin" />
-            </el-select>
-          </el-form-item>
-          
-          <el-form-item label="用户状态">
-            <el-select
-              v-model="filters.userStatus"
-              placeholder="选择状态"
-              clearable
-              class="unified-input filter-select"
-            >
-              <el-option label="待审核" :value="0" />
-              <el-option label="已通过" :value="1" />
-              <el-option label="已拒绝" :value="2" />
-              <el-option label="已封禁" :value="3" />
-            </el-select>
-          </el-form-item>
-          
-          <el-form-item label="注册时间">
-            <el-date-picker
-              v-model="filters.dateRange"
-              type="daterange"
-              range-separator="至"
-              start-placeholder="开始日期"
-              end-placeholder="结束日期"
-              class="unified-input"
-            />
-          </el-form-item>
-          
-          <el-form-item>
+          <div class="unified-search-button-container">
             <el-button
               type="primary"
               class="unified-button unified-button-primary"
@@ -98,8 +104,8 @@
               <el-icon><Search /></el-icon>
               搜索
             </el-button>
-          </el-form-item>
-        </el-form>
+          </div>
+        </div>
       </el-card>
       
       <!-- 用户列表 -->
@@ -135,10 +141,10 @@
           <el-table-column label="用户信息" min-width="200" :resizable="true" align="center">
             <template #default="scope">
               <div class="user-info unified-flex unified-flex-center">
-                <el-avatar :size="36" :src="scope.row.userAvatar">
-                  {{ scope.row.userName?.charAt(0) }}
-                </el-avatar>
                 <div class="user-details">
+                  <el-avatar el-avatar :size="36" :src="scope.row.userAvatar">
+                  {{ scope.row.userName?.charAt(0) }}
+                  </el-avatar>
                   <div class="user-name">{{ scope.row.userName }}</div>
                 </div>
               </div>
@@ -173,13 +179,25 @@
           
           <el-table-column label="操作" min-width="150" fixed="right" :resizable="true" align="center">
             <template #default="scope">
-              <div class="action-buttons unified-flex">
+              <div class="action-buttons unified-flex unified-flex-center">
                 <el-button
                   size="small"
-                  type="text"
+                  type="primary"
+                  plain
                   @click="showEditUserDialog(scope.row)"
+                  class="action-btn-edit"
                 >
                   编辑
+                </el-button>
+                
+                <el-button
+                  size="small"
+                  type="danger"
+                  plain
+                  @click="handleUserAction('delete', scope.row)"
+                  class="action-btn-delete"
+                >
+                  删除
                 </el-button>
               </div>
             </template>
@@ -416,7 +434,15 @@ import Layout from '@/components/Layout.vue'
 export default {
   name: 'AdminUsers',
   components: {
-    Layout
+    Layout,
+    Plus,
+    Search,
+    Edit,
+    Delete,
+    ArrowDown,
+    User,
+    UserFilled,
+    Lock
   },
   setup() {
     const router = useRouter()
@@ -964,11 +990,63 @@ export default {
   margin-bottom: var(--spacing-base);
 }
 
-.reset-btn {
+.filter-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
 }
 
-.filter-select {
-  width: 150px;
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--spacing-base);
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.filter-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-align: center;
+  line-height: 1;
+}
+
+.filter-form .el-input,
+.filter-form .el-select,
+.filter-form .el-date-editor {
+  width: 180px;
+}
+
+.filter-form .el-input__wrapper,
+.filter-form .el-select__wrapper {
+  border: 1px solid var(--border-dark) !important;
+  border-radius: var(--border-radius-base) !important;
+}
+
+.filter-form .el-input__wrapper:hover,
+.filter-form .el-select__wrapper:hover {
+  border-color: var(--primary-color) !important;
+}
+
+.filter-form .el-input.is-focus .el-input__wrapper,
+.filter-form .el-select.is-focus .el-select__wrapper {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2) !important;
+}
+
+.search-button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 /* 用户列表样式 */

@@ -9,12 +9,17 @@
         </template>
         
         <!-- 订单状态筛选 -->
-        <div class="filter-section">
-          <el-tabs v-model="activeTab" @tab-click="handleTabClick">
-            <el-tab-pane label="全部" name="all" />
-            <el-tab-pane label="已完成" name="2" />
-            <el-tab-pane label="已取消" name="3" />
-          </el-tabs>
+        <div class="unified-filter-container">
+          <div class="unified-filter-form">
+            <div class="unified-filter-item">
+              <div class="unified-filter-label">订单状态</div>
+              <el-tabs v-model="activeTab" @tab-click="handleTabClick" class="unified-filter-tabs">
+                <el-tab-pane label="全部" name="all" />
+                <el-tab-pane label="已完成" name="2" />
+                <el-tab-pane label="已取消" name="3" />
+              </el-tabs>
+            </div>
+          </div>
         </div>
         
         <!-- 订单列表 -->

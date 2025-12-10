@@ -166,13 +166,27 @@ import {
   Plus,
   Message,
   Edit,
-  ArrowRight
+  ArrowRight,
+  Refresh,
+  Search
 } from '@element-plus/icons-vue'
 
 export default {
   name: 'AdminDashboard',
   components: {
-    Layout
+    Layout,
+    User,
+    Goods,
+    ShoppingCartFull,
+    CreditCard,
+    ArrowUp,
+    ArrowDown,
+    Plus,
+    Message,
+    Edit,
+    ArrowRight,
+    Refresh,
+    Search
   },
   setup() {
     const router = useRouter()
@@ -231,6 +245,12 @@ export default {
     const highInventoryProducts = ref([])
     const highInventoryLoading = ref(false)
     
+    // 仪表盘筛选条件
+    const dashboardFilters = ref({
+      timeRange: '30d',
+      statsType: 'all'
+    })
+    
     // 快速操作
     const quickActions = ref([
       {
@@ -249,7 +269,7 @@ export default {
         handler: () => router.push('/admin/product-review')
       },
       {
-        title: '发布公告',
+        title: '发布新闻',
         icon: 'Message',
         handler: () => router.push('/admin/news?action=add')
       },
@@ -592,6 +612,22 @@ export default {
       router.push('/admin/statistics?type=high-inventory')
     }
     
+    // 更新仪表盘数据
+    const updateDashboardData = () => {
+      // 根据筛选条件更新数据
+      fetchComprehensiveStatistics()
+      fetchHighDemandCategories()
+      initCharts()
+    }
+    
+    // 刷新仪表盘数据
+    const refreshDashboardData = () => {
+      ElMessage.info('正在刷新数据...')
+      updateDashboardData()
+      fetchHighInventoryProducts()
+      ElMessage.success('数据已刷新')
+    }
+    
     onMounted(() => {
       // 获取仪表盘数据
       fetchComprehensiveStatistics()
@@ -617,7 +653,10 @@ export default {
       goToProducts,
       goToHighInventoryProducts,
       formatPrice,
-      formatDate
+      formatDate,
+      dashboardFilters,
+      updateDashboardData,
+      refreshDashboardData
     }
   }
 }

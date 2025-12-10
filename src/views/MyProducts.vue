@@ -11,20 +11,6 @@
           </div>
         </template>
         
-        <!-- 筛选和搜索 -->
-        <div class="filter-section">
-          <el-form :model="filters" inline>
-            <el-form-item label="状态">
-              <el-select v-model="filters.status" placeholder="全部状态" clearable @change="fetchProducts">
-                <el-option label="待审核" :value="0" />
-                <el-option label="已通过" :value="1" />
-                <el-option label="已拒绝" :value="2" />
-                <el-option label="已售出" :value="3" />
-              </el-select>
-            </el-form-item>
-          </el-form>
-        </div>
-        
         <!-- 二手物品列表 -->
         <div v-if="loading" class="loading-container">
           <el-skeleton :rows="3" animated />
@@ -38,99 +24,114 @@
           </el-empty>
         </div>
         
-        <el-table v-else :data="products" style="width: 100%">
-          <el-table-column label="二手物品图片" width="100">
-            <template #default="scope">
-              <div class="product-image">
-                <img v-if="getProductImage(scope.row)" :src="getProductImage(scope.row)" :alt="scope.row.productName" />
-                <div v-else class="no-image">
-                  <el-icon><Picture /></el-icon>
+        <div v-else class="unified-list-container">
+          <el-table :data="products" style="width: 100%">
+            <el-table-column label="二手物品图片" width="100" align="center">
+              <template #default="scope">
+                <div class="unified-list-item unified-flex unified-flex-center">
+                  <div class="unified-list-item-avatar">
+                    <img v-if="getProductImage(scope.row)" :src="getProductImage(scope.row)" :alt="scope.row.productName" style="width: 100%; height: 100%; object-fit: cover;" />
+                    <div v-else class="no-image unified-flex unified-flex-center">
+                      <el-icon><Picture /></el-icon>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </template>
-          </el-table-column>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="productName" label="二手物品名称" min-width="200" align="center" />
+            
+            <el-table-column prop="price" label="价格" width="120" align="center">
+              <template #default="scope">
+                ¥{{ formatPrice(scope.row.price) }}
+              </template>
+            </el-table-column>
+            
+            <el-table-column label="分类" width="120" align="center">
+              <template #default="scope">
+                {{ getCategoryName(scope.row.categoryId) }}
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="status" label="状态" width="100" align="center">
+              <template #default="scope">
+                <el-tag :type="getProductStatusType(scope.row.status)" size="small">
+                  {{ formatProductStatus(scope.row.status) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="paymentMethod" label="支付方式" width="120" align="center">
+              <template #default="scope">
+                {{ formatPaymentMethod(scope.row.paymentMethod) }}
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="createTime" label="发布时间" width="180" align="center">
+              <template #default="scope">
+                {{ formatDate(scope.row.createTime) }}
+              </template>
+            </el-table-column>
+            
+            <el-table-column label="操作" width="220" fixed="right" align="center">
+              <template #default="scope">
+                <div class="action-buttons unified-flex unified-flex-center">
+                  <el-button
+                    size="small"
+                    type="primary"
+                    plain
+                    @click="viewProduct(scope.row.id)"
+                    class="action-btn-edit"
+                  >
+                    查看
+                  </el-button>
+                  <el-button
+                    size="small"
+                    type="primary"
+                    plain
+                    @click="editProduct(scope.row)"
+                    class="action-btn-edit"
+                    :disabled="scope.row.status === 2"
+                  >
+                    编辑
+                  </el-button>
+                  <el-button
+                    v-if="scope.row.status === 1"
+                    size="small"
+                    type="warning"
+                    plain
+                    @click="changeStatus(scope.row.id, 0)"
+                    class="action-btn-edit"
+                  >
+                    下架
+                  </el-button>
+                  <el-button
+                    size="small"
+                    type="danger"
+                    plain
+                    @click="deleteProduct(scope.row)"
+                    class="action-btn-delete"
+                    :disabled="scope.row.status === 2"
+                  >
+                    删除
+                  </el-button>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
           
-          <el-table-column prop="productName" label="二手物品名称" min-width="200" />
-          
-          <el-table-column prop="price" label="价格" width="120">
-            <template #default="scope">
-              ¥{{ formatPrice(scope.row.price) }}
-            </template>
-          </el-table-column>
-          
-          <el-table-column label="分类" width="120">
-            <template #default="scope">
-              {{ getCategoryName(scope.row.categoryId) }}
-            </template>
-          </el-table-column>
-          
-          <el-table-column prop="status" label="状态" width="100">
-            <template #default="scope">
-              <el-tag :type="getProductStatusType(scope.row.status)" size="small">
-                {{ formatProductStatus(scope.row.status) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          
-          <el-table-column prop="paymentMethod" label="支付方式" width="120">
-            <template #default="scope">
-              {{ formatPaymentMethod(scope.row.paymentMethod) }}
-            </template>
-          </el-table-column>
-          
-          <el-table-column prop="createTime" label="发布时间" width="180">
-            <template #default="scope">
-              {{ formatDate(scope.row.createTime) }}
-            </template>
-          </el-table-column>
-          
-          <el-table-column label="操作" width="220" fixed="right">
-            <template #default="scope">
-              <el-button
-                size="small"
-                @click="viewProduct(scope.row.id)"
-              >
-                查看
-              </el-button>
-              <el-button
-                size="small"
-                type="primary"
-                @click="editProduct(scope.row)"
-                :disabled="scope.row.status === 2"
-              >
-                编辑
-              </el-button>
-              <el-button
-                v-if="scope.row.status === 1"
-                size="small"
-                type="warning"
-                @click="changeStatus(scope.row.id, 0)"
-              >
-                下架
-              </el-button>
-              <el-button
-                size="small"
-                type="danger"
-                @click="deleteProduct(scope.row)"
-                :disabled="scope.row.status === 2"
-              >
-                删除
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-        
-        <!-- 分页 -->
-        <div v-if="total > 0" class="pagination-container">
-          <el-pagination
-            v-model:current-page="pagination.current"
-            v-model:page-size="pagination.size"
-            :page-sizes="[10, 20, 30, 50]"
-            :total="total"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-          />
+          <!-- 分页 -->
+          <div v-if="total > 0" class="unified-pagination-container">
+            <el-pagination
+              v-model:current-page="pagination.current"
+              v-model:page-size="pagination.size"
+              :page-sizes="[10, 20, 30, 50]"
+              :total="total"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+            />
+          </div>
         </div>
       </el-card>
     </div>
@@ -141,7 +142,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { Picture } from '@element-plus/icons-vue'
+import { Picture, Search } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
 import { productApi } from '@/api'
 import { formatPrice, formatPaymentMethod, formatProductStatus, formatDate, getProductStatusType } from '@/utils/format'
@@ -152,7 +153,8 @@ export default {
   name: 'MyProducts',
   components: {
     Layout,
-    Picture
+    Picture,
+    Search
   },
   setup() {
     const store = useStore()

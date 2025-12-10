@@ -17,117 +17,112 @@
         </div>
         
         <el-card class="unified-card filter-card">
-          <el-collapse v-model="activeFilterSection">
-            <el-collapse-item name="filters" title="搜索与筛选">
-              <div class="filter-form">
-                <el-row :gutter="20">
-                  <el-col :xs="24" :sm="12" :md="8" :lg="6">
-                    <el-form-item label="关键词">
-                      <el-input
-                        v-model="filters.keyword"
-                        placeholder="搜索二手物品"
-                        clearable
-                        class="unified-input"
-                        @keyup.enter="handleSearch"
-                      />
-                    </el-form-item>
-                  </el-col>
-                  
-                  <el-col :xs="24" :sm="12" :md="8" :lg="6">
-                    <el-form-item label="分类">
-                      <el-select
-                        v-model="filters.categoryId"
-                        placeholder="选择分类"
-                        clearable
-                        class="unified-input filter-select"
-                      >
-                        <el-option
-                          v-for="category in categories"
-                          :key="category.id"
-                          :label="category.name"
-                          :value="category.id"
-                        />
-                      </el-select>
-                    </el-form-item>
-                  </el-col>
-                  
-                  <el-col :xs="24" :sm="12" :md="8" :lg="6">
-                    <el-form-item label="支付方式">
-                      <el-select
-                        v-model="filters.paymentMethod"
-                        placeholder="支付方式"
-                        clearable
-                        class="unified-input filter-select"
-                      >
-                        <el-option label="现金支付" :value="0" />
-                        <el-option label="微信支付" :value="1" />
-                        <el-option label="积分兑换" :value="2" />
-                        <el-option label="二手交换" :value="3" />
-                      </el-select>
-                    </el-form-item>
-                  </el-col>
-                  
-                  <el-col :xs="24" :sm="12" :md="8" :lg="6">
-                    <el-form-item label="排序">
-                      <el-select v-model="filters.sortField" class="unified-input filter-select">
-                        <el-option label="默认" value="createTime" />
-                        <el-option label="价格" value="price" />
-                        <el-option label="名称" value="productName" />
-                      </el-select>
-                      <el-select v-model="filters.sortOrder" class="unified-input filter-select">
-                        <el-option label="降序" value="desc" />
-                        <el-option label="升序" value="asc" />
-                      </el-select>
-                    </el-form-item>
-                  </el-col>
-                </el-row>
-                
-                <el-row :gutter="20">
-                  <el-col :xs="24" :sm="24" :md="12" :lg="8">
-                    <el-form-item label="价格区间">
-                      <div class="price-range unified-flex">
-                        <el-input-number
-                          v-model="filters.minPrice"
-                          placeholder="最低价"
-                          :min="0"
-                          :precision="2"
-                          class="unified-input price-input"
-                        />
-                        <span class="price-separator">-</span>
-                        <el-input-number
-                          v-model="filters.maxPrice"
-                          placeholder="最高价"
-                          :min="0"
-                          :precision="2"
-                          class="unified-input price-input"
-                        />
-                      </div>
-                    </el-form-item>
-                  </el-col>
-                  
-                  <el-col :xs="24" :sm="24" :md="12" :lg="16">
-                    <el-form-item>
-                      <el-button 
-                        type="primary" 
-                        class="unified-button unified-button-primary"
-                        @click="handleSearch"
-                      >
-                        <el-icon><Search /></el-icon>
-                        搜索
-                      </el-button>
-                      <el-button 
-                        class="unified-button unified-button-outline"
-                        @click="resetFilters"
-                      >
-                        <el-icon><RefreshLeft /></el-icon>
-                        重置
-                      </el-button>
-                    </el-form-item>
-                  </el-col>
-                </el-row>
+          <template #header>
+            <div class="card-header unified-flex unified-flex-between">
+              <h3 class="unified-title-base">搜索与筛选</h3>
+            </div>
+          </template>
+          
+          <div class="unified-filter-container">
+            <div class="unified-filter-form">
+              <div class="unified-filter-item">
+                <div class="unified-filter-label">关键词</div>
+                <el-input
+                  v-model="filters.keyword"
+                  placeholder="搜索二手物品"
+                  clearable
+                  class="unified-filter-input"
+                  @keyup.enter="handleSearch"
+                />
               </div>
-            </el-collapse-item>
-          </el-collapse>
+              
+              <div class="unified-filter-item">
+                <div class="unified-filter-label">分类</div>
+                <el-select
+                  v-model="filters.categoryId"
+                  placeholder="选择分类"
+                  clearable
+                  class="unified-filter-select"
+                >
+                  <el-option
+                    v-for="category in categories"
+                    :key="category.id"
+                    :label="category.name"
+                    :value="category.id"
+                  />
+                </el-select>
+              </div>
+              
+              <div class="unified-filter-item">
+                <div class="unified-filter-label">支付方式</div>
+                <el-select
+                  v-model="filters.paymentMethod"
+                  placeholder="支付方式"
+                  clearable
+                  class="unified-filter-select"
+                >
+                  <el-option label="现金支付" :value="0" />
+                  <el-option label="微信支付" :value="1" />
+                  <el-option label="积分兑换" :value="2" />
+                  <el-option label="二手交换" :value="3" />
+                </el-select>
+              </div>
+              
+              <div class="unified-filter-item">
+                <div class="unified-filter-label">排序方式</div>
+                <div class="sort-container unified-flex unified-flex-center">
+                  <el-select v-model="filters.sortField" class="unified-filter-select">
+                    <el-option label="默认" value="createTime" />
+                    <el-option label="价格" value="price" />
+                    <el-option label="名称" value="productName" />
+                  </el-select>
+                  <el-select v-model="filters.sortOrder" class="unified-filter-select">
+                    <el-option label="降序" value="desc" />
+                    <el-option label="升序" value="asc" />
+                  </el-select>
+                </div>
+              </div>
+              
+              <div class="unified-filter-item">
+                <div class="unified-filter-label">价格区间</div>
+                <div class="price-range-container unified-flex unified-flex-center">
+                  <el-input-number
+                    v-model="filters.minPrice"
+                    placeholder="最低价"
+                    :min="0"
+                    :precision="2"
+                    controls-position="right"
+                  />
+                  <span class="price-range-separator">-</span>
+                  <el-input-number
+                    v-model="filters.maxPrice"
+                    placeholder="最高价"
+                    :min="0"
+                    :precision="2"
+                    controls-position="right"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div class="unified-search-button-container">
+              <el-button
+                type="primary"
+                class="unified-button unified-button-primary"
+                @click="handleSearch"
+              >
+                <el-icon><Search /></el-icon>
+                搜索
+              </el-button>
+              <el-button
+                class="unified-button unified-button-outline"
+                @click="resetFilters"
+              >
+                <el-icon><RefreshLeft /></el-icon>
+                重置
+              </el-button>
+            </div>
+          </div>
         </el-card>
       </section>
 

@@ -26,18 +26,18 @@
         </template>
         
         <!-- 列表视图 -->
-        <div v-if="viewMode === 'list'">
+        <div v-if="viewMode === 'list'" class="unified-list-container">
           <el-table
             v-loading="loading"
             :data="categoryList"
             style="width: 100%"
             row-key="id"
           >
-            <el-table-column prop="id" label="ID" width="300" />
+            <el-table-column prop="id" label="ID" width="300" align="center" />
             
-            <el-table-column prop="name" label="分类名称" min-width="200" />
+            <el-table-column prop="name" label="分类名称" min-width="200" align="center" />
             
-            <el-table-column prop="productCount" label="产品数量" width="300">
+            <el-table-column prop="productCount" label="产品数量" width="300" align="center">
               <template #default="scope">
                 {{ scope.row.productCount || 0 }}
               </template>
@@ -53,7 +53,6 @@
                     @click="showEditCategoryDialog(scope.row)"
                     class="action-btn-edit"
                   >
-                    <el-icon><Edit /></el-icon>
                     编辑
                   </el-button>
                   
@@ -64,7 +63,6 @@
                     @click="handleDeleteCategory(scope.row)"
                     class="action-btn-delete"
                   >
-                    <el-icon><Delete /></el-icon>
                     删除
                   </el-button>
                 </div>
@@ -509,10 +507,6 @@ export default {
 
 .card-header {
   margin-bottom: var(--spacing-base);
-}
-
-.action-buttons {
-  gap: var(--spacing-xs);
 }
 
 /* 树形视图样式 */

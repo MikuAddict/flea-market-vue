@@ -37,84 +37,84 @@
           </div>
         </template>
         
-        <el-table
-          v-loading="loading"
-          :data="newsList"
-          @selection-change="handleSelectionChange"
-          style="width: 100%"
-        >
-          <el-table-column type="selection" width="55" />
-          
-          <el-table-column label="新闻信息" min-width="200">
-            <template #default="scope">
-              <div class="news-info">
-                <div class="news-details">
-                  <h4 class="news-title">{{ scope.row.title }}</h4>
-                  <p class="news-summary">{{ scope.row.content?.substring(0, 50) }}...</p>
+        <div class="unified-list-container">
+          <el-table
+            v-loading="loading"
+            :data="newsList"
+            @selection-change="handleSelectionChange"
+            style="width: 100%"
+          >
+            <el-table-column type="selection" width="55" align="center" />
+            
+            <el-table-column label="新闻信息" min-width="200" align="center">
+              <template #default="scope">
+                <div class="unified-list-item">
+                  <div class="unified-list-item-info">
+                    <div class="unified-list-item-name">{{ scope.row.title }}</div>
+                    <div class="unified-list-item-desc">{{ scope.row.content?.substring(0, 50) }}...</div>
+                  </div>
                 </div>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column prop="authorName" label="作者" width="120" />
-          <el-table-column prop="createTime" label="发布时间" width="160">
-            <template #default="scope">
-              {{ formatDate(scope.row.createTime) }}
-            </template>
-          </el-table-column>
-          
-          <el-table-column label="操作" width="200" fixed="right">
-            <template #default="scope">
-              <div class="action-buttons unified-flex">
-                <el-button
-                  size="small"
-                  type="text"
-                  @click="viewNews(scope.row)"
-                >
-                  查看
-                </el-button>
-                
-                <el-button
-                  size="small"
-                  type="text"
-                  @click="showEditNewsDialog(scope.row)"
-                >
-                  编辑
-                </el-button>
-                
-                <el-dropdown @command="(command) => handleNewsAction(command, scope.row)">
-                  <el-button size="small" type="text">
-                    更多
-                    <el-icon><ArrowDown /></el-icon>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="authorName" label="作者" width="120" align="center" />
+            
+            <el-table-column prop="createTime" label="发布时间" width="160" align="center">
+              <template #default="scope">
+                {{ formatDate(scope.row.createTime) }}
+              </template>
+            </el-table-column>
+            
+            <el-table-column label="操作" width="200" fixed="right" align="center">
+              <template #default="scope">
+                <div class="action-buttons unified-flex unified-flex-center">
+                  <el-button
+                    size="small"
+                    type="primary"
+                    plain
+                    @click="viewNews(scope.row)"
+                    class="action-btn-edit"
+                  >
+                    查看
                   </el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item command="publish" v-if="scope.row.status === 'draft'">
-                        发布
-                      </el-dropdown-item>
-                      <el-dropdown-item command="unpublish" v-if="scope.row.status === 'published'">
-                        取消发布
-                      </el-dropdown-item>
-                      <el-dropdown-item divided command="delete">删除</el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
-              </div>
-            </template>
-          </el-table-column>
-        </el-table>
-        
-        <!-- 分页 -->
-        <div class="pagination-container unified-flex unified-flex-center">
-          <el-pagination
-            v-model:current-page="pagination.current"
-            v-model:page-size="pagination.size"
-            :page-sizes="[10, 20, 50, 100]"
-            :total="pagination.total"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-            background
-          />
+                  
+                  <el-button
+                    size="small"
+                    type="primary"
+                    plain
+                    @click="showEditNewsDialog(scope.row)"
+                    class="action-btn-edit"
+                  >
+                    编辑
+                  </el-button>
+                  
+                  <el-button
+                    size="small"
+                    type="danger"
+                    plain
+                    @click="handleNewsAction('delete', scope.row)"
+                    class="action-btn-delete"
+                  >
+                    删除
+                  </el-button>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+          
+          <!-- 分页 -->
+          <div class="unified-pagination-container unified-flex unified-flex-center">
+            <el-pagination
+              v-model:current-page="pagination.current"
+              v-model:page-size="pagination.size"
+              :page-sizes="[10, 20, 50, 100]"
+              :total="pagination.total"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              background
+            />
+          </div>
         </div>
       </el-card>
       
@@ -607,37 +607,6 @@ export default {
 /* 新闻列表样式 */
 .news-list-card {
   margin-bottom: var(--spacing-xl);
-}
-
-.news-info {
-  display: flex;
-  align-items: flex-start;
-}
-
-.news-details {
-  flex: 1;
-}
-
-.news-title {
-  margin: 0 0 var(--spacing-xs) 0;
-  font-weight: 500;
-  color: var(--text-primary);
-  font-size: var(--font-size-base);
-}
-
-.news-summary {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-  line-height: 1.4;
-}
-
-.action-buttons {
-  gap: var(--spacing-xs);
-}
-
-.pagination-container {
-  margin-top: var(--spacing-xl);
 }
 
 /* 对话框样式 */

@@ -19,56 +19,72 @@
           </div>
         </template>
         
-        <el-form :model="filters" :inline="true" label-width="80px">
-          <el-form-item label="统计类型">
-            <el-select
-              v-model="filters.type"
-              placeholder="选择统计类型"
-              class="unified-input filter-select"
-              @change="handleTypeChange"
+        <div class="unified-filter-container">
+          <div class="unified-filter-form">
+            <div class="unified-filter-item">
+              <div class="unified-filter-label">统计类型</div>
+              <el-select
+                v-model="filters.type"
+                placeholder="选择统计类型"
+                @change="handleTypeChange"
+                class="unified-filter-select"
+              >
+                <el-option label="高闲置量二手物品" value="high-inventory" />
+                <el-option label="高需求量二手物品" value="high-demand" />
+                <el-option label="月度热门二手物品" value="monthly-top" />
+                <el-option label="活跃用户排行" value="active-users" />
+              </el-select>
+            </div>
+            
+            <div class="unified-filter-item" v-if="filters.type !== 'active-users'">
+              <div class="unified-filter-label">数量限制</div>
+              <el-input-number
+                v-model="filters.limit"
+                :min="1"
+                :max="100"
+                placeholder="显示数量"
+                @change="handleTypeChange"
+              />
+            </div>
+            
+            <div class="unified-filter-item" v-if="filters.type === 'monthly-top'">
+              <div class="unified-filter-label">月份</div>
+              <el-date-picker
+                v-model="filters.month"
+                type="month"
+                placeholder="选择月份"
+                format="YYYY年MM月"
+                value-format="YYYY-MM"
+                @change="handleTypeChange"
+                class="unified-filter-date"
+              />
+            </div>
+            
+            <div class="unified-filter-item" v-if="filters.type === 'active-users'">
+              <div class="unified-filter-label">日期范围</div>
+              <el-date-picker
+                v-model="filters.dateRange"
+                type="daterange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                @change="handleTypeChange"
+                class="unified-filter-date"
+              />
+            </div>
+          </div>
+          
+          <div class="unified-search-button-container">
+            <el-button
+              type="primary"
+              class="unified-button unified-button-primary"
+              @click="refreshStatistics"
             >
-              <el-option label="高闲置量二手物品" value="high-inventory" />
-              <el-option label="高需求量二手物品" value="high-demand" />
-              <el-option label="月度热门二手物品" value="monthly-top" />
-              <el-option label="活跃用户排行" value="active-users" />
-            </el-select>
-          </el-form-item>
-          
-          <el-form-item label="数量限制" v-if="filters.type !== 'active-users'">
-            <el-input-number
-              v-model="filters.limit"
-              :min="1"
-              :max="100"
-              placeholder="显示数量"
-              style="width: 150px"
-              @change="handleTypeChange"
-            />
-          </el-form-item>
-          
-          <el-form-item label="月份" v-if="filters.type === 'monthly-top'">
-            <el-date-picker
-              v-model="filters.month"
-              type="month"
-              placeholder="选择月份"
-              class="unified-input"
-              format="YYYY年MM月"
-              value-format="YYYY-MM"
-              @change="handleTypeChange"
-            />
-          </el-form-item>
-          
-          <el-form-item label="日期范围" v-if="filters.type === 'active-users'">
-            <el-date-picker
-              v-model="filters.dateRange"
-              type="daterange"
-              range-separator="至"
-              start-placeholder="开始日期"
-              end-placeholder="结束日期"
-              class="unified-input"
-              @change="handleTypeChange"
-            />
-          </el-form-item>
-        </el-form>
+              <el-icon><Search /></el-icon>
+              查询数据
+            </el-button>
+          </div>
+        </div>
       </el-card>
       
       <!-- 数据展示 -->

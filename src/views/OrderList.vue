@@ -12,8 +12,6 @@
         <div class="filter-section">
           <el-tabs v-model="activeTab" @tab-click="handleTabClick">
             <el-tab-pane label="全部" name="all" />
-            <el-tab-pane label="待支付" name="0" />
-            <el-tab-pane label="已支付" name="1" />
             <el-tab-pane label="已完成" name="2" />
             <el-tab-pane label="已取消" name="3" />
           </el-tabs>
@@ -50,7 +48,7 @@
                 <div class="product-image">
                   <img
                     v-if="order.product && order.product.imageUrl"
-                    :src="processImageUrl(order.product.imageUrl)"
+                    :src="order.product.imageUrl"
                     :alt="order.product.productName"
                   />
                   <div v-else class="no-image">
@@ -73,8 +71,22 @@
             </div>
             
             <div class="order-footer">
-              <div class="order-seller">
-                卖家: {{ order.seller?.userName || '未知' }}
+              <div class="order-seller" v-if="order.seller">
+                卖家: 
+                <el-avatar 
+                  :size="20" 
+                  :src="order.seller.userAvatar" 
+                  style="margin-right: 5px; vertical-align: middle; cursor: pointer;"
+                  @click="goToUserProfile(order.seller.id)"
+                >
+                  {{ order.seller.userName?.charAt(0) }}
+                </el-avatar>
+                <span class="clickable" @click="goToUserProfile(order.seller.id)">
+                  {{ order.seller.userName || '未知' }}
+                </span>
+              </div>
+              <div class="order-seller" v-else>
+                卖家: 未知
               </div>
               <div class="order-actions">
                 <el-button
@@ -84,26 +96,8 @@
                   查看详情
                 </el-button>
                 
-                <!-- 待支付状态的操作 -->
-                <template v-if="order.status === 0">
-                  <el-button
-                    size="small"
-                    type="primary"
-                    @click="payOrder(order)"
-                  >
-                    支付
-                  </el-button>
-                  <el-button
-                    size="small"
-                    type="danger"
-                    @click="cancelOrder(order.id)"
-                  >
-                    取消
-                  </el-button>
-                </template>
-                
-                <!-- 已支付状态的操作 -->
-                <template v-if="order.status === 1">
+                <!-- 已完成状态的操作 -->
+                <template v-if="order.status === 2 && !order.buyerConfirmed">
                   <el-button
                     size="small"
                     type="success"
@@ -140,7 +134,7 @@ import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { Picture } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
-import { orderApi } from '@/api'
+import { orderApi, productApi, userApi } from '@/api'
 import {
   formatPrice,
   formatPaymentMethod,
@@ -202,19 +196,69 @@ export default {
         let response
         
         if (activeTab.value === 'all') {
-          response = await api.order.getBuyerOrderList({
+          response = await orderApi.getBuyerOrderList({
             current: pagination.current,
             size: pagination.size
           })
         } else {
-          response = await api.order.getBuyerOrderListByStatus(activeTab.value, {
+          response = await orderApi.getBuyerOrderList({
             current: pagination.current,
             size: pagination.size
           })
         }
         
-        orders.value = response.data.data.records || []
+        // 获取订单列表数据
+        const orderRecords = response.data.data.records || []
         total.value = response.data.data.total || 0
+        
+        // 如果不是查看全部，则按状态过滤
+        let filteredOrders = orderRecords
+        if (activeTab.value !== 'all') {
+          filteredOrders = orderRecords.filter(order => order.status === parseInt(activeTab.value))
+        }
+        
+        // 为每个订单获取详细的商品信息和卖家信息
+        const enrichedOrders = []
+        for (const order of filteredOrders) {
+          // 获取商品详情
+          if (order.productId) {
+            try {
+              const productResponse = await productApi.getProductById(order.productId)
+              order.product = productResponse.data.data
+              
+              // 处理商品图片 - 只使用mainImageUrl
+              if (order.product && order.product.mainImageUrl) {
+                order.product.imageUrl = processImageUrl(order.product.mainImageUrl)
+              } else if (order.product && order.product.imageUrl) {
+                // 如果没有mainImageUrl，则使用imageUrl
+                order.product.imageUrl = processImageUrl(order.product.imageUrl)
+              }
+            } catch (error) {
+              console.error('获取商品详情失败:', error)
+              order.product = null
+            }
+          }
+          
+          // 获取卖家信息
+          if (order.sellerId) {
+            try {
+              const sellerResponse = await userApi.getUserVOById(order.sellerId)
+              order.seller = sellerResponse.data.data
+              
+              // 处理卖家头像
+              if (order.seller && order.seller.userAvatar) {
+                order.seller.userAvatar = processImageUrl(order.seller.userAvatar)
+              }
+            } catch (error) {
+              console.error('获取卖家信息失败:', error)
+              order.seller = null
+            }
+          }
+          
+          enrichedOrders.push(order)
+        }
+        
+        orders.value = enrichedOrders
       } catch (error) {
         console.error('获取订单列表失败:', error)
         orders.value = []
@@ -235,57 +279,7 @@ export default {
       router.push(`/orders/${orderId}`)
     }
     
-    // 支付订单
-    const payOrder = async (order) => {
-      try {
-        let result
-        
-        switch (order.paymentMethod) {
-          case 0: // 现金支付
-            ElMessageBox.prompt('请输入支付凭证图片URL', '上传支付凭证', {
-              confirmButtonText: '提交',
-              cancelButtonText: '取消'
-            }).then(async ({ value }) => {
-              try {
-                await api.order.submitPaymentProof({
-                  orderId: order.id,
-                  paymentProof: value
-                })
-                ElMessage.success('支付凭证已提交，请等待卖家确认')
-                fetchOrders()
-              } catch (error) {
-                console.error('提交支付凭证失败:', error)
-                ElMessage.error('提交支付凭证失败')
-              }
-            }).catch(() => {})
-            return
-            
-          case 1: // 微信支付
-            result = await api.order.wechatPay(order.id)
-            break
-            
-          case 2: // 积分兑换
-            result = await api.order.pointsPay(order.id)
-            break
-            
-          case 3: // 物品交换
-            result = await api.order.applyExchange(order.id)
-            break
-            
-          default:
-            ElMessage.error('未知的支付方式')
-            return
-        }
-        
-        if (result.data.code === 200) {
-          ElMessage.success('支付成功')
-          fetchOrders()
-        }
-      } catch (error) {
-        console.error('支付失败:', error)
-        ElMessage.error('支付失败')
-      }
-    }
+
     
     // 取消订单
     const cancelOrder = async (orderId) => {
@@ -300,7 +294,7 @@ export default {
           }
         )
         
-        await api.order.cancelOrder(orderId)
+        await orderApi.cancelOrder(orderId)
         ElMessage.success('订单已取消')
         fetchOrders()
       } catch (error) {
@@ -324,7 +318,7 @@ export default {
           }
         )
         
-        await api.order.confirmOrder(orderId)
+        await orderApi.confirmOrder(orderId)
         ElMessage.success('订单已完成')
         fetchOrders()
       } catch (error) {
@@ -348,6 +342,11 @@ export default {
       fetchOrders()
     }
     
+    // 跳转到用户个人资料页面
+    const goToUserProfile = (userId) => {
+      router.push(`/user/${userId}`)
+    }
+    
     onMounted(() => {
       fetchOrders()
     })
@@ -365,11 +364,11 @@ export default {
       getOrderStatusType,
       handleTabClick,
       viewOrder,
-      payOrder,
       cancelOrder,
       confirmOrder,
       handleSizeChange,
-      handleCurrentChange
+      handleCurrentChange,
+      goToUserProfile
     }
   }
 }
@@ -505,6 +504,15 @@ export default {
 .order-seller {
   color: var(--text-regular);
   font-size: var(--font-size-sm);
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  color: #409eff;
+  text-decoration: underline;
 }
 
 .order-actions {

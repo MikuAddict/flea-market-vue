@@ -67,8 +67,6 @@
               </div>
               <div class="product-notice" v-else-if="!isLoggedIn">
                 <el-alert title="请先登录" type="info" show-icon :closable="false">
-                  <el-button type="text" @click="$router.push('/login')">立即登录</el-button>
-                  <el-button type="text" @click="$router.push('/register')">注册账号</el-button>
                 </el-alert>
               </div>
               
@@ -108,9 +106,18 @@
                 <div class="review-list">
                   <div v-for="comment in comments" :key="comment.id" class="review-item">
                     <div class="review-header">
-                      <el-avatar :size="30" :src="comment.userAvatar">{{ comment.userName?.charAt(0) }}</el-avatar>
+                      <el-avatar 
+                        :size="30" 
+                        :src="comment.userAvatar" 
+                        class="clickable"
+                        @click="goToUserProfile(comment.userId)"
+                      >
+                        {{ comment.userName?.charAt(0) }}
+                      </el-avatar>
                       <div class="review-info">
-                        <div class="review-user">{{ comment.userName }}</div>
+                        <div class="review-user clickable" @click="goToUserProfile(comment.userId)">
+                          {{ comment.userName }}
+                        </div>
                       </div>
                       <div class="review-time">{{ formatDate(comment.createTime, 'YYYY-MM-DD') }}</div>
                     </div>
@@ -319,7 +326,7 @@ export default {
         sellerStats.value.published = productsResponse.data.data.total || 0
         
         // 获取卖家订单统计
-        const statsResponse = await statisticsApi.getUserStatistics(sellerId)
+        const statsResponse = await statisticsApi.getUserTradeStatistics(sellerId)
         if (statsResponse.data.code === 200) {
           const stats = statsResponse.data.data
           sellerStats.value.completed = stats.totalSales || 0
@@ -349,16 +356,17 @@ export default {
     // 创建订单
     const createOrder = async () => {
       try {
-        const response = await orderApi.createOrder({
-          productId: productId.value
-        })
+        const response = await orderApi.createOrder(productId.value)
         
         if (response.data.code === 200) {
           ElMessage.success('订单创建成功')
           router.push(`/orders/${response.data.data}`)
+        } else {
+          ElMessage.error(response.data.message || '订单创建失败')
         }
       } catch (error) {
         console.error('创建订单失败:', error)
+        ElMessage.error('创建订单失败')
       }
     }
     
@@ -677,6 +685,10 @@ export default {
 
 .clickable:hover {
   color: #409eff;
+}
+
+.review-user.clickable:hover {
+  text-decoration: underline;
 }
 
 .seller-info-card, .review-card {

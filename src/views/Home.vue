@@ -48,7 +48,7 @@
                   <el-icon :size="40"><component :is="getCategoryIcon(category.id)" /></el-icon>
                 </div>
                 <h4 class="category-name">{{ category.name }}</h4>
-                <p class="category-count">{{ category.count || 0 }} 件物品</p>
+                <p class="category-count">{{ category.productCount || 0 }} 件物品</p>
               </el-card>
             </div>
           </div>
@@ -333,11 +333,15 @@ export default {
   font-weight: 600;
   margin-bottom: var(--spacing-xs);
   color: var(--text-primary);
+  display: flex;
+  justify-content: center;
 }
 
 .category-count {
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
+  display: flex;
+  justify-content: center;
 }
 
 /* 产品网格样式 */

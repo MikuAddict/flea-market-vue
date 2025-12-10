@@ -240,12 +240,6 @@ export default {
         value: newsList.value.length,
         icon: 'Document',
         type: 'primary'
-      },
-      {
-        title: '已发布',
-        value: newsList.value.filter(news => news.status === 'published').length,
-        icon: 'View',
-        type: 'success'
       }
     ])
     

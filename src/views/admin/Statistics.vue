@@ -8,14 +8,6 @@
           <p class="unified-text-secondary">系统数据分析与统计报表</p>
         </div>
         <div class="header-actions unified-flex">
-          <el-button 
-            type="primary" 
-            class="unified-button unified-button-primary"
-            @click="exportData"
-          >
-            <el-icon><Download /></el-icon>
-            导出报表
-          </el-button>
         </div>
       </div>
       
@@ -102,29 +94,21 @@
             :data="statisticsData" 
             style="width: 100%"
           >
-            <el-table-column prop="productName" label="物品名称" min-width="150" />
+            <el-table-column prop="productName" label="分类名称" min-width="150" />
             <el-table-column prop="categoryName" label="分类" width="100" />
             <el-table-column prop="inventoryCount" label="闲置数量" width="120">
               <template #default="scope">
-                <el-tag type="warning" size="small">{{ scope.row.tradeCount || 0 }}</el-tag>
+                <el-tag type="warning" size="small">{{ scope.row.inventoryCount || 0 }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column prop="price" label="参考价格" width="120">
               <template #default="scope">
-                ¥{{ formatPrice(scope.row.tradeAmount || 0) }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="sellerName" label="卖家" width="120" />
-            <el-table-column label="操作" width="100">
-              <template #default="scope">
-                <el-button size="small" type="text" @click="viewProduct(scope.row.productId)">
-                  查看详情
-                </el-button>
+                ¥{{ formatPrice(scope.row.price || 0) }}
               </template>
             </el-table-column>
             <el-table-column label="操作" width="100">
               <template #default="scope">
-                <el-button size="small" type="text" @click="viewProduct(scope.row.productId)">
+                <el-button size="small" type="text" @click="viewProduct(scope.row.id)">
                   查看详情
                 </el-button>
               </template>
@@ -138,21 +122,21 @@
             :data="statisticsData" 
             style="width: 100%"
           >
-            <el-table-column prop="productName" label="物品名称" min-width="150" />
+            <el-table-column prop="productName" label="分类名称" min-width="150" />
             <el-table-column prop="categoryName" label="分类" width="100" />
             <el-table-column prop="demandCount" label="需求次数" width="120">
               <template #default="scope">
-                <el-tag type="success" size="small">{{ scope.row.tradeCount || 0 }}</el-tag>
+                <el-tag type="success" size="small">{{ scope.row.demandCount || 0 }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column prop="averagePrice" label="平均价格" width="120">
               <template #default="scope">
-                ¥{{ formatPrice(scope.row.tradeAmount || 0) }}
+                ¥{{ formatPrice(scope.row.averagePrice || 0) }}
               </template>
             </el-table-column>
             <el-table-column label="操作" width="100">
               <template #default="scope">
-                <el-button size="small" type="text" @click="viewProduct(scope.row.productId)">
+                <el-button size="small" type="text" @click="viewProduct(scope.row.id)">
                   查看详情
                 </el-button>
               </template>
@@ -283,10 +267,28 @@ export default {
         
         switch (filters.type) {
           case 'high-inventory':
-            response = await statisticsApi.getHighInventoryProducts(filters.limit)
+            response = await statisticsApi.getHighInventoryCategories(filters.limit)
+            if (response.data && response.data.code === 200) {
+              statisticsData.value = (response.data.data || []).map(item => ({
+                id: item.categoryId,
+                productName: item.categoryName,
+                categoryName: item.categoryName,
+                inventoryCount: item.productCount || 0,
+                price: item.tradeAmount || 0
+              }))
+            }
             break
           case 'high-demand':
-            response = await statisticsApi.getHighDemandProducts(filters.limit)
+            response = await statisticsApi.getHighDemandCategories(filters.limit)
+            if (response.data && response.data.code === 200) {
+              statisticsData.value = (response.data.data || []).map(item => ({
+                id: item.categoryId,
+                productName: item.categoryName,
+                categoryName: item.categoryName,
+                demandCount: item.productCount || 0,
+                averagePrice: item.tradeAmount || 0
+              }))
+            }
             break
           case 'monthly-top':
             if (!filters.month) {

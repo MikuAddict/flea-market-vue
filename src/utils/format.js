@@ -39,12 +39,12 @@ export function formatPaymentMethod(paymentMethod) {
 
 /**
  * 格式化订单状态
- * @param {number} status 订单状态 (0-待支付, 1-已支付, 2-已完成, 3-已取消)
+ * @param {number} status 订单状态 (2-已完成, 3-已取消)
  * @returns {string} 订单状态名称
  */
 export function formatOrderStatus(status) {
   const statuses = {
-    0: '待支付',
+    0: '已支付',
     1: '已支付',
     2: '已完成',
     3: '已取消'
@@ -101,7 +101,7 @@ export function formatUserStatus(status) {
  */
 export function getOrderStatusType(status) {
   const types = {
-    0: 'warning',
+    0: 'primary',
     1: 'primary',
     2: 'success',
     3: 'danger'

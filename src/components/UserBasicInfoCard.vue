@@ -85,7 +85,6 @@ export default {
     user: {
       type: Object,
       required: true
-      // 需要有 userName, userAvatar, userRole, point, createTime/registerTime 字段
     },
     editMode: {
       type: Boolean,

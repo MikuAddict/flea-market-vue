@@ -10,14 +10,6 @@ export default {
     })
   },
 
-  // 支付订单
-  payOrder(orderId) {
-    return request({
-      url: `/order/${orderId}/pay`,
-      method: 'put'
-    })
-  },
-
   // 取消订单
   cancelOrder(orderId) {
     return request({
@@ -77,53 +69,12 @@ export default {
     })
   },
 
-  // 提交支付凭证
-  submitPaymentProof(data) {
-    return request({
-      url: '/order/payment-proof',
-      method: 'post',
-      data
-    })
-  },
-
   // 确认订单（买家确认收货）
   confirmOrder(data) {
     return request({
       url: '/order/confirm',
       method: 'put',
       data
-    })
-  },
-
-  // 模拟微信支付
-  simulateWechatPay(orderId) {
-    return request({
-      url: `/order/${orderId}/pay/wechat`,
-      method: 'put'
-    })
-  },
-
-  // 积分兑换二手物品
-  exchangeWithPoints(orderId) {
-    return request({
-      url: `/order/${orderId}/pay/points`,
-      method: 'put'
-    })
-  },
-
-  // 申请物品交换
-  applyForExchange(orderId) {
-    return request({
-      url: `/order/${orderId}/exchange/apply`,
-      method: 'post'
-    })
-  },
-
-  // 确认物品交换
-  confirmExchange(orderId) {
-    return request({
-      url: `/order/${orderId}/exchange/confirm`,
-      method: 'put'
     })
   }
 }

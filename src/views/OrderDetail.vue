@@ -32,120 +32,122 @@
           </el-descriptions>
         </div>
         
-        <!-- 二手物品信息 -->
-        <div class="product-section">
-          <h3>二手物品信息</h3>
-          <el-card shadow="never" v-if="order.product">
-            <div class="product-content">
-              <div class="product-image">
-                <img
-                  v-if="order.product.imageUrl"
-                  :src="order.product.imageUrl"
-                  :alt="order.product.productName"
-                />
-                <div v-else class="no-image">
-                  <el-icon><Picture /></el-icon>
-                </div>
-              </div>
-              <div class="product-info">
-                <h4>{{ order.product.productName }}</h4>
-                <p>{{ order.product.description || '暂无描述' }}</p>
-                <div class="product-meta">
-                  <span>分类: {{ order.product.category?.name }}</span>
-                  <span>价格: ¥{{ formatPrice(order.product.price) }}</span>
-                </div>
-              </div>
-            </div>
-          </el-card>
-          <el-empty v-else description="二手物品信息不存在" />
-        </div>
-        
-        <!-- 交易双方信息 -->
-        <div class="trading-parties">
+        <!-- 二手物品详细信息 -->
+        <div class="product-detail-section">
+          <h3>二手物品详情</h3>
           <el-row :gutter="20">
-            <el-col :span="12">
-              <el-card>
-                <template #header>
-                  <span>买家信息</span>
-                </template>
-                <div class="party-info" v-if="order.buyer">
-                  <div class="party-avatar">
-                    <el-avatar :size="60" :src="order.buyer.userAvatar">
-                      {{ order.buyer.userName?.charAt(0) }}
-                    </el-avatar>
-                  </div>
-                  <div class="party-details">
-                    <h4>{{ order.buyer.userName }}</h4>
-                    <p>账号: {{ order.buyer.userAccount }}</p>
-                    <p>联系方式: {{ order.buyer.userPhone || '未设置' }}</p>
-                    <el-tag :type="getUserStatusType(order.buyer.userStatus)" size="small">
-                      {{ formatUserStatus(order.buyer.userStatus) }}
-                    </el-tag>
+            <el-col :xs="24" :lg="14">
+              <el-card class="product-info-card" v-if="productDetail">
+                <div class="product-gallery">
+                  <!-- 主图 -->
+                  <div class="main-image">
+                    <img
+                      v-if="productDetail.imageUrl"
+                      :src="productDetail.imageUrl"
+                      :alt="productDetail.productName"
+                      @error="handleImageError"
+                    />
+                    <div v-else class="image-placeholder">
+                      <el-icon size="50"><Picture /></el-icon>
+                      <p>暂无图片</p>
+                    </div>
                   </div>
                 </div>
-                <el-empty v-else description="买家信息不存在" />
+                <div class="product-basic-info">
+                  <h2 class="product-name">{{ productDetail.productName }}</h2>
+                  <div class="product-price">
+                    <span class="price-label">价格</span>
+                    <span class="price-value">¥{{ formatPrice(productDetail.price) }}</span>
+                  </div>
+                  <div class="product-meta">
+                    <el-tag v-if="productDetail.category" type="success" size="large">
+                      {{ productDetail.category.name }}
+                    </el-tag>
+                    <el-tag type="info" size="large">
+                      {{ formatPaymentMethod(productDetail.paymentMethod) }}
+                    </el-tag>
+                  </div>
+                  <div class="product-description">
+                    <h4>二手物品描述</h4>
+                    <p>{{ productDetail.description || '暂无描述' }}</p>
+                  </div>
+                  
+                  <!-- 显示卖家信息 -->
+                  <div class="seller-info" v-if="productDetail.user">
+                    <h4>卖家信息</h4>
+                    <div class="seller-details">
+                      <el-avatar 
+                        :size="40" 
+                        :src="productDetail.user.userAvatar"
+                        class="clickable"
+                        @click="$router.push(`/user/${productDetail.user.id}`)"
+                      >
+                        {{ productDetail.user.userName ? productDetail.user.userName.charAt(0) : '' }}
+                      </el-avatar>
+                      <div class="seller-text">
+                        <p class="seller-name clickable" @click="$router.push(`/user/${productDetail.user.id}`)">
+                          {{ productDetail.user.userName }}
+                        </p>
+                        <p class="seller-contact">联系方式: {{ productDetail.user.userPhone || '未设置' }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </el-card>
+              <div v-else-if="productLoading" class="loading-container">
+                <el-skeleton :rows="5" animated />
+              </div>
+              <el-empty v-else description="二手物品信息不存在或已被删除" />
             </el-col>
-            <el-col :span="12">
-              <el-card>
+            
+            <el-col :xs="24" :lg="10">
+              <!-- 订单状态信息 -->
+              <el-card class="order-status-card">
                 <template #header>
-                  <span>卖家信息</span>
+                  <span>订单状态</span>
                 </template>
-                <div class="party-info" v-if="order.seller">
-                  <div class="party-avatar">
-                    <el-avatar :size="60" :src="order.seller.userAvatar">
-                      {{ order.seller.userName?.charAt(0) }}
-                    </el-avatar>
-                  </div>
-                  <div class="party-details">
-                    <h4>{{ order.seller.userName }}</h4>
-                    <p>账号: {{ order.seller.userAccount }}</p>
-                    <p>联系方式: {{ order.seller.userPhone || '未设置' }}</p>
-                    <el-tag :type="getUserStatusType(order.seller.userStatus)" size="small">
-                      {{ formatUserStatus(order.seller.userStatus) }}
+                <div class="status-info">
+                  <div class="status-item">
+                    <span class="label">当前状态:</span>
+                    <el-tag :type="getOrderStatusType(order.status)" size="large">
+                      {{ formatOrderStatus(order.status) }}
                     </el-tag>
                   </div>
+                  <div class="status-item">
+                    <span class="label">支付方式:</span>
+                    <span>{{ formatPaymentMethod(order.paymentMethod) }}</span>
+                  </div>
+                  <div class="status-item">
+                    <span class="label">订单金额:</span>
+                    <span class="price">¥{{ formatPrice(order.amount) }}</span>
+                  </div>
+                  <div class="status-item">
+                    <span class="label">创建时间:</span>
+                    <span>{{ formatDate(order.createTime) }}</span>
+                  </div>
+                  <div v-if="order.finishTime" class="status-item">
+                    <span class="label">完成时间:</span>
+                    <span>{{ formatDate(order.finishTime) }}</span>
+                  </div>
                 </div>
-                <el-empty v-else description="卖家信息不存在" />
+                
+                <!-- 订单操作按钮 -->
+                <div class="order-actions" v-if="isBuyer || isSeller">
+                  <el-button 
+                    v-if="isBuyer && order.status === 2 && !order.buyerConfirmed" 
+                    type="success" 
+                    size="large" 
+                    @click="confirmOrder(order.id)"
+                  >
+                    确认收货
+                  </el-button>
+                </div>
               </el-card>
             </el-col>
           </el-row>
         </div>
         
-        <!-- 支付凭证 -->
-        <div class="payment-proof" v-if="order.paymentProof || (order.status === 1 && order.paymentMethod === 0)">
-          <el-card>
-            <template #header>
-              <span>支付凭证</span>
-            </template>
-            <div v-if="order.paymentProof" class="proof-image">
-              <el-image
-                :src="order.paymentProof"
-                :preview-src-list="[order.paymentProof]"
-                fit="contain"
-                style="max-width: 300px; max-height: 300px;"
-              >
-                <template #error>
-                  <div class="image-error">
-                    <el-icon><Picture /></el-icon>
-                    <p>图片加载失败</p>
-                  </div>
-                </template>
-              </el-image>
-            </div>
-            <div v-else-if="order.status === 1 && order.paymentMethod === 0" class="no-proof">
-              <p>支付凭证: {{ order.paymentProof || '待上传' }}</p>
-              <el-button
-                v-if="isBuyer"
-                type="primary"
-                size="small"
-                @click="showProofDialog"
-              >
-                上传支付凭证
-              </el-button>
-            </div>
-          </el-card>
-        </div>
+
         
         <!-- 订单操作 -->
         <div class="order-actions">
@@ -153,27 +155,12 @@
           
           <!-- 买家操作 -->
           <template v-if="isBuyer">
-            <template v-if="order.status === 0">
-              <el-button type="primary" @click="payOrder">支付</el-button>
-              <el-button type="danger" @click="cancelOrder">取消订单</el-button>
-            </template>
             <el-button
-              v-if="order.status === 1"
+              v-if="order.status === 2 && !order.buyerConfirmed"
               type="success"
               @click="confirmOrder"
             >
               确认收货
-            </el-button>
-          </template>
-          
-          <!-- 卖家操作 -->
-          <template v-if="isSeller">
-            <el-button
-              v-if="order.status === 1 && !order.sellerConfirmed"
-              type="success"
-              @click="confirmShipment"
-            >
-              确认发货
             </el-button>
           </template>
         </div>
@@ -184,37 +171,17 @@
       <el-skeleton animated />
     </div>
     
-    <!-- 支付凭证对话框 -->
-    <el-dialog
-      v-model="proofDialogVisible"
-      title="上传支付凭证"
-      width="500px"
-    >
-      <el-form :model="proofForm" label-width="80px">
-        <el-form-item label="支付凭证">
-          <el-input
-            v-model="proofForm.paymentProof"
-            placeholder="请输入支付凭证图片URL"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="proofDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitProof">提交</el-button>
-        </span>
-      </template>
-    </el-dialog>
+
   </Layout>
 </template>
 
 <script>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router'
 import { Picture } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
-import { orderApi } from '@/api'
+import { orderApi, productApi, userApi } from '@/api'
 import {
   formatPrice,
   formatPaymentMethod,
@@ -225,6 +192,7 @@ import {
   getUserStatusType
 } from '@/utils/format'
 import { useSingleDataFetch } from '@/composables/useDataFetch'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 export default {
   name: 'OrderDetail',
@@ -237,20 +205,6 @@ export default {
     const route = useRoute()
     const router = useRouter()
     
-    // 响应式数据
-    const loading = ref(true)
-    const order = ref(null)
-    const proofDialogVisible = ref(false)
-    const proofForm = reactive({
-      paymentProof: ''
-    })
-    
-    // 计算属性
-    const user = computed(() => store.state.user)
-    const orderId = computed(() => route.params.id)
-    const isBuyer = computed(() => user.value.id === order.value?.buyer?.id)
-    const isSeller = computed(() => user.value.id === order.value?.seller?.id)
-    
     // 使用单条数据获取组合函数
     const {
       loading,
@@ -258,45 +212,104 @@ export default {
       fetchData: fetchOrderDetail
     } = useSingleDataFetch({
       apiFunction: orderApi.getOrderById,
+      params: route.params.id,
       errorMessage: '订单不存在或已被删除'
     })
     
-    // 支付订单
-    const payOrder = async () => {
+
+    const productDetail = ref(null)
+    const productLoading = ref(false)
+    
+    // 计算属性
+    const user = computed(() => store.state.user)
+    const orderId = computed(() => route.params.id)
+    const isBuyer = computed(() => user.value && order.value && order.value.buyer && user.value.id === order.value.buyer.id)
+    const isSeller = computed(() => user.value && order.value && order.value.seller && user.value.id === order.value.seller.id)
+    
+    // 处理图片URL，将完整后端地址转换为相对路径
+    const processImageUrl = (url) => {
+      if (!url) return null
+      
+      // 如果URL包含localhost:7023，转换为相对路径
+      if (url.includes('localhost:7023')) {
+        return url.replace('http://localhost:7023', '/api')
+      }
+      
+      // 如果是相对路径且以images开头，添加/api前缀
+      if (url.startsWith('images/') || url.includes('/images/')) {
+        return `/api/${url.replace(/^\/?/, '')}`
+      }
+      
+      // 如果已经是相对路径（以/api开头），直接返回
+      if (url.startsWith('/api/')) {
+        return url
+      }
+      
+      // 其他情况返回原URL
+      return url
+    }
+    
+    // 获取二手物品详情
+    const fetchProductDetail = async (productId) => {
+      if (!productId) return
+      
+      productLoading.value = true
       try {
-        let result
-        
-        switch (order.value.paymentMethod) {
-          case 0: // 现金支付
-            showProofDialog()
-            return
-            
-          case 1: // 微信支付
-            result = await api.order.wechatPay(orderId.value)
-            break
-            
-          case 2: // 积分兑换
-            result = await api.order.pointsPay(orderId.value)
-            break
-            
-          case 3: // 物品交换
-            result = await api.order.applyExchange(orderId.value)
-            break
-            
-          default:
-            ElMessage.error('未知的支付方式')
-            return
-        }
-        
-        if (result.data.code === 200) {
-          ElMessage.success('支付成功')
-          fetchOrderDetail()
+        const response = await productApi.getProductById(productId)
+        if (response.data.code === 200) {
+          productDetail.value = response.data.data
+          
+          // 处理商品图片URL
+          if (productDetail.value) {
+            // 优先使用mainImageUrl，如果没有则使用imageUrl
+            const imageUrl = productDetail.value.mainImageUrl || productDetail.value.imageUrl
+            if (imageUrl) {
+              productDetail.value.imageUrl = processImageUrl(imageUrl)
+            }
+          }
+          
+          // 如果商品信息中没有完整的用户信息，则根据用户ID获取用户视图
+          if (productDetail.value.userId && !productDetail.value.user) {
+            try {
+              const userResponse = await userApi.getUserVOById(productDetail.value.userId)
+              if (userResponse.data.code === 200) {
+                productDetail.value.user = userResponse.data.data
+                
+                // 处理卖家头像URL
+                if (productDetail.value.user && productDetail.value.user.userAvatar) {
+                  productDetail.value.user.userAvatar = processImageUrl(productDetail.value.user.userAvatar)
+                }
+              }
+            } catch (userError) {
+              console.error('获取卖家信息失败:', userError)
+            }
+          }
         }
       } catch (error) {
-        console.error('支付失败:', error)
-        ElMessage.error('支付失败')
+        console.error('获取二手物品详情失败:', error)
+        productDetail.value = null
+      } finally {
+        productLoading.value = false
       }
     }
+    
+    // 监听订单数据变化，获取二手物品详情
+    watch(() => order.value, (newOrder) => {
+      if (newOrder && newOrder.productId) {
+        fetchProductDetail(newOrder.productId)
+      } else {
+        productDetail.value = null
+      }
+    })
+    
+    // 组件挂载时获取二手物品详情
+    onMounted(() => {
+      if (order.value && order.value.productId) {
+        fetchProductDetail(order.value.productId)
+      }
+    })
+    
+
     
     // 取消订单
     const cancelOrder = async () => {
@@ -311,9 +324,9 @@ export default {
           }
         )
         
-        await api.order.cancelOrder(orderId.value)
+        await orderApi.cancelOrder(orderId.value)
         ElMessage.success('订单已取消')
-        fetchOrderDetail()
+        await fetchOrderDetail()
       } catch (error) {
         if (error !== 'cancel') {
           console.error('取消订单失败:', error)
@@ -335,9 +348,9 @@ export default {
           }
         )
         
-        await api.order.confirmOrder(orderId.value)
+        await orderApi.confirmOrder(orderId.value)
         ElMessage.success('订单已完成')
-        fetchOrderDetail()
+        await fetchOrderDetail()
       } catch (error) {
         if (error !== 'cancel') {
           console.error('确认收货失败:', error)
@@ -346,66 +359,30 @@ export default {
       }
     }
     
-    // 确认发货
-    const confirmShipment = async () => {
-      try {
-        await ElMessageBox.confirm(
-          '确认已发货吗？',
-          '确认发货',
-          {
-            confirmButtonText: '确认',
-            cancelButtonText: '取消',
-            type: 'info'
-          }
-        )
-        
-        // 这里需要根据API调整，可能没有专门的确认发货接口
-        // 可以是更新订单状态或者确认交易
-        await api.order.completeOrder(orderId.value)
-        ElMessage.success('已确认发货')
-        fetchOrderDetail()
-      } catch (error) {
-        if (error !== 'cancel') {
-          console.error('确认发货失败:', error)
-          ElMessage.error('确认发货失败')
-        }
-      }
-    }
+
     
-    // 显示支付凭证对话框
-    const showProofDialog = () => {
-      proofForm.paymentProof = order.value.paymentProof || ''
-      proofDialogVisible.value = true
-    }
+
     
-    // 提交支付凭证
-    const submitProof = async () => {
-      try {
-        await api.order.submitPaymentProof({
-          orderId: orderId.value,
-          paymentProof: proofForm.paymentProof
-        })
-        ElMessage.success('支付凭证已提交，请等待卖家确认')
-        proofDialogVisible.value = false
-        fetchOrderDetail()
-      } catch (error) {
-        console.error('提交支付凭证失败:', error)
-        ElMessage.error('提交支付凭证失败')
+    // 图片加载错误处理
+    const handleImageError = (event) => {
+      event.target.style.display = 'none'
+      if (event.target.nextElementSibling) {
+        event.target.nextElementSibling.style.display = 'flex'
       }
     }
     
     // 监听路由参数变化
     watch(() => route.params.id, () => {
       if (route.params.id) {
-        fetchOrderDetail()
+        fetchOrderDetail(route.params.id)
       }
     }, { immediate: true })
     
     return {
       loading,
       order,
-      proofDialogVisible,
-      proofForm,
+      productDetail,
+      productLoading,
       isBuyer,
       isSeller,
       formatPrice,
@@ -415,12 +392,8 @@ export default {
       formatDate,
       getOrderStatusType,
       getUserStatusType,
-      payOrder,
       cancelOrder,
-      confirmOrder,
-      confirmShipment,
-      showProofDialog,
-      submitProof
+      confirmOrder
     }
   }
 }
@@ -439,111 +412,237 @@ export default {
   align-items: center;
 }
 
-.order-info, .product-section, .trading-parties, .payment-proof {
+.order-info, .product-detail-section {
   margin-top: var(--spacing-xl);
 }
 
-.order-info h3, .product-section h3 {
-  margin-bottom: var(--spacing-base);
+.order-info h3, .product-detail-section h3 {
+  margin-bottom: var(--spacing-xl);
+  font-size: var(--font-size-xl);
+  color: var(--text-primary);
 }
 
-.product-content {
-  display: flex;
-  gap: var(--spacing-base);
+/* 二手物品详情样式 */
+.product-gallery {
+  margin-bottom: var(--spacing-xl);
 }
 
-.product-image {
-  width: 120px;
-  height: 120px;
-  border-radius: var(--border-radius-small);
+.main-image {
+  width: 100%;
+  height: 400px;
+  border-radius: var(--border-radius-base);
   overflow: hidden;
+  background-color: var(--bg-light);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.product-image img {
+.main-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.no-image {
-  width: 120px;
-  height: 120px;
+.image-placeholder {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  background-color: var(--bg-light);
   color: var(--text-placeholder);
-  font-size: var(--font-size-xl);
 }
 
-.product-info {
-  flex: 1;
+.image-placeholder .el-icon {
+  margin-bottom: var(--spacing-sm);
 }
 
-.product-info h4 {
-  margin: 0 0 var(--spacing-sm) 0;
-  font-size: var(--font-size-lg);
+.product-basic-info {
+  padding: var(--spacing-base);
 }
 
-.product-info p {
-  margin: 0 0 var(--spacing-sm) 0;
-  color: var(--text-regular);
+.product-name {
+  margin: 0 0 var(--spacing-lg) 0;
+  font-size: var(--font-size-xxl);
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.product-price {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.price-label {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin-right: var(--spacing-sm);
+}
+
+.price-value {
+  font-size: var(--font-size-xxl);
+  color: var(--color-primary);
+  font-weight: bold;
 }
 
 .product-meta {
   display: flex;
   gap: var(--spacing-base);
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
+  margin-bottom: var(--spacing-lg);
 }
 
-.party-info {
+.product-description {
+  margin-bottom: var(--spacing-xl);
+}
+
+.product-description h4 {
+  margin: 0 0 var(--spacing-base) 0;
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+}
+
+.product-description p {
+  margin: 0;
+  color: var(--text-regular);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* 卖家信息样式 */
+.seller-info {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-color);
+}
+
+.seller-info h4 {
+  margin: 0 0 var(--spacing-base) 0;
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+}
+
+.seller-details {
   display: flex;
+  align-items: center;
   gap: var(--spacing-base);
 }
 
-.party-details h4 {
+.seller-text {
+  flex: 1;
+}
+
+.seller-name {
   margin: 0 0 var(--spacing-xs) 0;
   font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
-.party-details p {
-  margin: 0 0 var(--spacing-xs) 0;
-  color: var(--text-regular);
+.seller-contact {
+  margin: 0;
   font-size: var(--font-size-sm);
-}
-
-.proof-image {
-  display: flex;
-  justify-content: center;
-}
-
-.image-error {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
   color: var(--text-secondary);
 }
 
-.no-proof {
+/* 订单状态卡片样式 */
+.status-info {
+  margin-bottom: var(--spacing-xl);
+}
+
+.status-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: var(--spacing-base);
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--border-color-light);
 }
 
+.status-item:last-child {
+  border-bottom: none;
+}
+
+.status-item .label {
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+}
+
+.status-item .price {
+  font-weight: bold;
+  color: var(--color-primary);
+}
+
+/* 订单操作按钮样式 */
 .order-actions {
-  margin-top: 20px;
-  text-align: center;
+  flex-direction: column;
 }
 
 .order-actions .el-button {
-  margin: 0 10px 10px 0;
+  width: 100%;
+}
+
+.extra-payment-action {
+  margin-top: var(--spacing-base);
+  padding-top: var(--spacing-base);
+  border-top: 1px solid var(--border-color-light);
+}
+
+.extra-payment-action .el-button {
+  width: 100%;
+}
+
+.payment-proof img {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: var(--border-radius-small);
 }
 
 .loading-container {
-  padding: 20px;
+  padding: var(--spacing-xxl) 0;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  color: #409eff;
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .order-detail-container {
+    padding: var(--spacing-base);
+  }
+  
+  .main-image {
+    height: 300px;
+  }
+  
+  .product-name {
+    font-size: var(--font-size-xl);
+  }
+  
+  .price-value {
+    font-size: var(--font-size-xl);
+  }
+  
+  .product-meta {
+    flex-wrap: wrap;
+  }
+  
+  .seller-details {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .status-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+  
+  .order-actions {
+    flex-direction: column;
+  }
 }
 </style>

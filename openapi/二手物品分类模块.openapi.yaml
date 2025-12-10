@@ -91,7 +91,7 @@ paths:
     get:
       summary: 获取所有二手物品分类
       deprecated: false
-      description: 获取系统中所有的二手物品分类信息
+      description: 获取系统中所有的二手物品分类信息及其商品数量
       operationId: getCategoryList
       tags:
         - 二手物品分类管理
@@ -102,7 +102,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/BaseResponseListCategory'
+                $ref: '#/components/schemas/BaseResponseListCategoryVO'
           headers: {}
       security: []
 components:
@@ -124,22 +124,6 @@ components:
         deleted:
           type: integer
           format: int32
-    BaseResponseListCategory:
-      type: object
-      properties:
-        code:
-          type: integer
-          format: int32
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Category'
-        message:
-          type: string
-        hashMap:
-          type: object
-          additionalProperties: {}
-          properties: {}
     BaseResponseBoolean:
       type: object
       properties:
@@ -169,6 +153,33 @@ components:
           type: object
           additionalProperties: {}
           properties: {}
+    BaseResponseListCategoryVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryVO'
+        message:
+          type: string
+        hashMap:
+          type: object
+          additionalProperties: {}
+          properties: {}
+    CategoryVO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        productCount:
+          type: integer
+          format: int64
   responses: {}
   securitySchemes: {}
 servers: []

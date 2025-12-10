@@ -1,4 +1,4 @@
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, readonly } from 'vue'
 import { ElMessage } from 'element-plus'
 import { processIdsInArray } from '@/utils/numberPrecision'
 
@@ -159,39 +159,54 @@ export function useDataFetchWithIdPrecision(options = {}) {
  * @param {Object} options 配置选项
  * @returns {Object} 响应式数据和方法
  */
-export function useSingleDataFetch(options = {}) {
-  const {
-    apiFunction,          // API获取函数
-    errorMessage = '获取数据失败' // 错误消息
+export function useSingleDataFetch(options) {
+  const { 
+    apiFunction, 
+    errorMessage = '获取数据失败',
+    notFoundMessage = '数据不存在或已被删除'
   } = options
-
-  // 响应式数据
+  
   const loading = ref(false)
   const data = ref(null)
-
-  // 获取数据
+  const error = ref(null)
+  
   const fetchData = async (id) => {
+    if (!apiFunction) {
+      throw new Error('必须提供 apiFunction')
+    }
+    
     loading.value = true
+    error.value = null
+    
     try {
-      const response = await apiFunction(id)
+      // 如果提供了id，则将其作为参数传递给apiFunction
+      const response = id ? await apiFunction(id) : await apiFunction()
       
-      if (response && response.data && response.data.code === 200) {
-        data.value = response.data.data
+      if (response && response.data) {
+        if (response.data.code === 200) {
+          data.value = response.data.data
+        } else if (response.data.code === 404) {
+          error.value = notFoundMessage
+        } else {
+          error.value = response.data.message || errorMessage
+        }
       } else {
-        ElMessage.error(response && response.data && response.data.message || errorMessage)
+        error.value = errorMessage
       }
-    } catch (error) {
-      console.error(errorMessage, error)
-      ElMessage.error(errorMessage)
-      data.value = null
+    } catch (err) {
+      console.error('获取数据时发生错误:', err)
+      error.value = errorMessage
     } finally {
       loading.value = false
     }
+    
+    return { data: data.value, error: error.value }
   }
-
+  
   return {
-    loading,
-    data,
+    loading: readonly(loading),
+    data: readonly(data),
+    error: readonly(error),
     fetchData
   }
 }

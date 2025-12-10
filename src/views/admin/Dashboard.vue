@@ -101,7 +101,7 @@
             <el-card class="unified-card table-card fade-in">
               <template #header>
                 <div class="card-header unified-flex unified-flex-between">
-                  <h3 class="unified-title-base">高需求量二手物品排行</h3>
+                  <h3 class="unified-title-base">高需求量二手物品分类排行</h3>
                   <el-button type="text" @click="goToProducts" class="view-more-btn">
                     查看更多
                     <el-icon><ArrowRight /></el-icon>
@@ -109,7 +109,7 @@
                 </div>
               </template>
               <el-table :data="hotProducts" style="width: 100%">
-                <el-table-column prop="productName" label="名称" min-width="120" />
+                <el-table-column prop="productName" label="分类名称" min-width="120" />
                 <el-table-column prop="viewCount" label="售出量" width="100" />
                 <el-table-column prop="salesAmount" label="售出金额" width="100">
                   <template #default="scope">
@@ -125,7 +125,7 @@
             <el-card class="unified-card table-card fade-in">
               <template #header>
                 <div class="card-header unified-flex unified-flex-between">
-                  <h3 class="unified-title-base">高闲置量二手物品排行</h3>
+                  <h3 class="unified-title-base">高闲置量二手物品分类排行</h3>
                   <el-button type="text" @click="goToHighInventoryProducts" class="view-more-btn">
                     查看更多
                     <el-icon><ArrowRight /></el-icon>
@@ -133,16 +133,10 @@
                 </div>
               </template>
               <el-table :data="highInventoryProducts" style="width: 100%" v-loading="highInventoryLoading">
-                <el-table-column prop="productName" label="物品名称" min-width="120" />
-                <el-table-column prop="categoryName" label="分类" width="100" />
+                <el-table-column prop="productName" label="分类名称" min-width="120" />
                 <el-table-column prop="inventoryCount" label="闲置数量" width="100">
                   <template #default="scope">
                     <el-tag type="warning" size="small">{{ scope.row.inventoryCount }}</el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="price" label="价格" width="100">
-                  <template #default="scope">
-                    ¥{{ formatPrice(scope.row.price) }}
                   </template>
                 </el-table-column>
               </el-table>
@@ -277,12 +271,13 @@ export default {
             productName: item.categoryName,
             categoryName: item.categoryName,
             viewCount: item.productCount || 0,
-            salesAmount: 0,
+            salesAmount: item.tradeAmount || 0,
             imageUrl: item.imageUrl
           }))
         }
       } catch (error) {
         console.error('获取需求量大的二手物品分类失败:', error)
+        hotProducts.value = []
       }
     }
     
@@ -460,7 +455,7 @@ export default {
             productName: item.categoryName,
             categoryName: item.categoryName,
             inventoryCount: item.productCount || 0,
-            price: 0,
+            price: item.tradeAmount || 0,
             imageUrl: item.imageUrl
           }))
         }
@@ -483,8 +478,8 @@ export default {
             id: item.categoryId,
             productName: item.categoryName,
             categoryName: item.categoryName,
-            viewCount: item.productCount || 0,
-            salesAmount: 0,
+            demandCount: item.productCount || 0,
+            averagePrice: item.tradeAmount || 0,
             imageUrl: item.imageUrl
           }))
         }

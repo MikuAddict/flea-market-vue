@@ -16,6 +16,7 @@
             :products-count="myProducts.length"
             :orders-count="orders.length"
             :show-uploaded-tip="true"
+            date-format="YYYY-MM-DD"
           >
             <template #actions>
               <el-button 
@@ -359,23 +360,20 @@ export default {
     // 获取我的订单
     const fetchOrders = async () => {
       try {
-        let response
+        // 获取所有订单
+        const response = await orderApi.getBuyerOrderList({
+          current: 1,
+          size: 10
+        })
         
+        let ordersData = response.data.data.records || []
+        
+        // 如果有特定状态筛选，则按状态过滤
         if (orderStatus.value !== null) {
-          // 获取特定状态的订单
-          response = await orderApi.getBuyerOrderListByStatus(orderStatus.value, {
-            current: 1,
-            size: 10
-          })
-        } else {
-          // 获取所有订单
-          response = await orderApi.getBuyerOrderList({
-            current: 1,
-            size: 10
-          })
+          ordersData = ordersData.filter(order => order.status === orderStatus.value)
         }
         
-        orders.value = response.data.data.records || []
+        orders.value = ordersData
       } catch (error) {
         console.error('获取我的订单失败:', error)
       }

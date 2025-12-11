@@ -83,6 +83,32 @@ paths:
                 $ref: '#/components/schemas/BaseResponseBoolean'
           headers: {}
       security: []
+  /cart/check/{productId}:
+    get:
+      summary: 检查商品是否在购物车中
+      deprecated: false
+      description: 检查指定二手物品是否在当前用户的购物车中
+      operationId: checkProductInCart
+      tags:
+        - 购物车管理
+      parameters:
+        - name: productId
+          in: path
+          description: 二手物品ID
+          required: true
+          example: 0
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BaseResponseBoolean'
+          headers: {}
+      security: []
   /cart/{cartId}:
     delete:
       summary: 从购物车移除商品
@@ -109,20 +135,19 @@ paths:
                 $ref: '#/components/schemas/BaseResponseBoolean'
           headers: {}
       security: []
-  /cart/check/{productId}:
+  /cart/check:
     get:
       summary: 检查商品是否在购物车中
       deprecated: false
-      description: 检查指定二手物品是否在当前用户的购物车中
+      description: 检查指定商品是否在当前用户的购物车中
       operationId: checkProductInCart
       tags:
         - 购物车管理
       parameters:
         - name: productId
-          in: path
-          description: 二手物品ID
+          in: query
+          description: 商品ID
           required: true
-          example: 0
           schema:
             type: integer
             format: int64

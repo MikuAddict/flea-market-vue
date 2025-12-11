@@ -191,10 +191,8 @@ export default {
       }
       
       try {
-        const response = await cartApi.getUserCart()
-        const cartItems = response.data.data || []
-        const cartItem = cartItems.find(item => item.product && compareBigIntIds(item.product.id, props.product.id))
-        isInCart.value = !!cartItem
+        const response = await cartApi.checkProductInCart(props.product.id)
+        isInCart.value = response.data.data || false
       } catch (error) {
         console.error('检查购物车状态失败:', error)
         isInCart.value = false
@@ -211,41 +209,13 @@ export default {
       
       try {
         if (isInCart.value) {
-          // 先获取购物车列表，找到对应的购物车项ID
-          const cartResponse = await cartApi.getUserCart()
-          const cartItems = cartResponse.data.data || []
-          const cartItem = cartItems.find(item => item.product && compareBigIntIds(item.product.id, props.product.id))
-          
-          if (!cartItem) {
-            ElMessage.error('购物车项不存在，请刷新页面重试')
+          // 从购物车移除 - 使用商品ID移除
+          const response = await cartApi.removeFromCartByProductId(props.product.id)
+          if (response.data.code === 200) {
             isInCart.value = false
-            return
-          }
-          
-          // 尝试通过购物车项ID移除
-          try {
-            const response = await cartApi.removeFromCart(cartItem.id)
-            if (response.data.code === 200) {
-              isInCart.value = false
-              ElMessage.success('已移出购物车')
-            } else {
-              ElMessage.error(response.data.message || '移出购物车失败')
-            }
-          } catch (removeError) {
-            // 如果通过购物车项ID移除失败，尝试通过商品ID移除
-            console.log('通过购物车项ID移除失败，尝试通过商品ID移除:', removeError)
-            try {
-              const response = await cartApi.removeFromCartByProductId(props.product.id)
-              if (response.data.code === 200) {
-                isInCart.value = false
-                ElMessage.success('已移出购物车')
-              } else {
-                ElMessage.error(response.data.message || '移出购物车失败')
-              }
-            } catch (productRemoveError) {
-              ElMessage.error('移出购物车失败，请稍后重试')
-              console.error('移出购物车失败:', productRemoveError)
-            }
+            ElMessage.success('已移出购物车')
+          } else {
+            ElMessage.error(response.data.message || '移出购物车失败')
           }
         } else {
           // 加入购物车

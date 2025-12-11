@@ -150,6 +150,16 @@ export default {
     const userId = computed(() => store.state.user?.id)
     const productId = computed(() => route.params.id)
     
+    // 卖家统计数据
+    const sellerStats = ref({
+      published: 0,
+      sold: 0,
+      reviews: 0
+    })
+    
+    // 相关二手物品数据
+    const relatedProducts = ref([])
+    
     // 获取二手物品详情
     const fetchProductDetail = async () => {
       try {
@@ -206,6 +216,28 @@ export default {
         // 获取卖家订单统计
       } catch (error) {
         console.error('获取卖家统计失败:', error)
+      }
+    }
+    
+    // 获取相关二手物品
+    const fetchRelatedProducts = async (categoryId) => {
+      try {
+        const response = await productApi.getProductList({
+          current: 1,
+          size: 5,
+          categoryId: categoryId,
+          status: 1
+        })
+        
+        // 过滤掉当前商品
+        if (response.data.code === 200 && response.data.data?.records) {
+          relatedProducts.value = response.data.data.records.filter(
+            p => !compareBigIntIds(p.id, productId.value)
+          )
+        }
+      } catch (error) {
+        console.error('获取相关二手物品失败:', error)
+        relatedProducts.value = []
       }
     }
     
@@ -328,6 +360,8 @@ export default {
       commentForm, // 添加commentForm
       commentFormRef, // 添加commentFormRef
       commentSubmitting, // 添加commentSubmitting
+      sellerStats, // 添加sellerStats
+      relatedProducts, // 添加relatedProducts
       isLoggedIn,
       userId,
       formatPrice,
@@ -337,6 +371,7 @@ export default {
       formatDate,
       getProductStatusType,
       getUserStatusType,
+      compareBigIntIds, // 添加compareBigIntIds
       createOrder,
       contactSeller,
       viewSellerProducts,

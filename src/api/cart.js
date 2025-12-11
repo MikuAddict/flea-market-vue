@@ -54,8 +54,9 @@ export default {
   // 检查商品是否在购物车中
   checkProductInCart(productId) {
     return request({
-      url: `/cart/check/${productId}`,
-      method: 'get'
+      url: '/cart/check',
+      method: 'get',
+      params: { productId }
     })
   }
 }

@@ -103,25 +103,6 @@ export default {
     const store = useStore()
     const router = useRouter()
     
-    // 轮播图数据
-    const banners = ref([
-      {
-        title: '欢迎来到校园跳蚤市场',
-        description: '一个让闲置物品重新焕发价值的平台',
-        image: 'https://picsum.photos/seed/flea1/1200/400.jpg'
-      },
-      {
-        title: '二手物品交易',
-        description: '环保节约，资源共享',
-        image: 'https://picsum.photos/seed/flea2/1200/400.jpg'
-      },
-      {
-        title: '让闲置流动起来',
-        description: '变废为宝，循环利用',
-        image: 'https://picsum.photos/seed/flea3/1200/400.jpg'
-      }
-    ])
-    
     const categories = computed(() => store.state.categories)
     const latestProducts = computed(() => store.state.latestProducts)
     const latestNews = computed(() => store.state.latestNews)
@@ -153,7 +134,6 @@ export default {
     }
     
     return {
-      banners,
       categories,
       latestProducts,
       latestNews,

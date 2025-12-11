@@ -96,6 +96,51 @@
                     发布评论
                   </el-button>
                 </div>
+                
+                <!-- 买家评论展示 -->
+                <div class="order-review-section" v-if="order.status === 2">
+                  <div class="section-divider"></div>
+                  <div class="review-section-header">
+                    <span class="section-title">买家评论</span>
+                  </div>
+                  <div class="unified-review-item" v-if="orderReview">
+                    <!-- 买家信息 -->
+                    <div class="unified-review-header unified-flex unified-flex-center unified-flex-between">
+                      <div class="buyer-details unified-flex unified-flex-center">
+                        <el-avatar 
+                          :size="40" 
+                          :src="orderReview.userAvatar" 
+                          class="buyer-avatar"
+                        >
+                          {{ orderReview.userName?.charAt(0) }}
+                        </el-avatar>
+                        <div class="buyer-text">
+                          <div class="buyer-name">{{ orderReview.userName }}</div>
+                        </div>
+                      </div>
+                      <span class="review-time unified-text-secondary">{{ formatDate(orderReview.createTime) }}</span>
+                    </div>
+                    
+                    <!-- 评分展示 -->
+                    <div class="unified-review-rating" v-if="orderReview.rating">
+                      <el-rate
+                        v-model="orderReview.rating"
+                        disabled
+                        show-score
+                        text-color="#ff9900"
+                        score-template=""
+                      />
+                    </div>
+                    
+                    <div class="unified-review-content">
+                      <p class="unified-review-text">{{ orderReview.content }}</p>
+                    </div>
+                  </div>
+                  <div v-else class="unified-empty unified-flex unified-flex-col unified-flex-center">
+                    <el-icon size="40" color="var(--text-placeholder)"><Star /></el-icon>
+                    <p class="unified-empty-text">暂无评论</p>
+                  </div>
+                </div>
               </el-card>
             </el-col>
           </el-row>
@@ -146,7 +191,7 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router'
-import { Picture } from '@element-plus/icons-vue'
+import { Picture, Star } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
 import ProductInfoCard from '@/components/ProductInfoCard.vue'
 import { orderApi, productApi, userApi, reviewApi } from '@/api'
@@ -167,6 +212,7 @@ export default {
   components: {
     Layout,
     Picture,
+    Star,
     ProductInfoCard
   },
   setup() {
@@ -190,6 +236,7 @@ export default {
     const reviewFormRef = ref(null)
     const hasReviewed = ref(false)
     const checkingReview = ref(false)
+    const orderReview = ref(null)
     
     const reviewForm = reactive({
       rating: 5,
@@ -371,7 +418,7 @@ export default {
       }
     }
     
-    // 检查是否已评论
+    // 检查是否已评论并获取评论数据
     const checkIfReviewed = async () => {
       if (!order.value || !order.value.id) return
       
@@ -380,12 +427,20 @@ export default {
         const response = await reviewApi.getReviewByOrderId(order.value.id)
         if (response.data.code === 200 && response.data.data) {
           hasReviewed.value = true
+          orderReview.value = response.data.data
+          
+          // 处理用户头像URL
+          if (orderReview.value.userAvatar) {
+            orderReview.value.userAvatar = processImageUrl(orderReview.value.userAvatar)
+          }
         } else {
           hasReviewed.value = false
+          orderReview.value = null
         }
       } catch (error) {
         console.error('检查评论状态失败:', error)
         hasReviewed.value = false
+        orderReview.value = null
       } finally {
         checkingReview.value = false
       }
@@ -431,6 +486,18 @@ export default {
           ElMessage.success('评论发布成功')
           handleReviewDialogClose()
           hasReviewed.value = true
+          
+          // 获取新发布的评论数据
+          const reviewResponse = await reviewApi.getReviewByOrderId(order.value.id)
+          if (reviewResponse.data.code === 200 && reviewResponse.data.data) {
+            orderReview.value = reviewResponse.data.data
+            
+            // 处理用户头像URL
+            if (orderReview.value.userAvatar) {
+              orderReview.value.userAvatar = processImageUrl(orderReview.value.userAvatar)
+            }
+          }
+          
           // 刷新订单详情以更新按钮状态
           await fetchOrderDetail()
         } else {
@@ -481,7 +548,8 @@ export default {
       reviewForm,
       reviewRules,
       hasReviewed,
-      checkingReview, // 添加这个新属性
+      checkingReview,
+      orderReview, // 添加评论数据
       handleReviewDialogClose,
       submitReview
     }
@@ -777,6 +845,112 @@ export default {
   
   .order-actions .el-button {
     width: 100%;
+  }
+}
+
+/* 评论展示样式 */
+.order-review-section {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-xl);
+}
+
+.section-divider {
+  height: 1px;
+  background-color: var(--border-color-light);
+  margin-bottom: var(--spacing-lg);
+}
+
+.review-section-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.section-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.unified-review-header {
+  margin-bottom: var(--spacing-base);
+  padding-bottom: var(--spacing-base);
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.buyer-details {
+  gap: var(--spacing-base);
+}
+
+.buyer-avatar {
+  flex-shrink: 0;
+}
+
+.buyer-text {
+  flex: 1;
+}
+
+.buyer-name {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.review-time {
+  font-size: var(--font-size-sm);
+}
+
+.unified-review-rating {
+  margin-bottom: var(--spacing-base);
+}
+
+.unified-review-rating :deep(.el-rate) {
+  display: flex;
+  align-items: center;
+}
+
+.unified-review-rating :deep(.el-rate__icon) {
+  font-size: var(--font-size-md);
+  margin-right: var(--spacing-xs);
+}
+
+.unified-review-rating :deep(.el-rate__text) {
+  margin-left: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--text-regular);
+}
+
+.unified-review-content {
+  margin-top: var(--spacing-base);
+}
+
+.unified-review-text {
+  margin: 0;
+  color: var(--text-regular);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.unified-empty {
+  padding: var(--spacing-xl) 0;
+  text-align: center;
+}
+
+.unified-empty-text {
+  margin-top: var(--spacing-base);
+  color: var(--text-placeholder);
+}
+
+@media (max-width: 768px) {
+  .unified-review-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-base);
+  }
+  
+  .buyer-details {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--spacing-xs);
   }
 }
 </style>

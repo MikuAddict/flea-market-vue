@@ -358,14 +358,6 @@ export default {
             status: newsForm.status
           })
           ElMessage.success('新闻添加成功')
-        } else {
-          result = await adminApi.news.updateNews({
-            id: formatIdForApi(newsForm.id),
-            title: newsForm.title,
-            content: newsForm.content,
-            status: newsForm.status
-          })
-          ElMessage.success('新闻更新成功')
         }
         
         newsDialogVisible.value = false
@@ -375,65 +367,6 @@ export default {
         ElMessage.error('操作失败')
       } finally {
         newsFormSubmitting.value = false
-      }
-    }
-    
-    // 处理新闻操作
-    const handleNewsAction = async (command, news) => {
-      switch (command) {
-        case 'publish':
-          try {
-            await ElMessageBox.confirm(`确定要发布新闻 "${news.title}" 吗？`, '提示', {
-              confirmButtonText: '确定',
-              cancelButtonText: '取消',
-              type: 'warning'
-            })
-            
-            ElMessage.warning('更新新闻状态功能暂未实现')
-            return
-          } catch (error) {
-            if (error !== 'cancel') {
-              ElMessage.error('新闻发布失败')
-            }
-          }
-          break
-          
-        case 'unpublish':
-          try {
-            await ElMessageBox.confirm(`确定要取消发布新闻 "${news.title}" 吗？`, '提示', {
-              confirmButtonText: '确定',
-              cancelButtonText: '取消',
-              type: 'warning'
-            })
-            
-            // 更新新闻状态功能在API中未定义，需要实现
-            ElMessage.warning('更新新闻状态功能暂未实现')
-            return
-          } catch (error) {
-            if (error !== 'cancel') {
-              ElMessage.error('取消发布失败')
-            }
-          }
-          break
-      }
-    }
-    
-    // 批量发布新闻
-    const batchPublishNews = async () => {
-      try {
-        await ElMessageBox.confirm(`确定要发布选中的 ${selectedNews.value.length} 条新闻吗？`, '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        })
-        
-        // 批量发布功能在API中未定义，需要实现
-        ElMessage.warning('批量发布功能暂未实现')
-        return
-      } catch (error) {
-        if (error !== 'cancel') {
-          ElMessage.error('批量发布失败')
-        }
       }
     }
     
@@ -459,23 +392,26 @@ export default {
         }
       }
     }
-    
-    // 获取状态文本
-    const getStatusText = (status) => {
-      const statusMap = {
-        draft: '草稿',
-        published: '已发布'
+
+    // 处理新闻操作
+    const handleNewsAction = async (action, news) => {
+      try {
+        if (action === 'delete') {
+          await ElMessageBox.confirm('确定要删除这条新闻吗？此操作不可恢复。', '警告', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'error'
+          })
+          
+          await adminApi.news.deleteNews(formatIdForApi(news.id))
+          ElMessage.success('删除成功')
+          fetchNews()
+        }
+      } catch (error) {
+        if (error !== 'cancel') {
+          ElMessage.error('操作失败')
+        }
       }
-      return statusMap[status] || '未知'
-    }
-    
-    // 获取状态类型
-    const getStatusType = (status) => {
-      const typeMap = {
-        draft: 'warning',
-        published: 'success'
-      }
-      return typeMap[status] || 'info'
     }
     
     onMounted(() => {
@@ -506,10 +442,7 @@ export default {
       resetNewsForm,
       submitNewsForm,
       handleNewsAction,
-      batchPublishNews,
       batchDeleteNews,
-      getStatusText,
-      getStatusType,
       formatDate
     }
   }

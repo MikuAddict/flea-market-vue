@@ -31,102 +31,102 @@
           <el-empty description="暂无订单" />
         </div>
         
-        <div v-else class="order-list">
-          <el-card
-            v-for="order in orders"
-            :key="order.id"
-            class="unified-order-item"
-            shadow="hover"
-          >
-            <div class="unified-order-header">
-              <div class="unified-order-info">
-                <span class="order-id">订单号: {{ order.id }}</span>
-                <el-tag :type="getOrderStatusType(order.status)" size="small">
-                  {{ formatOrderStatus(order.status) }}
-                </el-tag>
-              </div>
-              <span class="unified-order-time">{{ formatDate(order.createTime) }}</span>
-            </div>
-            
-            <div class="order-content">
-              <div class="product-info">
-                <div class="product-image">
-                  <img
-                    v-if="order.product && order.product.imageUrl"
-                    :src="order.product.imageUrl"
-                    :alt="order.product.productName"
-                  />
-                  <div v-else class="no-image">
-                    <el-icon><Picture /></el-icon>
+                   <div v-else>
+                    <el-card
+                      v-for="order in orders"
+                      :key="order.id"
+                      class="unified-order-item"
+                      shadow="hover"
+                    >
+                      <div class="unified-order-header">
+                        <div class="unified-order-info">
+                          <span class="order-id">订单号: {{ order.id }}</span>
+                          <el-tag :type="getOrderStatusType(order.status)" size="small">
+                            {{ formatOrderStatus(order.status) }}
+                          </el-tag>
+                        </div>
+                        <span class="unified-order-time">{{ formatDate(order.createTime) }}</span>
+                      </div>
+                      
+                      <div class="unified-order-content">
+                        <div class="unified-product-info">
+                          <div class="unified-product-image">
+                            <img
+                              v-if="order.product && order.product.imageUrl"
+                              :src="order.product.imageUrl"
+                              :alt="order.product.productName"
+                            />
+                            <div v-else class="unified-no-image">
+                              <el-icon><Picture /></el-icon>
+                            </div>
+                          </div>
+                          <div class="unified-product-details">
+                            <h4>{{ order.product?.productName || '二手物品已删除' }}</h4>
+                            <p v-if="order.product?.category?.name">
+                              分类: {{ order.product.category.name }}
+                            </p>
+                            <p v-else-if="order.product?.categoryName">
+                              分类: {{ order.product.categoryName }}
+                            </p>
+                            <p>支付方式: {{ formatPaymentMethod(order.paymentMethod || order.product?.paymentMethod) }}</p>
+                          </div>
+                        </div>
+                        
+                        <div class="unified-order-amount">
+                          <div class="unified-amount-label">订单金额</div>
+                          <div class="unified-amount-value">¥{{ formatPrice(order.amount || order.product?.price) }}</div>
+                        </div>
+                      </div>
+                      
+                      <div class="unified-order-footer">
+                        <div class="unified-order-seller" v-if="order.seller">
+                          卖家: 
+                          <el-avatar 
+                            :size="20" 
+                            :src="order.seller.userAvatar" 
+                            class="unified-mr-xs unified-cursor-pointer"
+                            @click="goToUserProfile(order.seller.id)"
+                          >
+                            {{ order.seller.userName?.charAt(0) }}
+                          </el-avatar>
+                          <span class="unified-cursor-pointer" @click="goToUserProfile(order.seller.id)">
+                            {{ order.seller.userName || '未知' }}
+                          </span>
+                        </div>
+                        <div class="unified-order-seller" v-else>
+                          卖家: 未知
+                        </div>
+                        <div class="unified-order-actions">
+                          <el-button
+                            size="small"
+                            @click="viewOrder(order.id)"
+                          >
+                            查看详情
+                          </el-button>
+                          
+                          <!-- 取消订单（状态为0：待支付） -->
+                          <el-button
+                            v-if="order.status === 0"
+                            size="small"
+                            type="danger"
+                            @click="cancelOrder(order.id)"
+                          >
+                            取消订单
+                          </el-button>
+                          
+                          <!-- 确认收货（状态为1：已支付，且买家未确认） -->
+                          <el-button
+                            v-if="order.status === 1 && !order.buyerConfirmed"
+                            size="small"
+                            type="success"
+                            @click="confirmOrder(order.id)"
+                          >
+                            确认收货
+                          </el-button>
+                        </div>
+                      </div>
+                    </el-card>
                   </div>
-                </div>
-                <div class="product-details">
-                  <h4>{{ order.product?.productName || '二手物品已删除' }}</h4>
-                  <p v-if="order.product?.category?.name">
-                    分类: {{ order.product.category.name }}
-                  </p>
-                  <p v-else-if="order.product?.categoryName">
-                    分类: {{ order.product.categoryName }}
-                  </p>
-                  <p>支付方式: {{ formatPaymentMethod(order.paymentMethod || order.product?.paymentMethod) }}</p>
-                </div>
-              </div>
-              
-              <div class="order-amount">
-                <div class="amount-label">订单金额</div>
-                <div class="amount-value">¥{{ formatPrice(order.amount || order.product?.price) }}</div>
-              </div>
-            </div>
-            
-            <div class="order-footer">
-              <div class="order-seller" v-if="order.seller">
-                卖家: 
-                <el-avatar 
-                  :size="20" 
-                  :src="order.seller.userAvatar" 
-                  style="margin-right: 5px; vertical-align: middle; cursor: pointer;"
-                  @click="goToUserProfile(order.seller.id)"
-                >
-                  {{ order.seller.userName?.charAt(0) }}
-                </el-avatar>
-                <span class="clickable" @click="goToUserProfile(order.seller.id)">
-                  {{ order.seller.userName || '未知' }}
-                </span>
-              </div>
-              <div class="order-seller" v-else>
-                卖家: 未知
-              </div>
-              <div class="order-actions">
-                <el-button
-                  size="small"
-                  @click="viewOrder(order.id)"
-                >
-                  查看详情
-                </el-button>
-                
-                <!-- 取消订单（状态为0：待支付） -->
-                <el-button
-                  v-if="order.status === 0"
-                  size="small"
-                  type="danger"
-                  @click="cancelOrder(order.id)"
-                >
-                  取消订单
-                </el-button>
-                
-                <!-- 确认收货（状态为1：已支付，且买家未确认） -->
-                <el-button
-                  v-if="order.status === 1 && !order.buyerConfirmed"
-                  size="small"
-                  type="success"
-                  @click="confirmOrder(order.id)"
-                >
-                  确认收货
-                </el-button>
-              </div>
-            </div>
-          </el-card>
-        </div>
         
         <!-- 分页 -->
         <div v-if="total > 0" class="pagination-container">

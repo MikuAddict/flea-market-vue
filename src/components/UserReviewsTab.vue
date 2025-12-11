@@ -34,6 +34,17 @@
             <span class="review-time unified-text-secondary">{{ formatDate(review.createTime) }}</span>
           </div>
           
+          <!-- 评分展示 -->
+          <div class="unified-review-rating" v-if="review.rating">
+            <el-rate
+              v-model="review.rating"
+              disabled
+              show-score
+              text-color="#ff9900"
+              score-template=""
+            />
+          </div>
+          
           <div class="unified-review-content">
             <p class="unified-review-text">{{ review.content }}</p>
           </div>
@@ -156,6 +167,27 @@ export default {
   border-left: 4px solid var(--primary-color);
 }
 
+/* 评分样式 */
+.unified-review-rating {
+  margin-bottom: var(--spacing-base);
+}
+
+.unified-review-rating :deep(.el-rate) {
+  display: flex;
+  align-items: center;
+}
+
+.unified-review-rating :deep(.el-rate__icon) {
+  font-size: var(--font-size-md);
+  margin-right: var(--spacing-xs);
+}
+
+.unified-review-rating :deep(.el-rate__text) {
+  margin-left: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--text-regular);
+}
+
 /* 买家信息样式 */
 .buyer-info {
   margin-bottom: var(--spacing-base);
@@ -170,6 +202,7 @@ export default {
 
 .buyer-avatar {
   flex-shrink: 0;
+  text-decoration: none;
 }
 
 .buyer-text {
@@ -181,6 +214,7 @@ export default {
   font-weight: 500;
   color: var(--text-primary);
   margin-bottom: 2px;
+  text-decoration: none;
 }
 
 .buyer-role {

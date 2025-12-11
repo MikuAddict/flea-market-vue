@@ -144,15 +144,6 @@ export default {
       })
     },
 
-    // 更新新闻
-    updateNews(data) {
-      return request({
-        url: `/news/${data.id}`,
-        method: 'put',
-        data
-      })
-    },
-
     // 删除新闻
     deleteNews(id) {
       return request({

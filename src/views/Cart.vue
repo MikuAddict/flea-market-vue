@@ -122,7 +122,6 @@ export default {
     const loading = ref(false)
     const cartItems = ref([])
     const selectedItems = ref([])
-    const selectAll = ref(false)
     
     // 计算属性
     const totalPrice = computed(() => {
@@ -213,51 +212,6 @@ export default {
       }
     }
     
-    // 全选/取消全选
-    const handleSelectAll = (checked) => {
-      if (checked) {
-        selectedItems.value = cartItems.value.map(item => item.id)
-      } else {
-        selectedItems.value = []
-      }
-    }
-    
-    // 监听选中项变化，更新全选状态
-    watch(selectedItems, (newVal) => {
-      selectAll.value = newVal.length === cartItems.value.length && cartItems.value.length > 0
-    })
-    
-    // 批量删除
-    const handleBatchDelete = async () => {
-      try {
-        await ElMessageBox.confirm(
-          `确定要删除选中的 ${selectedItems.value.length} 件商品吗？`,
-          '删除确认',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        )
-        
-        // 逐个删除选中的商品
-        const promises = selectedItems.value.map(id => 
-          cartApi.removeFromCart(id)
-        )
-        
-        await Promise.all(promises)
-        
-        ElMessage.success('删除成功')
-        selectedItems.value = []
-        await fetchCartItems()
-      } catch (error) {
-        if (error !== 'cancel') {
-          ElMessage.error('删除失败')
-          console.error('批量删除失败:', error)
-        }
-      }
-    }
-    
     // 删除单个商品
     const handleDeleteItem = async (item) => {
       try {
@@ -289,31 +243,6 @@ export default {
       }
     }
     
-    // 清空购物车
-    const handleClearCart = async () => {
-      try {
-        await ElMessageBox.confirm(
-          '确定要清空购物车吗？此操作不可恢复！',
-          '清空购物车',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        )
-        
-        await cartApi.clearCart()
-        ElMessage.success('购物车已清空')
-        selectedItems.value = []
-        await fetchCartItems()
-      } catch (error) {
-        if (error !== 'cancel') {
-          ElMessage.error('清空购物车失败')
-          console.error('清空购物车失败:', error)
-        }
-      }
-    }
-    
     // 立即购买单个商品
     const handleBuyNow = async (item) => {
       try {
@@ -337,73 +266,6 @@ export default {
       } catch (error) {
         ElMessage.error('创建订单失败')
         console.error('创建订单失败:', error)
-      }
-    }
-    
-    // 批量下单
-    const handleBatchBuy = async () => {
-      const selectedCount = selectedItems.value.length
-      
-      try {
-        await ElMessageBox.confirm(
-          `将为您创建 ${selectedCount} 个单独的订单，每个商品对应一个订单，确定继续吗？`,
-          '批量下单',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'info'
-          }
-        )
-        
-        // 逐个创建订单
-        const successCount = ref(0)
-        const failureCount = ref(0)
-        const orderIds = []
-        
-        for (const cartItemId of selectedItems.value) {
-          const item = cartItems.value.find(cartItem => cartItem.id === cartItemId)
-          if (!item) continue
-          
-          try {
-            const response = await orderApi.createOrder(item.product?.id || item.productId)
-            if (response.data.code === 200) {
-              successCount.value++
-              orderIds.push(response.data.data.id)
-              
-              // 从购物车中移除该商品
-              await cartApi.removeFromCart(item.id)
-            } else {
-              failureCount.value++
-              console.error(`商品 ${item.product?.productName || item.productName || '未知商品'} 创建订单失败:`, response.data.message)
-            }
-          } catch (error) {
-            failureCount.value++
-            console.error(`商品 ${item.product?.productName || item.productName} 创建订单失败:`, error)
-          }
-        }
-        
-        // 显示结果
-        if (successCount.value > 0) {
-          ElMessage.success(`成功创建 ${successCount.value} 个订单`)
-          
-          // 跳转到第一个订单详情页面
-          if (orderIds.length > 0) {
-            router.push(`/orders/${orderIds[0]}`)
-          }
-        }
-        
-        if (failureCount.value > 0) {
-          ElMessage.warning(`${failureCount.value} 个商品创建订单失败`)
-        }
-        
-        // 清空选中状态并刷新购物车
-        selectedItems.value = []
-        await fetchCartItems()
-      } catch (error) {
-        if (error !== 'cancel') {
-          ElMessage.error('批量下单失败')
-          console.error('批量下单失败:', error)
-        }
       }
     }
     
@@ -446,14 +308,9 @@ export default {
       loading,
       cartItems,
       selectedItems,
-      selectAll,
       totalPrice,
-      handleSelectAll,
-      handleBatchDelete,
       handleDeleteItem,
-      handleClearCart,
       handleBuyNow,
-      handleBatchBuy,
       goToProduct,
       goToUserProfile,
       getProductImage,

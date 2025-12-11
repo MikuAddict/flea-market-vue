@@ -208,16 +208,6 @@ export default {
       dateRange: null
     })
     
-    // 新闻统计数据
-    const newsStats = computed(() => [
-      {
-        title: '总新闻数',
-        value: newsList.value.length,
-        icon: 'Document',
-        type: 'primary'
-      }
-    ])
-    
     // 新闻表单
     const newsForm = reactive({
       id: '',
@@ -424,7 +414,6 @@ export default {
       selectedNews,
       pagination,
       filters,
-      newsStats,
       newsDialogVisible,
       dialogMode,
       newsForm,

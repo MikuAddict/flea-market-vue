@@ -215,9 +215,6 @@ export default {
       sortOrder: 'desc'
     })
     
-    // 筛选区域展开状态
-    const activeFilterSection = ref(['filters'])
-    
     // 计算属性
     const categories = computed(() => store.state.categories)
     const isLoggedIn = computed(() => store.getters.isLoggedIn)
@@ -320,7 +317,6 @@ export default {
       filters,
       categories,
       isLoggedIn,
-      activeFilterSection,
       handleSearch,
       resetFilters,
       handleSizeChange,

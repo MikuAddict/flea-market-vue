@@ -127,20 +127,13 @@ export default {
       router.push('/products')
     }
     
-    // 获取分类图标
-    const getCategoryIcon = (categoryId) => {
-      // 目前只使用Goods图标，后续可以扩展
-      return Goods
-    }
-    
     return {
       categories,
       latestProducts,
       latestNews,
       formatDate,
       goToCategory,
-      goToProducts,
-      getCategoryIcon
+      goToProducts
     }
   }
 }

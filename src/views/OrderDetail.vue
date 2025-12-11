@@ -96,50 +96,51 @@
                     发布评论
                   </el-button>
                 </div>
-                
-                <!-- 买家评论展示 -->
-                <div class="order-review-section" v-if="order.status === 2">
-                  <div class="section-divider"></div>
-                  <div class="review-section-header">
-                    <span class="section-title">买家评论</span>
+              </el-card>
+              
+              <!-- 买家评论展示 -->
+              <el-card class="unified-card review-card" v-if="orderReview && order.status === 2">
+                <template #header>
+                  <div class="unified-flex unified-flex-between unified-w-full">
+                    <span>买家评论</span>
                   </div>
-                  <div class="unified-review-item" v-if="orderReview">
-                    <!-- 买家信息 -->
-                    <div class="unified-review-header unified-flex unified-flex-center unified-flex-between">
-                      <div class="buyer-details unified-flex unified-flex-center">
-                        <el-avatar 
-                          :size="40" 
-                          :src="orderReview.userAvatar" 
-                          class="buyer-avatar"
-                        >
-                          {{ orderReview.userName?.charAt(0) }}
-                        </el-avatar>
-                        <div class="buyer-text">
-                          <div class="buyer-name">{{ orderReview.userName }}</div>
-                        </div>
+                </template>
+                <div class="unified-review-item" v-if="orderReview">
+                  <!-- 买家信息 -->
+                  <div class="unified-review-header unified-flex unified-flex-center unified-flex-between">
+                    <div class="buyer-details unified-flex unified-flex-center">
+                      <el-avatar 
+                        :size="40" 
+                        :src="orderReview.userAvatar" 
+                        class="buyer-avatar"
+                      >
+                        {{ orderReview.userName?.charAt(0) }}
+                      </el-avatar>
+                      <div class="buyer-text">
+                        <div class="buyer-name">{{ orderReview.userName }}</div>
                       </div>
-                      <span class="review-time unified-text-secondary">{{ formatDate(orderReview.createTime) }}</span>
                     </div>
-                    
-                    <!-- 评分展示 -->
-                    <div class="unified-review-rating" v-if="orderReview.rating">
-                      <el-rate
-                        v-model="orderReview.rating"
-                        disabled
-                        show-score
-                        text-color="#ff9900"
-                        score-template=""
-                      />
-                    </div>
-                    
-                    <div class="unified-review-content">
-                      <p class="unified-review-text">{{ orderReview.content }}</p>
-                    </div>
+                    <span class="review-time unified-text-secondary">{{ formatDate(orderReview.createTime) }}</span>
                   </div>
-                  <div v-else class="unified-empty unified-flex unified-flex-col unified-flex-center">
-                    <el-icon size="40" color="var(--text-placeholder)"><Star /></el-icon>
-                    <p class="unified-empty-text">暂无评论</p>
+                  
+                  <!-- 评分展示 -->
+                  <div class="unified-review-rating" v-if="orderReview.rating">
+                    <el-rate
+                      v-model="orderReview.rating"
+                      disabled
+                      show-score
+                      text-color="#ff9900"
+                      score-template=""
+                    />
                   </div>
+                  
+                  <div class="unified-review-content">
+                    <p class="unified-review-text">{{ orderReview.content }}</p>
+                  </div>
+                </div>
+                <div v-else class="unified-empty unified-flex unified-flex-col unified-flex-center">
+                  <el-icon size="60" color="var(--text-placeholder)"><Star /></el-icon>
+                  <p class="unified-empty-text">暂无评论</p>
                 </div>
               </el-card>
             </el-col>
@@ -179,6 +180,7 @@
           </span>
         </template>
       </el-dialog>
+
     </div>
     
     <div v-else class="loading-container">
@@ -849,25 +851,9 @@ export default {
 }
 
 /* 评论展示样式 */
-.order-review-section {
-  margin-top: var(--spacing-xl);
-  padding-top: var(--spacing-xl);
-}
-
-.section-divider {
-  height: 1px;
-  background-color: var(--border-color-light);
-  margin-bottom: var(--spacing-lg);
-}
-
-.review-section-header {
-  margin-bottom: var(--spacing-lg);
-}
-
-.section-title {
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  color: var(--text-primary);
+.review-card {
+  margin-top: 11px;
+  border-left: 4px solid var(--primary-color);
 }
 
 .unified-review-header {

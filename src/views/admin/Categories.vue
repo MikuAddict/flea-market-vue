@@ -37,7 +37,7 @@
             
             <el-table-column prop="name" label="分类名称" min-width="200" align="center" />
             
-            <el-table-column prop="productCount" label="产品数量" width="300" align="center">
+            <el-table-column prop="productCount" label="在售数量" width="300" align="center">
               <template #default="scope">
                 {{ scope.row.productCount || 0 }}
               </template>
@@ -256,10 +256,8 @@ export default {
       try {
         const response = await adminApi.category.getCategoryList()
         if (response.data && response.data.code === 200) {
-          // 根据OpenAPI规范，返回的是分类数组，没有父子级关系
           const categories = response.data.data || []
           
-          // 处理大整数ID，确保精度不丢失
           const processedCategories = categories.map(category => ({
             ...category,
             id: typeof category.id === 'number' && category.id > Number.MAX_SAFE_INTEGER 
@@ -283,14 +281,6 @@ export default {
     const showAddCategoryDialog = () => {
       dialogMode.value = 'add'
       resetCategoryForm()
-      categoryDialogVisible.value = true
-    }
-    
-    // 显示添加子分类对话框
-    const showAddSubCategoryDialog = (parent) => {
-      dialogMode.value = 'add'
-      resetCategoryForm()
-      categoryForm.parentId = parent.id
       categoryDialogVisible.value = true
     }
     
@@ -328,13 +318,11 @@ export default {
         categoryFormSubmitting.value = true
         
         if (dialogMode.value === 'add') {
-          // 根据OpenAPI规范，CategoryAddRequest只包含name字段
           await adminApi.category.addCategory({
             name: categoryForm.name
           })
           ElMessage.success('分类添加成功')
         } else {
-          // 根据OpenAPI规范，更新分类直接传递Category对象
           await adminApi.category.updateCategory({
             id: categoryForm.id,
             name: categoryForm.name
@@ -355,14 +343,9 @@ export default {
     // 处理分类操作
     const handleCategoryAction = async (command, category) => {
       switch (command) {
-        case 'move':
-          // 这里可以实现移动分类的功能
-          ElMessage.info('移动分类功能开发中')
-          break
-          
         case 'delete':
           try {
-            await ElMessageBox.confirm(`确定要删除分类 "${category.name}" 吗？删除后，该分类下的所有产品将重新分类，此操作不可恢复。`, '警告', {
+            await ElMessageBox.confirm(`确定要删除分类 "${category.name}"`, '警告', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
               type: 'error'
@@ -378,25 +361,6 @@ export default {
           }
           break
       }
-    }
-    
-    // 删除分类（用于树形视图）
-    const handleDeleteCategory = async (category) => {
-      try {
-        await ElMessageBox.confirm(`确定要删除分类 "${category.name}" 吗？删除后，该分类下的所有产品将重新分类，此操作不可恢复。`, '警告', {
-              confirmButtonText: '确定',
-              cancelButtonText: '取消',
-              type: 'error'
-            })
-            
-            await adminApi.category.deleteCategory(category.id)
-            ElMessage.success('分类删除成功')
-            fetchCategories()
-          } catch (error) {
-            if (error !== 'cancel') {
-              ElMessage.error('分类删除失败')
-            }
-          }
     }
     
     onMounted(() => {
@@ -419,12 +383,10 @@ export default {
       categoryStats,
       fetchCategories,
       showAddCategoryDialog,
-      showAddSubCategoryDialog,
       showEditCategoryDialog,
       resetCategoryForm,
       submitCategoryForm,
       handleCategoryAction,
-      handleDeleteCategory
     }
   }
 }

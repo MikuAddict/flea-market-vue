@@ -97,18 +97,18 @@
         <div class="unified-flex unified-flex-center unified-gap-sm">
           <el-avatar 
             :size="sellerAvatarSize" 
-            :src="product.user.userAvatar"
+            :src="product.userAvatar"
             class="clickable"
-            @click="$emit('seller-click', product.user.id)"
+            @click="$emit('seller-click', product.id)"
           >
-            {{ product.user.userName ? product.user.userName.charAt(0) : '' }}
+            {{product.userName.charAt(0)}}
           </el-avatar>
           <div class="seller-text">
-            <p class="seller-name clickable" @click="$emit('seller-click', product.user.id)">
-              {{ product.user.userName }}
+            <p class="seller-name clickable" @click="$emit('seller-click', product.id)">
+              {{ product.userName }}
             </p>
             <p class="seller-contact" v-if="showContact">
-              联系方式: {{ product.user.userPhone || '未设置' }}
+              联系方式: {{ product.userPhone}}
             </p>
             <slot name="seller-info"></slot>
           </div>

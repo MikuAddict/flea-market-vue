@@ -74,7 +74,6 @@
         <!-- 树形视图 -->
         <div v-else>
           <el-tree
-            :data="categoryTree"
             :props="defaultProps"
             :expand-on-click-node="false"
             :default-expand-all="true"
@@ -176,6 +175,7 @@ export default {
     const categoryDialogVisible = ref(false)
     const dialogMode = ref('add')
     const categoryFormSubmitting = ref(false)
+    const viewMode = ref('list') // 视图模式：list-列表视图，tree-树形视图
     
     // 分类表单
     const categoryForm = reactive({
@@ -330,6 +330,7 @@ export default {
       categoryFormRef,
       categoryFormRules,
       categoryFormSubmitting,
+      viewMode,
       fetchCategories,
       showAddCategoryDialog,
       showEditCategoryDialog,

@@ -576,15 +576,47 @@ export default {
               type: 'category',
               data: categoryNames.length > 0 ? categoryNames : ['暂无数据']
             },
-            yAxis: {
-              type: 'value',
-              name: '交易统计',
-              axisLabel: {
-                formatter: function(value) {
-                  return value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value
+            yAxis: [
+              {
+                type: 'value',
+                name: '交易量',
+                position: 'left',
+                axisLine: {
+                  lineStyle: {
+                    color: '#409EFF'
+                  }
+                },
+                axisLabel: {
+                  formatter: function(value) {
+                    return value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value
+                  }
+                },
+                min: 0,
+                max: function(value) {
+                  // 动态设置最大值，确保交易量柱状图有足够高度
+                  const maxValue = Math.max(...tradeCounts) || 10
+                  return Math.max(maxValue * 1.2, 10) // 至少显示10的高度
+                }
+              },
+              {
+                type: 'value',
+                name: '交易额',
+                position: 'right',
+                axisLine: {
+                  lineStyle: {
+                    color: '#67C23A'
+                  }
+                },
+                axisLabel: {
+                  formatter: function(value) {
+                    return value >= 1000 ? '¥' + (value / 1000).toFixed(1) + 'k' : '¥' + value
+                  }
+                },
+                splitLine: {
+                  show: false
                 }
               }
-            },
+            ],
             series: [
               {
                 name: '交易量',
@@ -593,7 +625,8 @@ export default {
                 itemStyle: {
                   color: '#409EFF'
                 },
-                barWidth: '40%'
+                barWidth: '40%',
+                yAxisIndex: 0
               },
               {
                 name: '交易额',
@@ -602,7 +635,8 @@ export default {
                 itemStyle: {
                   color: '#67C23A'
                 },
-                barWidth: '40%'
+                barWidth: '40%',
+                yAxisIndex: 1
               }
             ]
           }

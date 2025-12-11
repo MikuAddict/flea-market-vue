@@ -1,5 +1,6 @@
 import { createStore } from 'vuex'
 import { userApi, categoryApi, productApi, newsApi } from '../api/api-client'
+import { handleReactiveBigInt } from '../utils/bigIntHandler'
 
 export default createStore({
   state: {
@@ -13,7 +14,10 @@ export default createStore({
     // 数据缓存
     categories: [],
     latestProducts: [],
-    latestNews: null
+    latestNews: null,
+    
+    // 用户信息缓存时间戳
+    userCacheTime: null
   },
   
   getters: {
@@ -28,7 +32,19 @@ export default createStore({
   
   mutations: {
     SET_USER(state, user) {
-      state.user = user
+      // 使用大整数处理工具处理用户数据
+      state.user = user ? handleReactiveBigInt(user) : null
+      // 更新用户信息缓存时间戳
+      state.userCacheTime = new Date().getTime()
+      // 将用户信息持久化到localStorage
+      if (user) {
+        localStorage.setItem('user', JSON.stringify({
+          data: state.user,
+          timestamp: state.userCacheTime
+        }))
+      } else {
+        localStorage.removeItem('user')
+      }
     },
     
     SET_TOKEN(state, token) {
@@ -45,11 +61,11 @@ export default createStore({
     },
     
     SET_CATEGORIES(state, categories) {
-      state.categories = categories
+      state.categories = handleReactiveBigInt(categories)
     },
     
     SET_LATEST_PRODUCTS(state, products) {
-      state.latestProducts = products
+      state.latestProducts = handleReactiveBigInt(products)
     },
     
     SET_LATEST_NEWS(state, news) {
@@ -59,7 +75,9 @@ export default createStore({
     CLEAR_USER(state) {
       state.user = null
       state.token = null
+      state.userCacheTime = null
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
     }
   },
   
@@ -147,7 +165,7 @@ export default createStore({
     },
     
     // 获取当前用户信息
-    async getCurrentUser({ commit, state }) {
+    async getCurrentUser({ commit, state }, { forceRefresh = false } = {}) {
       // 如果没有token，直接返回
       if (!state.token) {
         // 检查localStorage中是否有token
@@ -159,9 +177,35 @@ export default createStore({
         }
       }
       
-      // 如果已经有用户信息，避免重复请求
-      if (state.user) {
+      // 检查缓存中的用户信息
+      if (!forceRefresh && state.user) {
         return { success: true, data: state.user };
+      }
+      
+      // 尝试从localStorage恢复缓存的用户信息
+      if (!forceRefresh && !state.user) {
+        const cachedUser = localStorage.getItem('user');
+        if (cachedUser) {
+          try {
+            const { data, timestamp } = JSON.parse(cachedUser);
+            // 检查缓存是否有效（30分钟内）
+            const now = new Date().getTime();
+            const CACHE_EXPIRY_TIME = 30 * 60 * 1000; // 30分钟
+            
+            if (timestamp && (now - timestamp) < CACHE_EXPIRY_TIME) {
+              commit('SET_USER', data);
+              state.userCacheTime = timestamp;
+              console.log('从缓存恢复用户信息');
+              return { success: true, data };
+            } else {
+              // 缓存过期，清除
+              localStorage.removeItem('user');
+            }
+          } catch (error) {
+            console.error('解析缓存的用户信息失败:', error);
+            localStorage.removeItem('user');
+          }
+        }
       }
 
       commit('SET_LOADING', true)

@@ -7,7 +7,7 @@
           <ProductInfoCard
             :product="product"
             :show-login-notice="!isLoggedIn"
-            :default-action="isLoggedIn && product.user?.id !== userId && product.status === 1"
+            :default-action="isLoggedIn && product.user?.id && userId && !compareBigIntIds(product.user.id, userId) && product.status === 1"
             :default-action-text="getActionText()"
             @action-click="createOrder"
             @seller-click="goToUserProfile"
@@ -119,6 +119,7 @@ import {
   getProductStatusType,
   getUserStatusType
 } from '@/utils/format'
+import { compareBigIntIds } from '@/utils/bigIntHandler'
 import { useSingleDataFetch } from '@/composables/useDataFetch'
 
 export default {
@@ -205,23 +206,6 @@ export default {
         // 获取卖家订单统计
       } catch (error) {
         console.error('获取卖家统计失败:', error)
-      }
-    }
-    
-    // 获取相关二手物品
-    const fetchRelatedProducts = async (categoryId) => {
-      try {
-        const response = await productApi.advancedSearchProducts({
-          categoryId: categoryId,
-          current: 1,
-          size: 4
-        })
-        const products = response.data.data.records || []
-        
-        // 排除当前二手物品
-        relatedProducts.value = products.filter(item => item.id !== productId.value)
-      } catch (error) {
-        console.error('获取相关二手物品失败:', error)
       }
     }
     

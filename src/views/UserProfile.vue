@@ -315,6 +315,7 @@ import UserProductsTab from '@/components/UserProductsTab.vue'
 import UserReviewsTab from '@/components/UserReviewsTab.vue'
 import { userApi, productApi, orderApi, reviewApi } from '@/api'
 import { useFormHandler } from '@/composables/useEventHandlers'
+import { refreshUserInfo, isUserCacheValid } from '@/utils/userCache'
 import {
   formatPrice,
   formatOrderStatus,
@@ -761,9 +762,9 @@ export default {
     })
     
     onMounted(async () => {
-      // 获取当前用户信息
-      if (!user.value.id) {
-        await store.dispatch('getCurrentUser')
+      // 获取当前用户信息，如果缓存无效则强制刷新
+      if (!user.value.id || !isUserCacheValid()) {
+        await refreshUserInfo(true)
       }
       
       // 初始化表单

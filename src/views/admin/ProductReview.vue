@@ -40,8 +40,8 @@
             :key="product.id" 
             class="review-item fade-in"
           >
-            <div class="product-info">
-              <div class="product-image">
+              <div class="product-info">
+              <div class="product-image unified-cursor-pointer" @click="viewProduct(product)">
                 <img 
                   v-if="getProductImage(product)" 
                   :src="getProductImage(product)" 
@@ -52,15 +52,18 @@
                 </div>
               </div>
               <div class="product-details">
-                <h4 class="product-name">{{ product.productName }}</h4>
+                <h4 class="product-name unified-cursor-pointer" @click="viewProduct(product)">{{ product.productName }}</h4>
                 <div class="product-meta">
                   <el-tag type="warning" size="small">待审核</el-tag>
                   <span class="product-price">¥{{ formatPrice(product.price) }}</span>
-                  <span class="product-category">{{ getCategoryName(product.categoryId) }}</span>
+                  <span class="product-category">{{ product.categoryName }}</span>
                 </div>
-                <p class="product-description">{{ product.description || '暂无描述' }}</p>
+                <p class="product-description">{{ product.description}}</p>
                 <div class="product-owner">
-                  <span>发布者: {{ product.userId || '未知' }}</span>
+                  <div class="owner-info unified-flex unified-flex-center unified-cursor-pointer" @click="goToUserProfile(product.userId)">
+                    <el-avatar :size="24" :src="getUserAvatar(product.userAvatar)" class="owner-avatar" />
+                    <span class="owner-name">{{ product.userName}}</span>
+                  </div>
                   <span class="publish-time">{{ formatDate(product.createTime) }}</span>
                 </div>
               </div>
@@ -84,14 +87,6 @@
               >
                 <el-icon><Close /></el-icon>
                 拒绝
-              </el-button>
-              <el-button 
-                type="primary" 
-                size="small" 
-                @click="viewProduct(product)"
-              >
-                <el-icon><View /></el-icon>
-                查看详情
               </el-button>
             </div>
           </div>
@@ -132,6 +127,7 @@ import {
 import Layout from '@/components/Layout.vue'
 import { adminApi } from '@/api'
 import { formatPrice, formatDate } from '@/utils/format'
+import { refreshUserInfo } from '@/utils/userCache'
 
 export default {
   name: 'AdminProductReview',
@@ -197,10 +193,6 @@ export default {
       if (product.mainImageUrl) {
         return processImageUrl(product.mainImageUrl)
       }
-      // 如果没有主图，使用imageUrls数组的第一张图片
-      if (product.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
-        return processImageUrl(product.imageUrls[0])
-      }
       // 如果imageUrls是字符串（逗号分隔），解析并取第一个
       if (product.imageUrls && typeof product.imageUrls === 'string') {
         const urls = product.imageUrls.split(',').filter(url => url.trim())
@@ -208,12 +200,6 @@ export default {
       }
       // 最后尝试imageUrl字段
       return processImageUrl(product.imageUrl) || null
-    }
-    
-    // 获取分类名称
-    const getCategoryName = (categoryId) => {
-      const category = categories.value.find(c => c.id === categoryId)
-      return category ? category.name : '未知分类'
     }
     
     // 获取待审核商品列表
@@ -313,6 +299,34 @@ export default {
       router.push(`/products/${product.id}`)
     }
     
+    // 跳转到用户个人资料
+    const goToUserProfile = (userId) => {
+      router.push(`/user/${userId}`)
+    }
+    
+    // 获取用户头像
+    const getUserAvatar = (avatarUrl) => {
+      if (!avatarUrl) return null
+      
+      // 处理头像URL，将完整后端地址转换为相对路径
+      if (avatarUrl.includes('localhost:7023')) {
+        return avatarUrl.replace('http://localhost:7023', '/api')
+      }
+      
+      // 如果是相对路径且以images开头，添加/api前缀
+      if (avatarUrl.startsWith('images/') || avatarUrl.includes('/images/')) {
+        return `/api/${avatarUrl.replace(/^\/?/, '')}`
+      }
+      
+      // 如果已经是相对路径（以/api开头），直接返回
+      if (avatarUrl.startsWith('/api/')) {
+        return avatarUrl
+      }
+      
+      // 其他情况返回原URL
+      return avatarUrl
+    }
+    
     // 处理每页显示数量变化
     const handleSizeChange = (size) => {
       pagination.size = size
@@ -327,9 +341,11 @@ export default {
     }
     
     onMounted(async () => {
-      // 获取分类数据
-      if (categories.value.length === 0) {
-        await store.dispatch('fetchCategories')
+      // 确保用户信息是最新的
+      try {
+        await refreshUserInfo()
+      } catch (error) {
+        console.error('刷新用户信息失败:', error)
       }
       
       // 获取待审核商品列表
@@ -347,11 +363,12 @@ export default {
       formatPrice,
       formatDate,
       getProductImage,
-      getCategoryName,
       fetchPendingProducts,
       approveProduct,
       rejectProduct,
       viewProduct,
+      goToUserProfile,
+      getUserAvatar,
       handleSizeChange,
       handleCurrentChange
     }
@@ -473,6 +490,12 @@ export default {
   border-radius: var(--border-radius-base);
   overflow: hidden;
   flex-shrink: 0;
+  transition: all var(--transition-base);
+}
+
+.product-image:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-base);
 }
 
 .product-image img {
@@ -501,6 +524,11 @@ export default {
   font-weight: 600;
   margin: 0 0 var(--spacing-xs) 0;
   color: var(--text-primary);
+  transition: all var(--transition-base);
+}
+
+.product-name:hover {
+  color: var(--primary-color);
 }
 
 .product-meta {
@@ -538,6 +566,23 @@ export default {
   gap: var(--spacing-lg);
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
+}
+
+.owner-info {
+  gap: var(--spacing-xs);
+  transition: all var(--transition-base);
+}
+
+.owner-info:hover {
+  color: var(--primary-color);
+}
+
+.owner-avatar {
+  flex-shrink: 0;
+}
+
+.owner-name {
+  font-weight: 500;
 }
 
 .publish-time {

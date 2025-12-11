@@ -44,7 +44,7 @@
           {{ formatPaymentMethod(product.paymentMethod) }}
         </div>
         <div v-if="product.category" class="unified-tag unified-tag-success">
-          {{ product.category.name }}
+          {{ product.categoryName }}
         </div>
         <div v-if="showStatus && product.status" class="unified-tag" :class="getProductStatusType(product.status)">
           {{ formatProductStatus(product.status) }}
@@ -133,6 +133,7 @@ import {
   formatProductStatus,
   getProductStatusType 
 } from '@/utils/format'
+import { compareBigIntIds } from '@/utils/bigIntHandler'
 import cartApi from '@/api/cart'
 
 export default {
@@ -200,7 +201,8 @@ export default {
     const isLoggedIn = computed(() => store.getters.isLoggedIn)
     const user = computed(() => store.state.user)
     const isOwnProduct = computed(() => {
-      return user.value && props.product.user && user.value.id === props.product.user.id
+      if (!user.value || !user.value.id || !props.product.user) return false
+      return compareBigIntIds(user.value.id, props.product.user.id)
     })
     
     // 处理图片URL

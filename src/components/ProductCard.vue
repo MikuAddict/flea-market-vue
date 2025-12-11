@@ -42,7 +42,7 @@
       
       <!-- 操作按钮 -->
       <div class="unified-flex unified-flex-wrap unified-gap-xs">
-        <!-- 购物车按钮 -->
+        <!-- 购物车按钮 - 只在不是自己的商品时显示 -->
         <el-button 
           v-if="isLoggedIn && product.status === 1 && !isOwnProduct"
           size="small" 
@@ -53,7 +53,7 @@
           {{ isInCart ? '移出购物车' : '加入购物车' }}
         </el-button>
         
-        <!-- 立即购买按钮 -->
+        <!-- 立即购买按钮 - 只在不是自己的商品时显示 -->
         <el-button 
           v-if="isLoggedIn && product.status === 1 && !isOwnProduct"
           size="small" 
@@ -94,12 +94,13 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'
 import { formatPrice, formatPaymentMethod, formatProductStatus, getProductStatusType } from '@/utils/format'
+import { compareBigIntIds } from '@/utils/bigIntHandler'
 import cartApi from '@/api/cart'
 
 export default {
@@ -133,7 +134,8 @@ export default {
     const isLoggedIn = computed(() => store.getters.isLoggedIn)
     const user = computed(() => store.state.user)
     const isOwnProduct = computed(() => {
-      return user.value && props.product.user && user.value.id === props.product.user.id
+      if (!user.value || !user.value.id) return false
+      return compareBigIntIds(user.value.id, props.product.userId)
     })
     
     const goToDetail = () => {
@@ -182,15 +184,20 @@ export default {
     
     // 检查商品是否在购物车中
     const checkProductInCart = async () => {
-      if (!isLoggedIn.value || !props.product.id) return
+      // 如果商品是用户自己发布的，不需要检查购物车状态
+      if (!isLoggedIn.value || !props.product.id || isOwnProduct.value) {
+        isInCart.value = false
+        return
+      }
       
       try {
         const response = await cartApi.getUserCart()
         const cartItems = response.data.data || []
-        const cartItem = cartItems.find(item => item.product && item.product.id === props.product.id)
+        const cartItem = cartItems.find(item => item.product && compareBigIntIds(item.product.id, props.product.id))
         isInCart.value = !!cartItem
       } catch (error) {
         console.error('检查购物车状态失败:', error)
+        isInCart.value = false
       }
     }
     
@@ -207,7 +214,7 @@ export default {
           // 先获取购物车列表，找到对应的购物车项ID
           const cartResponse = await cartApi.getUserCart()
           const cartItems = cartResponse.data.data || []
-          const cartItem = cartItems.find(item => item.product && item.product.id === props.product.id)
+          const cartItem = cartItems.find(item => item.product && compareBigIntIds(item.product.id, props.product.id))
           
           if (!cartItem) {
             ElMessage.error('购物车项不存在，请刷新页面重试')
@@ -264,9 +271,21 @@ export default {
       router.push(`/products/${props.product.id}`)
     }
     
-    // 组件挂载时检查购物车状态
+    // 监听用户信息变化，当用户登录状态改变时更新购物车状态
+    watch([user, isOwnProduct], ([newUser, newIsOwnProduct]) => {
+      // 只有当用户已登录且商品不是自己的时候才检查购物车状态
+      if (newUser && !newIsOwnProduct) {
+        checkProductInCart()
+      } else {
+        isInCart.value = false
+      }
+    })
+    
+    // 组件挂载时检查购物车状态（仅当商品不是用户自己发布时）
     onMounted(() => {
-      checkProductInCart()
+      if (!isOwnProduct.value) {
+        checkProductInCart()
+      }
     })
     
     return {

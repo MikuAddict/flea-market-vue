@@ -47,7 +47,7 @@
                   <el-dropdown-item command="profile">个人中心</el-dropdown-item>
                   <el-dropdown-item command="my-products">我的二手物品</el-dropdown-item>
                   <el-dropdown-item command="orders">我的订单</el-dropdown-item>
-                  <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+                  <el-dropdown-item command="logout">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -81,6 +81,8 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { ArrowDown, Search, Operation } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { refreshUserInfo } from '@/utils/userCache'
 
 export default {
   name: 'Layout',
@@ -107,10 +109,16 @@ export default {
       }
     }
     
-    const handleCommand = (command) => {
+    const handleCommand = async (command) => {
       switch (command) {
         case 'profile':
-          router.push('/profile')
+          // 访问个人中心前刷新用户信息
+          try {
+            await refreshUserInfo(true)
+            router.push('/profile')
+          } catch (error) {
+            ElMessage.error('获取用户信息失败，请重试')
+          }
           break
         case 'my-products':
           router.push('/my-products')

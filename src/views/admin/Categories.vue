@@ -352,66 +352,6 @@ export default {
   margin-bottom: var(--spacing-xs);
 }
 
-/* 统计卡片样式 */
-.stats-cards {
-  margin-bottom: var(--spacing-xl);
-}
-
-.stat-card {
-  height: 100%;
-}
-
-.stat-item {
-  height: 120px;
-  padding: var(--spacing-lg);
-}
-
-.stat-content {
-  height: 100%;
-}
-
-.stat-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  margin-right: var(--spacing-base);
-}
-
-.stat-item-primary .stat-icon {
-  background-color: rgba(64, 158, 255, 0.1);
-  color: var(--primary-color);
-}
-
-.stat-item-success .stat-icon {
-  background-color: rgba(103, 194, 58, 0.1);
-  color: var(--success-color);
-}
-
-.stat-item-warning .stat-icon {
-  background-color: rgba(230, 162, 60, 0.1);
-  color: var(--warning-color);
-}
-
-.stat-item-danger .stat-icon {
-  background-color: rgba(245, 108, 108, 0.1);
-  color: var(--danger-color);
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  margin: 0 0 var(--spacing-xs) 0;
-}
-
-.stat-title {
-  color: var(--text-secondary);
-  margin: 0;
-}
-
 /* 分类列表样式 */
 .categories-card {
   margin-bottom: var(--spacing-xl);
@@ -467,18 +407,10 @@ export default {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .stats-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
   .page-header {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-base);
-  }
-  
-  .view-options .el-radio-group {
-    flex-direction: column;
   }
 }
 

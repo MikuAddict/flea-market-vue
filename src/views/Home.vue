@@ -84,7 +84,14 @@ import { useRouter } from 'vue-router'
 import { 
   Goods, 
   ArrowRight, 
-  Calendar
+  Calendar,
+  Monitor,
+  Phone,
+  Camera,
+  Box,
+  UserFilled,
+  ShoppingBag,
+  HomeFilled
 } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
 import ProductCard from '@/components/ProductCard.vue'
@@ -97,7 +104,14 @@ export default {
     ProductCard,
     Goods,
     ArrowRight,
-    Calendar
+    Calendar,
+    Monitor,
+    Phone,
+    Camera,
+    Box,
+    UserFilled,
+    ShoppingBag,
+    HomeFilled
   },
   setup() {
     const store = useStore()
@@ -127,13 +141,37 @@ export default {
       router.push('/products')
     }
     
+    // 根据分类ID获取对应的图标
+    const getCategoryIcon = (categoryId) => {
+      const iconMap = {
+        // 电子产品
+        1: 'Monitor',
+        2: 'Phone',
+        3: 'Camera',
+        // 数码设备
+        4: 'Box',
+        5: 'UserFilled',
+        // 图书文具
+        6: 'ShoppingBag',
+        // 服饰鞋包
+        7: 'HomeFilled',
+        // 家居日用
+        8: 'Goods',
+        // 默认图标
+        default: 'Goods'
+      }
+      
+      return iconMap[categoryId] || iconMap.default
+    }
+    
     return {
       categories,
       latestProducts,
       latestNews,
       formatDate,
       goToCategory,
-      goToProducts
+      goToProducts,
+      getCategoryIcon
     }
   }
 }

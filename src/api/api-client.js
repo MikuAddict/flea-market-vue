@@ -1,45 +1,7 @@
 import axios from 'axios'
 import store from '../store/store'
 import { ElMessage } from 'element-plus'
-
-// 自定义JSON解析器，处理大整数
-const bigIntJsonParser = (data) => {
-  if (typeof data !== 'string') {
-    return data
-  }
-  
-  // 正则表达式匹配JSON中的大数字值，包括id和可能的大数字
-  const bigIntRegex = /"([^"]+)":\s*([0-9]{15,})([,}\s])/g
-  const processedData = data.replace(bigIntRegex, (match, key, numberStr, suffix) => {
-    // 处理所有可能的大数字字段，不限于id字段
-    try {
-      const num = BigInt(numberStr)
-      // 如果数字大于最大安全整数，转换为字符串
-      if (num > BigInt(Number.MAX_SAFE_INTEGER)) {
-        return `"${key}":"${numberStr}"${suffix}`
-      }
-    } catch (e) {
-      // 无法转换为BigInt，保持原样
-    }
-    return match
-  })
-  
-  // 特别处理可能包含大数字的数组
-  const arrayRegex = /"([^"]+)":\s*\[([^\]]*)\]/g
-  const finalData = processedData.replace(arrayRegex, (match, key, arrayContent) => {
-    if (arrayContent && arrayContent.includes('"id":')) {
-      // 处理数组中的对象ID字段
-      const processedArrayContent = arrayContent.replace(
-        /"id":\s*([0-9]{15,})([,}\s])/g, 
-        '"id":"$1"$2'
-      )
-      return `"${key}": [${processedArrayContent}]`
-    }
-    return match
-  })
-  
-  return JSON.parse(finalData)
-}
+import { bigIntJsonParser } from '../utils/bigIntHandler'
 
 // 创建axios实例
 const request = axios.create({

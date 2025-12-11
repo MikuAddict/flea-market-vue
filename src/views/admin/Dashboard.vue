@@ -172,6 +172,7 @@ import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import { statisticsApi, adminApi } from '@/api'
 import Layout from '@/components/Layout.vue'
+import { refreshUserInfo } from '@/utils/userCache'
 import { 
   User,
   Goods,
@@ -676,7 +677,14 @@ export default {
       }
     }
     
-    onMounted(() => {
+    onMounted(async () => {
+      // 确保用户信息是最新的
+      try {
+        await refreshUserInfo(true)
+      } catch (error) {
+        console.error('刷新用户信息失败:', error)
+      }
+      
       // 获取仪表盘数据
       fetchComprehensiveStatistics()
         .then(() => console.log('fetchComprehensiveStatistics 完成'))

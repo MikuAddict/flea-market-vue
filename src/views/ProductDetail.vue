@@ -1,6 +1,125 @@
 <template>
   <Layout>
-    <div class="product-detail-container" v-if="!loading">
+    <!-- 商品已售出时显示订单详情 -->
+    <div class="order-detail-container" v-if="!loading && product && product.status === 2">
+      <el-card class="unified-card order-card">
+        <template #header>
+          <div class="unified-flex unified-flex-between unified-w-full">
+            <span>商品已售出 - 订单详情</span>
+          </div>
+        </template>
+        
+        <!-- 二手物品详细信息 -->
+        <div class="product-detail-section">
+          <el-row :gutter="20">
+            <el-col :xs="24" :lg="14">
+              <ProductInfoCard
+                :product="product"
+                :show-actions="false"
+                :show-login-notice="false"
+                :seller-avatar-size="40"
+                @seller-click="(userId) => $router.push(`/user/${userId}`)"
+                @image-error="handleImageError"
+              >
+              </ProductInfoCard>
+            </el-col>
+            
+            <el-col :xs="24" :lg="10">
+              <!-- 订单状态信息 -->
+              <el-card class="unified-card order-status-card">
+                <template #header>
+                  <span>商品状态</span>
+                </template>
+                <div class="unified-flex unified-flex-col unified-gap-base status-info">
+                  <div class="unified-flex unified-flex-between status-item">
+                    <span class="label">当前状态:</span>
+                    <el-tag type="success" size="large">
+                      已售出
+                    </el-tag>
+                  </div>
+                  <div class="unified-flex unified-flex-between status-item">
+                    <span class="label">支付方式:</span>
+                    <span>{{ formatPaymentMethod(product.paymentMethod) }}</span>
+                  </div>
+                  <div class="unified-flex unified-flex-between status-item">
+                    <span class="label">商品价格:</span>
+                    <span class="price">¥{{ formatPrice(product.price) }}</span>
+                  </div>
+                  <div class="status-item">
+                    <span class="label">创建时间:</span>
+                    <span>{{ formatDate(product.createTime) }}</span>
+                  </div>
+                </div>
+                
+                <!-- 查看订单按钮 -->
+                <div class="order-actions" v-if="isLoggedIn && isOrderOwner">
+                  <el-button
+                    class="unified-button unified-button-primary"
+                    size="large"
+                    @click="viewOrderDetail"
+                  >
+                    查看我的订单
+                  </el-button>
+                </div>
+                
+                <!-- 非订单所有者提示 -->
+                <div v-if="isLoggedIn && !isOrderOwner" class="order-notice">
+                  <el-alert
+                    title="该商品已被其他用户购买"
+                    type="info"
+                    :closable="false"
+                    show-icon
+                  >
+                    <p>您可以浏览其他类似商品</p>
+                  </el-alert>
+                </div>
+              </el-card>
+              
+              <!-- 二手物品留言 -->
+              <el-card class="unified-card review-card" v-if="product.id">
+                <template #header>
+                  <div class="unified-flex unified-flex-between unified-w-full">
+                    <span>二手物品留言</span>
+                  </div>
+                </template>
+                <div v-if="comments.length === 0" class="unified-empty">
+                  <el-icon size="60" color="var(--text-placeholder)"><ChatDotRound /></el-icon>
+                  <p>暂无留言</p>
+                </div>
+                <div v-else>
+                  <div class="review-list-container">
+                    <div class="review-list">
+                      <div v-for="comment in comments" :key="comment.id" class="unified-review-item">
+                        <div class="unified-review-header">
+                          <el-avatar 
+                            :size="30" 
+                            :src="comment.userAvatar" 
+                            class="clickable"
+                            @click="goToUserProfile(comment.userId)"
+                          >
+                            {{ comment.userName?.charAt(0) }}
+                          </el-avatar>
+                          <div class="review-info">
+                            <div class="review-user clickable" @click="goToUserProfile(comment.userId)">
+                              {{ comment.userName }}
+                            </div>
+                          </div>
+                          <div class="review-time">{{ formatDate(comment.createTime, 'YYYY-MM-DD') }}</div>
+                        </div>
+                        <div class="unified-review-content">{{ comment.content }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </el-card>
+            </el-col>
+          </el-row>
+        </div>
+      </el-card>
+    </div>
+    
+    <!-- 商品未售出时显示正常商品详情 -->
+    <div class="product-detail-container" v-else-if="!loading">
       <el-row :gutter="20">
         <!-- 左侧二手物品信息 -->
         <el-col :xs="24" :lg="14">
@@ -25,6 +144,8 @@
               </div>
             </template>
             <div v-if="comments.length === 0" class="unified-empty">
+              <el-icon size="60" color="var(--text-placeholder)"><ChatDotRound /></el-icon>
+              <p>暂无留言</p>
             </div>
             <div v-else>
               <div class="review-list-container">
@@ -68,10 +189,10 @@
                 <el-form-item>
                   <el-button 
                     type="primary" 
+                    class="unified-button unified-button-primary unified-w-auto"
                     @click="submitComment" 
                     :loading="commentSubmitting"
                     size="small"
-                    class="unified-w-auto"
                   >
                     发表留言
                   </el-button>
@@ -145,6 +266,10 @@ export default {
     const commentFormRef = ref(null) // 留言表单引用
     const commentSubmitting = ref(false) // 留言提交状态
     
+    // 订单相关数据
+    const orderInfo = ref(null)
+    const isOrderOwner = ref(false)
+    
     // 计算属性
     const isLoggedIn = computed(() => store.getters.isLoggedIn)
     const userId = computed(() => store.state.user?.id)
@@ -185,6 +310,11 @@ export default {
         const commentsResponse = await commentApi.getCommentTree(productId.value)
         comments.value = commentsResponse.data.data || []
         
+        // 如果商品已售出，获取订单信息
+        if (product.value.status === 2) {
+          await fetchOrderInfo()
+        }
+        
         // 获取卖家统计信息
         if (product.value.user) {
           await fetchSellerStats(product.value.user.id)
@@ -200,6 +330,38 @@ export default {
         router.push('/products')
       } finally {
         loading.value = false
+      }
+    }
+    
+    // 获取订单信息
+    const fetchOrderInfo = async () => {
+      try {
+        // 通过获取买家订单列表来查找对应商品的订单
+        if (isLoggedIn.value) {
+          const response = await orderApi.getBuyerOrderList({
+            current: 1,
+            size: 100 // 获取足够多的订单来查找
+          })
+          
+          if (response.data.code === 200 && response.data.data?.records) {
+            // 查找包含当前商品ID的订单
+            const foundOrder = response.data.data.records.find(order => 
+              order.productId && compareBigIntIds(order.productId, productId.value)
+            )
+            
+            if (foundOrder) {
+              orderInfo.value = foundOrder
+              isOrderOwner.value = true
+            } else {
+              orderInfo.value = null
+              isOrderOwner.value = false
+            }
+          }
+        }
+      } catch (error) {
+        console.error('获取订单信息失败:', error)
+        orderInfo.value = null
+        isOrderOwner.value = false
       }
     }
     
@@ -346,6 +508,15 @@ export default {
       }
     }
     
+    // 查看订单详情
+    const viewOrderDetail = () => {
+      if (orderInfo.value && orderInfo.value.id) {
+        router.push(`/orders/${orderInfo.value.id}`)
+      } else {
+        ElMessage.error('订单信息不存在')
+      }
+    }
+    
     // 监听路由参数变化
     watch(() => route.params.id, () => {
       if (route.params.id) {
@@ -364,6 +535,7 @@ export default {
       relatedProducts, // 添加relatedProducts
       isLoggedIn,
       userId,
+      isOrderOwner,
       formatPrice,
       formatPaymentMethod,
       formatProductStatus,
@@ -378,6 +550,7 @@ export default {
       goToUserProfile, // 添加 goToUserProfile
       showAllReviews,
       submitComment, // 添加submitComment
+      viewOrderDetail, // 添加viewOrderDetail
       getActionText,
       handleImageError
     }

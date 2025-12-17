@@ -46,22 +46,11 @@
         <el-button 
           v-if="isLoggedIn && product.status === 1 && !isOwnProduct"
           size="small" 
-          :type="isInCart ? 'danger' : 'primary'"
-          class="unified-w-auto"
+          class="unified-button"
+          :class="isInCart ? 'action-btn-delete' : 'unified-button-primary'"
           @click.stop="handleCartAction"
         >
           {{ isInCart ? '移出购物车' : '加入购物车' }}
-        </el-button>
-        
-        <!-- 立即购买按钮 - 只在不是自己的商品时显示 -->
-        <el-button 
-          v-if="isLoggedIn && product.status === 1 && !isOwnProduct"
-          size="small" 
-          type="primary"
-          class="unified-w-auto"
-          @click.stop="handleBuyNow"
-        >
-          立即购买
         </el-button>
         
         <!-- 管理按钮（仅在是我的商品页面显示） -->
@@ -129,6 +118,7 @@ export default {
     
     // 状态
     const isInCart = ref(false)
+    const cartItemId = ref(null)
     
     // 计算属性
     const isLoggedIn = computed(() => store.getters.isLoggedIn)
@@ -187,15 +177,27 @@ export default {
       // 如果商品是用户自己发布的，不需要检查购物车状态
       if (!isLoggedIn.value || !props.product.id || isOwnProduct.value) {
         isInCart.value = false
+        cartItemId.value = null
         return
       }
       
       try {
-        const response = await cartApi.checkProductInCart(props.product.id)
-        isInCart.value = response.data.data || false
+        const response = await cartApi.getUserCart()
+        if (response.data.code === 200 && response.data.data) {
+          const cartItems = response.data.data
+          const cartItem = cartItems.find(item => 
+            item.productId && compareBigIntIds(item.productId, props.product.id)
+          )
+          isInCart.value = !!cartItem
+          cartItemId.value = cartItem ? cartItem.id : null
+        } else {
+          isInCart.value = false
+          cartItemId.value = null
+        }
       } catch (error) {
         console.error('检查购物车状态失败:', error)
         isInCart.value = false
+        cartItemId.value = null
       }
     }
     
@@ -208,11 +210,12 @@ export default {
       }
       
       try {
-        if (isInCart.value) {
-          // 从购物车移除 - 使用商品ID移除
-          const response = await cartApi.removeFromCartByProductId(props.product.id)
+        if (isInCart.value && cartItemId.value) {
+          // 从购物车移除 - 使用购物车记录ID移除
+          const response = await cartApi.removeFromCart(cartItemId.value)
           if (response.data.code === 200) {
             isInCart.value = false
+            cartItemId.value = null
             ElMessage.success('已移出购物车')
           } else {
             ElMessage.error(response.data.message || '移出购物车失败')
@@ -223,6 +226,8 @@ export default {
           
           if (response.data.code === 200) {
             isInCart.value = true
+            // 重新获取购物车状态以获取购物车记录ID
+            await checkProductInCart()
             ElMessage.success('已加入购物车')
           } else {
             ElMessage.error(response.data.message || '加入购物车失败')
@@ -234,12 +239,7 @@ export default {
       }
     }
     
-    // 立即购买
-    const handleBuyNow = () => {
-      // 这里可以触发一个事件，让父组件处理立即购买逻辑
-      // 或者直接跳转到创建订单的逻辑
-      router.push(`/products/${props.product.id}`)
-    }
+
     
     // 监听用户信息变化，当用户登录状态改变时更新购物车状态
     watch([user, isOwnProduct], ([newUser, newIsOwnProduct]) => {
@@ -268,7 +268,6 @@ export default {
       editProduct,
       deleteProduct,
       toggleStatus,
-      handleBuyNow, // 添加这个新方法
       isLoggedIn,
       user,
       isOwnProduct,

@@ -266,11 +266,12 @@ export default {
       }
       
       try {
-        if (isInCart.value) {
-          // 从购物车移除 - 使用商品ID移除
-          const response = await cartApi.removeFromCartByProductId(props.product.id)
+        if (isInCart.value && cartItemId.value) {
+          // 从购物车移除 - 使用购物车记录ID移除
+          const response = await cartApi.removeFromCart(cartItemId.value)
           if (response.data.code === 200) {
             isInCart.value = false
+            cartItemId.value = null
             ElMessage.success('已移出购物车')
           } else {
             ElMessage.error(response.data.message || '移出购物车失败')

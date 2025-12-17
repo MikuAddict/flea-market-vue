@@ -64,7 +64,7 @@
                 <div class="order-actions" v-if="isBuyer">
                   <el-button
                     v-if="order.status === 0"
-                    type="primary"
+                    class="unified-button unified-button-primary"
                     size="large"
                     @click="payOrder"
                   >
@@ -72,7 +72,7 @@
                   </el-button>
                   <el-button
                     v-if="order.status === 0 || order.status === 1"
-                    type="danger"
+                    class="unified-button action-btn-delete"
                     size="large"
                     @click="cancelOrder"
                   >
@@ -80,7 +80,7 @@
                   </el-button>
                   <el-button
                     v-if="order.status === 1"
-                    type="success"
+                    class="unified-button unified-button-primary"
                     size="large"
                     @click="confirmOrder"
                   >
@@ -88,7 +88,7 @@
                   </el-button>
                   <el-button
                     v-if="order.status === 2 && !hasReviewed"
-                    type="primary"
+                    class="unified-button unified-button-primary"
                     size="large"
                     @click="showReviewDialog = true"
                     :loading="checkingReview"

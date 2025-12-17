@@ -101,6 +101,7 @@
                         <div class="unified-order-actions">
                           <el-button
                             size="small"
+                            class="unified-button unified-button-outline"
                             @click="viewOrder(order.id)"
                           >
                             查看详情
@@ -110,7 +111,7 @@
                           <el-button
                             v-if="order.status === 0 || order.status === 1"
                             size="small"
-                            type="danger"
+                            class="unified-button action-btn-delete"
                             @click="cancelOrder(order.id)"
                           >
                             取消订单
@@ -120,7 +121,7 @@
                           <el-button
                             v-if="order.status === 1 && !order.buyerConfirmed"
                             size="small"
-                            type="success"
+                            class="unified-button unified-button-primary"
                             @click="confirmOrder(order.id)"
                           >
                             确认收货

@@ -162,6 +162,7 @@ export function useDataFetchWithIdPrecision(options = {}) {
 export function useSingleDataFetch(options) {
   const { 
     apiFunction, 
+    params, 
     errorMessage = '获取数据失败',
     notFoundMessage = '数据不存在或已被删除'
   } = options
@@ -179,12 +180,15 @@ export function useSingleDataFetch(options) {
     error.value = null
     
     try {
-      // 如果提供了id，则将其作为参数传递给apiFunction
-      const response = id ? await apiFunction(id) : await apiFunction()
+      // 如果提供了id，则使用id；否则使用params；如果都没有，则不传参数
+      const response = id ? await apiFunction(id) : params ? await apiFunction(params) : await apiFunction()
+      
+      console.log('[useSingleDataFetch] API响应:', response);
       
       if (response && response.data) {
         if (response.data.code === 200) {
           data.value = response.data.data
+          console.log('[useSingleDataFetch] 更新数据:', data.value);
         } else if (response.data.code === 404) {
           error.value = notFoundMessage
         } else {

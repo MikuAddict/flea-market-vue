@@ -15,6 +15,8 @@
               <div class="unified-filter-label">订单状态</div>
               <el-tabs v-model="activeTab" @tab-click="handleTabClick">
                 <el-tab-pane label="全部" name="all" />
+                <el-tab-pane label="待支付" name="0" />
+                <el-tab-pane label="已支付" name="1" />
                 <el-tab-pane label="已完成" name="2" />
                 <el-tab-pane label="已取消" name="3" />
               </el-tabs>
@@ -104,9 +106,9 @@
                             查看详情
                           </el-button>
                           
-                          <!-- 取消订单（状态为0：待支付） -->
+                          <!-- 取消订单（状态为0：待支付 或 状态1：已支付） -->
                           <el-button
-                            v-if="order.status === 0"
+                            v-if="order.status === 0 || order.status === 1"
                             size="small"
                             type="danger"
                             @click="cancelOrder(order.id)"
@@ -221,7 +223,8 @@ export default {
         } else {
           response = await orderApi.getBuyerOrderList({
             current: pagination.current,
-            size: pagination.size
+            size: pagination.size,
+            status: parseInt(activeTab.value)
           })
         }
         
@@ -229,15 +232,9 @@ export default {
         const orderRecords = response.data.data.records || []
         total.value = response.data.data.total || 0
         
-        // 如果不是查看全部，则按状态过滤
-        let filteredOrders = orderRecords
-        if (activeTab.value !== 'all') {
-          filteredOrders = orderRecords.filter(order => order.status === parseInt(activeTab.value))
-        }
-        
         // 为每个订单获取详细的商品信息和卖家信息
         const enrichedOrders = []
-        for (const order of filteredOrders) {
+        for (const order of orderRecords) {
           // 获取商品详情
           if (order.productId) {
             try {

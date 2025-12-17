@@ -71,7 +71,7 @@
                     立即支付
                   </el-button>
                   <el-button
-                    v-if="(order.status === 1 || order.status === 0)"
+                    v-if="order.status === 0 || order.status === 1"
                     type="danger"
                     size="large"
                     @click="cancelOrder"
@@ -363,7 +363,7 @@ export default {
         
         await orderApi.payOrder(orderId.value)
         ElMessage.success('订单支付成功')
-        await fetchOrderDetail()
+        await fetchOrderDetail(orderId.value)
       } catch (error) {
         if (error !== 'cancel') {
           console.error('支付订单失败:', error)
@@ -387,7 +387,7 @@ export default {
         
         await orderApi.cancelOrder(orderId.value)
         ElMessage.success('订单已取消')
-        await fetchOrderDetail()
+        await fetchOrderDetail(orderId.value)
       } catch (error) {
         if (error !== 'cancel') {
           console.error('取消订单失败:', error)
@@ -411,7 +411,7 @@ export default {
         
         await orderApi.confirmOrder(orderId.value)
         ElMessage.success('订单已完成')
-        await fetchOrderDetail()
+        await fetchOrderDetail(orderId.value)
       } catch (error) {
         if (error !== 'cancel') {
           console.error('确认收货失败:', error)
@@ -501,7 +501,7 @@ export default {
           }
           
           // 刷新订单详情以更新按钮状态
-          await fetchOrderDetail()
+          await fetchOrderDetail(orderId.value)
         } else {
           throw new Error(response.data.message || '评论发布失败')
         }
@@ -551,7 +551,7 @@ export default {
       reviewRules,
       hasReviewed,
       checkingReview,
-      orderReview, // 添加评论数据
+      orderReview,
       handleReviewDialogClose,
       submitReview
     }

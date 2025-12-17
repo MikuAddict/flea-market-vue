@@ -44,7 +44,7 @@ export function formatPaymentMethod(paymentMethod) {
  */
 export function formatOrderStatus(status) {
   const statuses = {
-    0: '已支付',
+    0: '待支付',
     1: '已支付',
     2: '已完成',
     3: '已取消'
@@ -101,7 +101,7 @@ export function formatUserStatus(status) {
  */
 export function getOrderStatusType(status) {
   const types = {
-    0: 'primary',
+    0: 'warning',
     1: 'primary',
     2: 'success',
     3: 'danger'

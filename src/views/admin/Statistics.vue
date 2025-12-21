@@ -29,7 +29,6 @@
                 @change="handleTypeChange"
                 class="unified-filter-select"
               >
-                <el-option label="月度综合统计" value="monthly" />
                 <el-option label="分类已售量统计" value="category-sold" />
                 <el-option label="分类交易排行" value="category-ranking" />
                 <el-option label="分类在售量统计" value="category-on-sale" />
@@ -83,75 +82,9 @@
         
         <!-- 表格视图 -->
         <div>
-          <!-- 月度综合统计表格 -->
-          <div v-if="filters.type === 'monthly'">
-            <h4>分类交易排行</h4>
-            <el-table 
-              v-loading="loading && filters.type === 'monthly'" 
-              :data="statisticsData.monthlyCategoryRanking || []" 
-              style="width: 100%"
-              class="unified-table"
-            >
-              <el-table-column label="排名" width="80" align="center">
-                <template #default="scope">
-                  <el-tag :type="getRankType(scope.$index + 1)" size="small">
-                    {{ scope.$index + 1 }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="categoryName" label="分类名称" min-width="150" align="center" />
-              <el-table-column prop="tradeCount" label="交易次数" width="120" align="center">
-                <template #default="scope">
-                  <el-tag type="primary" size="small">{{ scope.row.tradeCount || 0 }}</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="totalAmount" label="交易总额" width="120" align="center">
-                <template #default="scope">
-                  ¥{{ formatPrice(scope.row.totalAmount || 0) }}
-                </template>
-              </el-table-column>
-            </el-table>
-            
-            <h4 style="margin-top: 20px;">活跃用户排行</h4>
-            <el-table 
-              v-loading="loading && filters.type === 'monthly'" 
-              :data="statisticsData.activeUserRanking || []" 
-              style="width: 100%"
-              class="unified-table"
-            >
-              <el-table-column label="排名" width="80" align="center">
-                <template #default="scope">
-                  <el-tag :type="getRankType(scope.$index + 1)" size="small">
-                    {{ scope.$index + 1 }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column label="用户信息" min-width="150" align="center">
-                <template #default="scope">
-                  <div class="user-info unified-flex unified-flex-center">
-                    <el-avatar :size="30" :src="scope.row.avatar">
-                      {{ scope.row.userName?.charAt(0) }}
-                    </el-avatar>
-                    <span class="user-name">{{ scope.row.userName }}</span>
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column prop="tradeCount" label="交易次数" width="100" align="center">
-                <template #default="scope">
-                  <el-tag type="primary" size="small">{{ scope.row.tradeCount || 0 }}</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="totalAmount" label="交易总额" width="120" align="center">
-                <template #default="scope">
-                  ¥{{ formatPrice(scope.row.totalAmount || 0) }}
-                </template>
-              </el-table-column>
-            </el-table>
-          </div>
-          
           <!-- 分类已售量统计表格 -->
           <el-table 
-            v-else-if="filters.type === 'category-sold'"
+            v-if="filters.type === 'category-sold'"
             v-loading="loading && filters.type === 'category-sold'" 
             :data="statisticsData.categorySoldInventory || []" 
             style="width: 100%"
@@ -274,7 +207,7 @@ export default {
     
     // 筛选条件
     const filters = reactive({
-      type: 'monthly',
+      type: 'category-sold',
       year: new Date().getFullYear(),
       month: new Date().getMonth() + 1
     })
@@ -291,14 +224,6 @@ export default {
         let response
         
         switch (filters.type) {
-          case 'monthly':
-            response = await statisticsApi.getMonthlyStatistics(filters.year, filters.month)
-            console.log("月度统计数据响应:", response)
-            if (response.status === 200) {
-              statisticsData.value = response.data || {}
-              console.log("月度统计数据赋值:", statisticsData.value)
-            }
-            break
           case 'category-sold':
             response = await statisticsApi.getMonthlyCategorySoldInventory(filters.year, filters.month)
             if (response.status === 200) {
@@ -350,7 +275,6 @@ export default {
     // 获取统计标题
     const getStatisticsTitle = () => {
       const titleMap = {
-        'monthly': `月度综合统计 (${filters.year}年${filters.month}月)`,
         'category-sold': `分类已售量统计 (${filters.year}年${filters.month}月)`,
         'category-ranking': `分类交易排行 (${filters.year}年${filters.month}月)`,
         'category-on-sale': `分类在售量统计 (${filters.year}年${filters.month}月)`,

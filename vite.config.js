@@ -9,7 +9,7 @@ export default defineConfig({
     showSwitch: true
   })],
   server: {
-    port: 3000,
+    port: 3123,
     proxy: {
       '/api': {
         target: 'http://localhost:7023',

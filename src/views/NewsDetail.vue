@@ -91,6 +91,30 @@ export default {
   border-bottom: 1px solid #ebeef5;
 }
 
+.news-content {
+  /* 确保内容自动换行，避免横向滚动 */
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  
+  /* 允许内容自然垂直滚动 */
+  overflow-y: auto;
+  max-height: none;
+  
+  /* 确保内联元素不会破坏布局 */
+  max-width: 100%;
+}
+
+.news-content >>> div {
+  /* 确保富文本内容也能正确换行 */
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  max-width: 100%;
+}
+
 .news-actions {
   border-top: 1px solid var(--border-light);
 }

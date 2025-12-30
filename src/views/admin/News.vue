@@ -51,7 +51,7 @@
                 <div class="unified-list-item">
                   <div class="unified-list-item-info">
                     <div class="unified-list-item-name">{{ scope.row.title }}</div>
-                    <div class="unified-list-item-desc">{{ scope.row.content?.substring(0, 50) }}...</div>
+                    <div class="unified-list-item-desc">{{ scope.row.content?.substring(0, 20) }}...</div>
                   </div>
                 </div>
               </template>
@@ -65,7 +65,7 @@
               </template>
             </el-table-column>
             
-            <el-table-column label="操作" width="200" fixed="right" align="center">
+            <el-table-column label="操作" width="150" fixed="right" align="center">
               <template #default="scope">
                 <div class="action-buttons unified-flex unified-flex-center">
                   <el-button
@@ -73,19 +73,9 @@
                     type="primary"
                     plain
                     @click="viewNews(scope.row)"
-                    class="action-btn-edit"
+                    class="action-btn-view"
                   >
                     查看
-                  </el-button>
-                  
-                  <el-button
-                    size="small"
-                    type="primary"
-                    plain
-                    @click="showEditNewsDialog(scope.row)"
-                    class="action-btn-edit"
-                  >
-                    编辑
                   </el-button>
                   
                   <el-button

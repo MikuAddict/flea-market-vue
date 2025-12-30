@@ -15,10 +15,7 @@
           <div class="card-header unified-flex unified-flex-between">
             <h3 class="unified-title-base">待审核商品列表</h3>
             <div class="header-actions">
-              <el-button type="primary" @click="fetchPendingProducts" :loading="loading">
-                <el-icon><Refresh /></el-icon>
-                刷新
-              </el-button>
+              <!-- 刷新按钮已删除 -->
             </div>
           </div>
         </template>

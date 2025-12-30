@@ -29,7 +29,7 @@
                 </div>
 
                 <div class="news-content unified-mb-sm">
-                  <p class="unified-text-regular unified-line-height-1_6">{{ news.content.substring(0, 200) }}...</p>
+                  <p class="unified-text-regular unified-line-height-1_6 news-summary">{{ truncateContent(news.content, 200) }}</p>
                 </div>
                 <div class="news-footer unified-flex unified-flex-between unified-flex-center">
                   <span class="news-author unified-text-sm unified-text-secondary">作者: {{ news.authorName }}</span>
@@ -93,6 +93,13 @@ export default {
       basePath: '/news/'
     })
     
+    // 内容截断函数，显示指定长度后添加省略号
+    const truncateContent = (content, maxLength) => {
+      if (!content) return ''
+      if (content.length <= maxLength) return content
+      return content.substring(0, maxLength) + '...'
+    }
+    
     // 重置获取新闻列表，使其在挂载时自动获取
     onMounted(() => {
       fetchNewsList()
@@ -107,7 +114,8 @@ export default {
       navigateToDetail,
       fetchNewsList,
       handleCurrentChange,
-      handleSizeChange
+      handleSizeChange,
+      truncateContent
     }
   }
 }
@@ -116,5 +124,26 @@ export default {
 <style scoped>
 .news-item {
   margin-bottom: 15px;
+}
+
+.news-content {
+  /* 确保内容区域不会溢出 */
+  max-width: 100%;
+}
+
+.news-summary {
+  /* 文本溢出处理 - 多行文本省略号 */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  
+  /* 确保长单词和URL能正确换行 */
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  
+  /* 兼容性处理 */
+  text-overflow: ellipsis;
 }
 </style>

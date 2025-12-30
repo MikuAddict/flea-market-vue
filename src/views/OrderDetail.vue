@@ -3,11 +3,8 @@
     <div class="order-detail-container" v-if="!loading && order">
       <el-card class="unified-card order-card">
         <template #header>
-          <div class="unified-flex unified-flex-between unified-w-full">
-            <span>订单详情</span>
-          </div>
+          <span class="unified-title-lg">订单详情</span>
         </template>
-        
         <!-- 二手物品详细信息 -->
         <div class="product-detail-section">
           <el-row :gutter="20">

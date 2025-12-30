@@ -250,8 +250,26 @@ export default {
         
         if (response.data.code === 200) {
           ElMessage.success('订单创建成功')
+          
+          // 获取订单ID - 检查不同可能的返回数据结构
+          let orderId
+          if (response.data.data && response.data.data.id) {
+            orderId = response.data.data.id
+          } else if (response.data.data) {
+            // 如果data直接是订单ID
+            orderId = response.data.data
+          } else {
+            // 如果没有返回订单ID，跳转到订单列表
+            router.push('/orders')
+            return
+          }
+          
           // 跳转到订单详情页面
-          router.push(`/orders/${response.data.data.id}`)
+          if (orderId) {
+            router.push(`/orders/${orderId}`)
+          } else {
+            router.push('/orders')
+          }
           
           // 从购物车中移除该商品
           await cartApi.removeFromCart(item.id)
@@ -266,6 +284,9 @@ export default {
       } catch (error) {
         ElMessage.error('创建订单失败')
         console.error('创建订单失败:', error)
+        
+        // 如果创建订单失败，仍然跳转到订单列表
+        router.push('/orders')
       }
     }
     

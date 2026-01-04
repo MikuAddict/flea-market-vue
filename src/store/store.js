@@ -267,15 +267,15 @@ export default createStore({
     },
     
     // 获取二手物品分类
-    async fetchCategories({ commit, state }) {
-      // 如果已有分类数据，避免重复请求
-      if (state.categories.length > 0) {
+    async fetchCategories({ commit, state }, { forceRefresh = false } = {}) {
+      // 如果已有分类数据且不强制刷新，避免重复请求
+      if (!forceRefresh && state.categories.length > 0) {
         console.log('[Store] 分类数据已存在，无需重复获取');
         return
       }
       
       try {
-        console.log('[Store] 开始获取分类数据');
+        console.log('[Store] 开始获取分类数据', forceRefresh ? '(强制刷新)' : '');
         const response = await categoryApi.getCategoryList()
         const { data } = response.data
         
@@ -296,11 +296,12 @@ export default createStore({
     },
     
     // 获取最新二手物品
-    async fetchLatestProducts({ commit, state }) {
-      // 如果已有最新商品数据，避免重复请求
-      if (state.latestProducts.length > 0) return
+    async fetchLatestProducts({ commit, state }, { forceRefresh = false } = {}) {
+      // 如果已有最新商品数据且不强制刷新，避免重复请求
+      if (!forceRefresh && state.latestProducts.length > 0) return
       
       try {
+        console.log('[Store] 获取最新二手物品', forceRefresh ? '(强制刷新)' : '');
         const response = await productApi.getLatestProducts()
         const { data } = response.data
         commit('SET_LATEST_PRODUCTS', data)
@@ -310,11 +311,12 @@ export default createStore({
     },
     
     // 获取最新新闻
-    async fetchLatestNews({ commit, state }) {
-      // 如果已有最新新闻数据，避免重复请求
-      if (state.latestNews) return
+    async fetchLatestNews({ commit, state }, { forceRefresh = false } = {}) {
+      // 如果已有最新新闻数据且不强制刷新，避免重复请求
+      if (!forceRefresh && state.latestNews) return
       
       try {
+        console.log('[Store] 获取最新新闻', forceRefresh ? '(强制刷新)' : '');
         const response = await newsApi.getLatestNews()
         const { data } = response.data
         commit('SET_LATEST_NEWS', data)

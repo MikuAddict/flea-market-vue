@@ -99,12 +99,12 @@
             :size="sellerAvatarSize" 
             :src="product.userAvatar"
             class="clickable"
-            @click="$emit('seller-click', product.id)"
+            @click="$emit('seller-click', product.user.id)"
           >
             {{product.userName.charAt(0)}}
           </el-avatar>
           <div class="seller-text">
-            <p class="seller-name clickable" @click="$emit('seller-click', product.id)">
+            <p class="seller-name clickable" @click="$emit('seller-click', product.user.id)">
               {{ product.userName }}
             </p>
             <p class="seller-contact" v-if="showContact">

@@ -310,19 +310,9 @@ export default {
         const commentsResponse = await commentApi.getCommentTree(productId.value)
         comments.value = commentsResponse.data.data || []
         
-        // 如果商品已售出，获取订单信息
-        if (product.value.status === 2) {
-          await fetchOrderInfo()
-        }
-        
         // 获取卖家统计信息
         if (product.value.user) {
           await fetchSellerStats(product.value.user.id)
-        }
-        
-        // 获取相关二手物品（同分类）
-        if (product.value.categoryId) {
-          await fetchRelatedProducts(product.value.categoryId)
         }
       } catch (error) {
         console.error('获取二手物品详情失败:', error)
@@ -330,38 +320,6 @@ export default {
         router.push('/products')
       } finally {
         loading.value = false
-      }
-    }
-    
-    // 获取订单信息
-    const fetchOrderInfo = async () => {
-      try {
-        // 通过获取买家订单列表来查找对应商品的订单
-        if (isLoggedIn.value) {
-          const response = await orderApi.getBuyerOrderList({
-            current: 1,
-            size: 100 // 获取足够多的订单来查找
-          })
-          
-          if (response.data.code === 200 && response.data.data?.records) {
-            // 查找包含当前商品ID的订单
-            const foundOrder = response.data.data.records.find(order => 
-              order.productId && compareBigIntIds(order.productId, productId.value)
-            )
-            
-            if (foundOrder) {
-              orderInfo.value = foundOrder
-              isOrderOwner.value = true
-            } else {
-              orderInfo.value = null
-              isOrderOwner.value = false
-            }
-          }
-        }
-      } catch (error) {
-        console.error('获取订单信息失败:', error)
-        orderInfo.value = null
-        isOrderOwner.value = false
       }
     }
     

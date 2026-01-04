@@ -210,6 +210,11 @@ export default {
       router.push(`/products/${productId}`)
     }
     
+    // 跳转到用户资料
+    const goToUserProfile = (userId) => {
+      router.push(`/user/${userId}`)
+    }
+    
     onMounted(async () => {
       await fetchUserInfo()
       await fetchUserProducts()
@@ -225,7 +230,8 @@ export default {
       formatUserRole,
       formatDate,
       handleTabClick,
-      goToProduct
+      goToProduct,
+      goToUserProfile
     }
   }
 }

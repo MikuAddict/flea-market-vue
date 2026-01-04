@@ -78,9 +78,9 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { 
   Goods, 
   ArrowRight, 
@@ -116,18 +116,31 @@ export default {
   setup() {
     const store = useStore()
     const router = useRouter()
+    const route = useRoute()
     
     const categories = computed(() => store.state.categories)
     const latestProducts = computed(() => store.state.latestProducts)
     const latestNews = computed(() => store.state.latestNews)
     
+    // 刷新数据的函数
+    const refreshData = async () => {
+      await Promise.all([
+        store.dispatch('fetchCategories', { forceRefresh: true }),
+        store.dispatch('fetchLatestProducts', { forceRefresh: true }),
+        store.dispatch('fetchLatestNews', { forceRefresh: true })
+      ])
+    }
+    
     onMounted(async () => {
       // 获取初始数据
-      await Promise.all([
-        store.dispatch('fetchCategories'),
-        store.dispatch('fetchLatestProducts'),
-        store.dispatch('fetchLatestNews')
-      ])
+      await refreshData()
+    })
+    
+    // 监听路由变化，当导航到首页时刷新数据
+    watch(() => route.path, (newPath, oldPath) => {
+      if (newPath === '/' && newPath !== oldPath) {
+        refreshData()
+      }
     })
     
     const goToCategory = (categoryId) => {

@@ -301,11 +301,6 @@ export default {
       router.push(`/admin/users?id=${userId}`)
     }
     
-    // 导出数据
-    const exportData = () => {
-      ElMessage.info('导出功能开发中')
-    }
-    
     onMounted(() => {
       fetchStatisticsData()
     })
@@ -319,7 +314,6 @@ export default {
       getRankType,
       viewProduct,
       viewUser,
-      exportData,
       formatPrice,
       fetchStatisticsData
     }

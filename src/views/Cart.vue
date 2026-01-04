@@ -62,7 +62,15 @@
                   </el-tag>
                 </div>
                 <p class="item-seller">
-                  卖家: <span class="seller-name clickable" @click="goToUserProfile(item.product?.user?.id || item.userId)">{{ item.product?.user?.userName || item.sellerName || '未知卖家' }}</span>
+                  卖家: <span 
+                    class="seller-name" 
+                    :class="{ 'clickable': !productsLoading[item.productId] && getSellerId(item) }"
+                    @click="!productsLoading[item.productId] && goToUserProfile(getSellerId(item))"
+                  >{{ 
+                    productsLoading[item.productId] 
+                      ? '加载中...' 
+                      : (item.product?.user?.userName || item.sellerName || '未知卖家')
+                  }}</span>
                 </p>
               </div>
               
@@ -122,6 +130,7 @@ export default {
     const loading = ref(false)
     const cartItems = ref([])
     const selectedItems = ref([])
+    const productsLoading = ref({}) // 用于跟踪每个商品的加载状态
     
     // 计算属性
     const totalPrice = computed(() => {
@@ -150,41 +159,63 @@ export default {
             paymentMethod: item.paymentMethod  // 新增字段
           }
 
-          // 如果提供了卖家信息，构建user对象
-          if (item.userId || item.sellerName || item.sellerAvatar) {
-            item.product.user = {
-              id: item.userId,
-              userName: item.sellerName,     // 使用新字段
-              userAvatar: item.sellerAvatar  // 使用新字段
-            }
-          }
-
-          // 如果缺少必要信息，从API获取完整信息
-          if (!item.product.paymentMethod || (item.product.user && !item.product.user.userName)) {
-            try {
-              const productApi = (await import('@/api/product')).default
-              const productResponse = await productApi.getProductById(item.productId)
-              if (productResponse.data.code === 200) {
-                // 合并完整的产品信息
-                item.product = { ...item.product, ...productResponse.data.data }
-                
-                // 获取完整的用户信息
-                if (item.product.user && item.product.user.id && !item.product.user.userName) {
+          // 设置加载状态
+          productsLoading.value[item.productId] = true
+          
+          // 总是从API获取完整的产品和卖家信息
+          try {
+            const productApi = (await import('@/api/product')).default
+            const productResponse = await productApi.getProductById(item.productId)
+            console.log('产品API返回数据:', {
+              productId: item.productId,
+              responseData: productResponse.data,
+              dataField: productResponse.data.data,
+              userField: productResponse.data.data?.user
+            })
+            
+            if (productResponse.data.code === 200) {
+              // 合并完整的产品信息
+              item.product = { ...item.product, ...productResponse.data.data }
+              
+              // 确保有卖家信息
+              if (productResponse.data.data.user) {
+                item.product.user = productResponse.data.data.user
+                // 更新sellerName为实际的卖家名称
+                item.sellerName = productResponse.data.data.user.userName
+                console.log('已设置卖家信息:', item.product.user)
+              } else {
+                console.warn('产品API返回的数据中没有用户信息，尝试单独获取用户信息')
+                // 如果产品API没有返回用户信息，尝试单独获取
+                if (productResponse.data.data.userId) {
                   try {
                     const userApi = (await import('@/api/user')).default
-                    const userResponse = await userApi.getUserVOById(item.product.user.id)
+                    const userResponse = await userApi.getUserVOById(productResponse.data.data.userId)
                     if (userResponse.data.code === 200) {
-                      item.product.user = { ...item.product.user, ...userResponse.data.data }
+                      item.product.user = userResponse.data.data
+                      item.sellerName = userResponse.data.data.userName
+                      console.log('通过单独API获取到卖家信息:', item.product.user)
                     }
                   } catch (userError) {
-                    console.warn('获取用户详细信息失败:', userError)
+                    console.error('单独获取用户信息失败:', userError)
                   }
                 }
               }
-            } catch (error) {
-              console.warn('获取商品详细信息失败:', error)
             }
+          } catch (error) {
+            console.warn('获取商品详细信息失败:', error)
+          } finally {
+            productsLoading.value[item.productId] = false
           }
+          
+          // 添加调试日志
+          console.log('购物车项:', {
+            itemId: item.id,
+            productId: item.productId,
+            userId: item.userId,
+            userName: item.sellerName,
+            productUserId: item.product?.user?.id,
+            productUserName: item.product?.user?.userName
+          })
           
           updatedCartItems.push(item)
         }
@@ -295,8 +326,27 @@ export default {
       router.push(`/products/${productId}`)
     }
     
+    // 获取卖家ID的辅助函数
+    const getSellerId = (item) => {
+      // 使用product.user.id，这应该是在fetchCartItems中从API获取的真实卖家ID
+      const sellerId = item.product?.user?.id
+      console.log('获取卖家ID:', {
+        sellerId,
+        'item.product?.user?.id': item.product?.user?.id,
+        'item.userId': item.userId,
+        'item.sellerName': item.sellerName,
+        'item.product.user.userName': item.product?.user?.userName
+      })
+      return sellerId
+    }
+    
     // 跳转到用户资料
-    const goToUserProfile = (userId) => {
+    const goToUserProfile = async (userId) => {
+      if (!userId) {
+        console.warn('用户ID为空，无法跳转')
+        return
+      }
+      console.log('跳转到用户主页，用户ID:', userId)
       router.push(`/user/${userId}`)
     }
     
@@ -329,11 +379,13 @@ export default {
       loading,
       cartItems,
       selectedItems,
+      productsLoading,
       totalPrice,
       handleDeleteItem,
       handleBuyNow,
       goToProduct,
       goToUserProfile,
+      getSellerId,
       getProductImage,
       formatPrice,
       formatPaymentMethod

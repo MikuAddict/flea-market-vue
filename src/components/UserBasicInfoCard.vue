@@ -10,7 +10,8 @@
     <div class="profile-content">
       <div class="avatar-section unified-flex unified-flex-center">
         <div class="unified-relative">
-          <el-avatar :size="100" :src="user.userAvatar" class="unified-avatar">
+          <!-- 优先显示头像预览，如果没有预览则显示原始头像 -->
+          <el-avatar :size="100" :src="avatarPreviewUrl || user.userAvatar" class="unified-avatar">
             <span class="unified-avatar-text">{{ user.userName?.charAt(0) }}</span>
           </el-avatar>
           <slot name="avatar-overlay"></slot>
@@ -93,6 +94,10 @@ export default {
     avatarFile: {
       type: Object,
       default: null
+    },
+    avatarPreviewUrl: {
+      type: String,
+      default: ''
     },
     productsCount: {
       type: Number,

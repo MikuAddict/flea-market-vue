@@ -33,8 +33,6 @@
             style="width: 100%"
             row-key="id"
           >
-            <el-table-column prop="id" label="ID" width="300" align="center" />
-            
             <el-table-column prop="name" label="分类名称" min-width="200" align="center" />
             
             <el-table-column prop="productCount" label="在售数量" width="300" align="center">
@@ -315,6 +313,26 @@ export default {
           break
       }
     }
+
+    // 处理删除分类
+    const handleDeleteCategory = async (category) => {
+      try {
+        await ElMessageBox.confirm(`确定要删除分类 "${category.name}" 吗？删除后无法恢复。`, '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+        
+        await adminApi.category.deleteCategory(category.id)
+        ElMessage.success('分类删除成功')
+        fetchCategories()
+      } catch (error) {
+        if (error !== 'cancel') {
+          console.error('分类删除失败:', error)
+          ElMessage.error('分类删除失败')
+        }
+      }
+    }
     
     onMounted(() => {
       fetchCategories()
@@ -337,6 +355,7 @@ export default {
       resetCategoryForm,
       submitCategoryForm,
       handleCategoryAction,
+      handleDeleteCategory,
     }
   }
 }

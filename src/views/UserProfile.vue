@@ -13,9 +13,10 @@
             :user="user" 
             :edit-mode="editMode"
             :avatar-file="avatarFile"
+            :avatar-preview-url="avatarUrl"
             :products-count="myProducts.length"
             :orders-count="orders.length"
-            :show-uploaded-tip="true"
+            :show-uploaded-tip="false"
             date-format="YYYY-MM-DD"
           >
             <template #actions>

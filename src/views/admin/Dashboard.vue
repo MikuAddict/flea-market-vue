@@ -112,7 +112,7 @@
                 :data="hotProducts" 
                 style="width: 100%" 
                 v-loading="highInventoryLoading" 
-                :empty-text="hotProducts.length === 0 ? '加载中...' : '暂无数据'"
+                :empty-text="'暂无数据'"
                 class="unified-table"
               >
                 <el-table-column prop="productName" label="分类名称" min-width="120" align="center" />

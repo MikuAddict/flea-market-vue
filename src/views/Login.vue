@@ -71,14 +71,22 @@ export default {
     const handleLogin = async () => {
       loading.value = true
       try {
-        await store.dispatch('login', loginForm)
-        ElMessage.success('登录成功')
+        const result = await store.dispatch('login', loginForm)
         
-        // 获取重定向路径
-        const redirect = route.query.redirect || '/'
-        router.push(redirect)
+        // 检查登录是否成功
+        if (result && result.success) {
+          ElMessage.success(result.message || '登录成功')
+          
+          // 获取重定向路径
+          const redirect = route.query.redirect || '/'
+          router.push(redirect)
+        } else {
+          // 登录失败，显示错误消息但不跳转
+          ElMessage.error(result?.message || '登录失败，请检查用户名和密码')
+        }
       } catch (error) {
-        ElMessage.error(error.message || '登录失败')
+        console.error('登录处理错误:', error)
+        ElMessage.error(error.message || '登录失败，请稍后再试')
       } finally {
         loading.value = false
       }
